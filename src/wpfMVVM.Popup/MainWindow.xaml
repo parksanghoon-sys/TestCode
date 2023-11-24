@@ -4,9 +4,35 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:wpfMVVM.Popup"
+        xmlns:control="clr-namespace:wpfMVVM.Popup.Controls"
         mc:Ignorable="d"
         Title="MainWindow" Height="450" Width="800">
     <Grid>
-
+        <ContentControl x:Name="xMianContent"
+                        Content="{Binding CurrentDataContext}"/>
+        <control:MessagePopUpBox x:Name="xMsgBox_Ok"
+                                 IsOpen="False"
+                                 VAlignment="Center"
+                                 HAlignment="Center"
+                                 IsBackgroundDisable="False"
+                                 MessagePopUpBoxType="Confirm">
+            <TextBlock x:Name="xTxtMsgBox"
+                       FontSize="25"
+                       Text="안녕하세요!!&#10;이 프로젝트는 아주 간단한 wpf MVVM 샘플 입니다."
+                       FontWeight="Bold"
+                       Margin="20 0 20 0"/>
+        </control:MessagePopUpBox>
+        <control:MessagePopUpBox x:Name="xMsgBox_YesNo"
+                                 IsOpen="False"
+                                 VAlignment="Center"
+                                 HAlignment="Center"
+                                 IsBackgroundDisable="False"
+                                 MessagePopUpBoxType="YesNo">
+            <TextBlock x:Name="xTxtMsgBoxYesNo"
+                       FontSize="25"
+                       Text="aaa."
+                       FontWeight="ExtraBold"
+                       Margin="20, 0, 20, 0"/>
+        </control:MessagePopUpBox>
     </Grid>
 </Window>

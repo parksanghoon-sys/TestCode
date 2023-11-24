@@ -2,8 +2,32 @@
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:local="clr-namespace:wpfMVVM.Popup"
-             StartupUri="MainWindow.xaml">
+             xmlns:view="clr-namespace:wpfMVVM.Popup.Views"
+             xmlns:viewmodel="clr-namespace:wpfMVVM.Popup.ViewModels">
     <Application.Resources>
-         
+        <DataTemplate DataType="{x:Type viewmodel:MainViewModel}">
+            <view:MainView/>
+        </DataTemplate>
+        
+        <DataTemplate DataType="{x:Type viewmodel:PopUp1ViewModel}">
+            <view:PopUp1View/>
+        </DataTemplate>
+
+        <DataTemplate DataType="{x:Type viewmodel:PopUp2ViewModel}">
+            <view:PopUp2View/>
+        </DataTemplate>
+
+        <!--Button Style-->
+        <Style x:Key="NormalButtonStyle" TargetType="Button">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Grid Background="{TemplateBinding Background}">
+                            <ContentPresenter />
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
     </Application.Resources>
 </Application>
