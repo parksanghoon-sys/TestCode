@@ -7,6 +7,13 @@
 
     public static void Main(string[] args)
     {
+        double input = 79; // 전달받은 short 값
+
+        var intdata = Convert.ToInt32(input);
+        bool isNegative = (intdata & (1 << 6)) != 0; // 7번째 비트 체크
+        int number = (int)(intdata & ((1 << 6) - 1)); // 하위 6비트로 숫자 표현
+
+
         int valuetest = 0;
         var test = new Dictionary<(CombinedControl, DownAdvisory, VerticalControl, UpAdvisory), Action>()
         {
