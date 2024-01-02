@@ -10,3 +10,8 @@ char a = 'A';
 char b = 'B';
 var t = string.Format("{0}{1}",a,b);
 Console.WriteLine(t);
+
+string presetFreq = "123.123";
+var ttt = presetFreq.ToCharArray()[0] = 'A';
+
+Console.WriteLine(presetFreq);

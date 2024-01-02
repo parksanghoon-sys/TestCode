@@ -5,7 +5,9 @@ VisualStudioVersion = 17.6.33829.357
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "wpfEnumMarkupExtension", "wpfEnumMarkupExtension.csproj", "{034CF2D7-FF5A-429B-BF3E-B3EDA5799246}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "wpfListViewColumnSort", "..\wpfListViewColumnSort\wpfListViewColumnSort.csproj", "{F9A870C3-D09C-43D6-8A8E-745D1C9A619D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "wpfListViewColumnSort", "..\wpfListViewColumnSort\wpfListViewColumnSort.csproj", "{F9A870C3-D09C-43D6-8A8E-745D1C9A619D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "wpfEnumDescriptionCombobox", "..\wpfEnumDescriptionCombobox\wpfEnumDescriptionCombobox.csproj", "{76D7D882-CC1F-4F45-8A72-D32D17E65330}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -21,6 +23,10 @@ Global
 		{F9A870C3-D09C-43D6-8A8E-745D1C9A619D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F9A870C3-D09C-43D6-8A8E-745D1C9A619D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F9A870C3-D09C-43D6-8A8E-745D1C9A619D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{76D7D882-CC1F-4F45-8A72-D32D17E65330}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{76D7D882-CC1F-4F45-8A72-D32D17E65330}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{76D7D882-CC1F-4F45-8A72-D32D17E65330}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{76D7D882-CC1F-4F45-8A72-D32D17E65330}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
