@@ -55,7 +55,7 @@ namespace wpfMVVM.Popup.ViewModels
         }
 
         [RelayCommand]
-        private void ShowYesNoMsgExecute()
+        private void ShowYesNoMsg()
         {
             WeakReferenceMessenger.Default.Send(
                 new ShowMessageBoxMessage(new MessageBoxInfo()
@@ -83,7 +83,7 @@ namespace wpfMVVM.Popup.ViewModels
             }else
             {
                 var popup1vm = Ioc.Default.GetService<PopUp1ViewModel>();
-                _dialogService.SetViewModel(popup1vm, "PopUp1", 500, 300, Enums.EDialogHostType.BasicType);
+                _dialogService.SetViewModel(popup1vm, "PopUp1", 300, 100, Enums.EDialogHostType.BasicType);
             }
         }
         [RelayCommand]
