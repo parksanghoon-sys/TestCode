@@ -40,9 +40,9 @@ namespace wpfDatagridTest
             this.DataContext = this;
             People = new ObservableCollection<Person>
         {
-            new Person { Frequncy = "", Age = 30 },
-            new Person { Frequncy = "", Age = 25 },
-            new Person { Frequncy = "", Age = 40 },
+            new Person { Frequncy = "", Age = 30, Name="Test1", Sex="남성" },
+            new Person { Frequncy = "", Age = 25, Name="Test2", Sex="남성" },
+            new Person { Frequncy = "", Age = 40, Name="Test3", Sex="남성" },
         };
         }
 
@@ -62,5 +62,7 @@ namespace wpfDatagridTest
     {
         public string? Frequncy { get; set; }
         public int Age { get; set; }
+        public string Name{ get; set; }
+        public string Sex { get; set; }
     }
 }

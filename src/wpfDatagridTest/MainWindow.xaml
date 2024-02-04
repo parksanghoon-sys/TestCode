@@ -20,8 +20,11 @@
                             <TextBox Text="{Binding Frequncy}" PreviewTextInput="TextBox_PreviewTextInput" MaxLength="7"/>
                         </DataTemplate>
                     </DataGridTemplateColumn.CellEditingTemplate>
+                    
                 </DataGridTemplateColumn>
-                <DataGridTextColumn Header="Age" Binding="{Binding Age}" Foreground="#FF8c8c8c" IsReadOnly="True"/>
+                <DataGridTextColumn Header="Age" Binding="{Binding Age}" Foreground="#FF8c8c8c" IsReadOnly="False"/>
+                <DataGridTextColumn Header="Name" Binding="{Binding Name}" Foreground="#FF8c8c8c" IsReadOnly="False"/>
+                <DataGridTextColumn Header="Sex" Binding="{Binding Sex}" Foreground="#FF8c8c8c" IsReadOnly="False"/>
                 <!-- Other columns -->
             </DataGrid.Columns>
         </DataGrid>

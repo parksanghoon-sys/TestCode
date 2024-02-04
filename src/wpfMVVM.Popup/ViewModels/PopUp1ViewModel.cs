@@ -10,6 +10,6 @@ namespace wpfMVVM.Popup.ViewModels
     public partial class PopUp1ViewModel : ObservableObject
     {
         [ObservableProperty]
-        private string _text = "PopUp1 View";
+        private string _text = "PopUp1123123123 View";
     }
 }
