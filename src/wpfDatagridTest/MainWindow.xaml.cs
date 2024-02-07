@@ -57,6 +57,11 @@ namespace wpfDatagridTest
             Regex regex = new Regex("^[A]?[0-9]*([.][0-9]{0,3})?$"); // 맨 앞에 'A'가 올 수 있고, 그 뒤에 소수점 3자리까지의 숫자만 허용. 소수점 다음에 숫자가 없는 경우도 허용.
             e.Handled = !regex.IsMatch((sender as TextBox).Text.Insert((sender as TextBox).SelectionStart, e.Text));
         }
+
+        private void dgTest_LostFocus(object sender, RoutedEventArgs e)
+        {
+            dgTest.UnselectAll();
+        }
     }
     public class Person
     {
