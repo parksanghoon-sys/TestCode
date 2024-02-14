@@ -15,7 +15,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "cliDoubleToByte", "..\cliDo
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "cliCRC8Calc", "..\cliCRC8Calc\cliCRC8Calc.csproj", "{7B832110-3713-4DD6-ACC0-8D8D313178C4}"
 EndProject
+<<<<<<< HEAD:src/cliTest/cliTest.sln
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "cliValueToBitArray", "..\cliValueToBitArray\cliValueToBitArray.csproj", "{42709D00-8BCA-49EC-AAE3-41040944B635}"
+=======
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "cliRepositoryPattern", "..\cliRepositoryPattern\cliRepositoryPattern.csproj", "{620EB2CD-3848-4A7A-90C4-7BB30DB1C9EB}"
+>>>>>>> 7d72d705322751e47d298dad681517f97b19682e:src/CLI/cliTest/cliTest.sln
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -47,10 +51,17 @@ Global
 		{7B832110-3713-4DD6-ACC0-8D8D313178C4}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7B832110-3713-4DD6-ACC0-8D8D313178C4}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7B832110-3713-4DD6-ACC0-8D8D313178C4}.Release|Any CPU.Build.0 = Release|Any CPU
+<<<<<<< HEAD:src/cliTest/cliTest.sln
 		{42709D00-8BCA-49EC-AAE3-41040944B635}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{42709D00-8BCA-49EC-AAE3-41040944B635}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{42709D00-8BCA-49EC-AAE3-41040944B635}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{42709D00-8BCA-49EC-AAE3-41040944B635}.Release|Any CPU.Build.0 = Release|Any CPU
+=======
+		{620EB2CD-3848-4A7A-90C4-7BB30DB1C9EB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{620EB2CD-3848-4A7A-90C4-7BB30DB1C9EB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{620EB2CD-3848-4A7A-90C4-7BB30DB1C9EB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{620EB2CD-3848-4A7A-90C4-7BB30DB1C9EB}.Release|Any CPU.Build.0 = Release|Any CPU
+>>>>>>> 7d72d705322751e47d298dad681517f97b19682e:src/CLI/cliTest/cliTest.sln
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
