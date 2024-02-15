@@ -36,13 +36,17 @@ namespace cliompensatioinOfNegative2
         {
             int originToInt = Convert.ToInt32(originData);
             int mask = (1 << (signIndex)) - 1;
-            bool isNegative = (originToInt & (1 << signIndex-1)) != 0; 
-            int convertData = (int)(originToInt & ((1 << signIndex) - 1)); 
+            bool isNegative = (originToInt & (1 << signIndex - 1)) != 0;
+            int convertData = 0;
 
             if (isNegative)
             {
                 convertData = (originToInt ^ mask) + 1;
                 convertData *= -1;
+            }
+            else
+            {
+                convertData = (int)(originToInt & ((1 << signIndex) - 1));
             }
                 
             return convertData;
