@@ -32,7 +32,7 @@ namespace cliompensatioinOfNegative2
             }
             return result;
         }
-        public double NegativePositiveConvert(double originData, int signIndex)
+        public double CalculateComplement(double originData, int signIndex)
         {
             int originToInt = Convert.ToInt32(originData);
             int mask = (1 << (signIndex)) - 1;

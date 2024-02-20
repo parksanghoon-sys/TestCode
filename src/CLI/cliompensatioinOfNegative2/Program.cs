@@ -9,7 +9,7 @@ class Program
     {
         var testc = new BitCalculation();
         byte[] bytes = new byte[1] { 0x67};
-        var test = testc.NegativePositiveConvert(53859,16);
+        var test = testc.CalculateComplement(53859,16);
         Console.WriteLine(test);
     }
 }
