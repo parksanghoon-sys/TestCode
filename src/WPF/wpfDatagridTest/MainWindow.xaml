@@ -6,8 +6,58 @@
         xmlns:local="clr-namespace:wpfDatagridTest"
         mc:Ignorable="d"        
         Title="MainWindow" Height="450" Width="800">
+    <Window.Resources>
+        <Style x:Key="ColumnEditStyle" TargetType="{x:Type TextBox}">
+            <Setter Property="Margin" Value="25,0"/>
+            <Setter Property="HorizontalAlignment" Value="Stretch"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+            <Setter Property="Background" Value="{x:Null}" />
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="FontSize" Value="12"/>
+        </Style>
+        <Style x:Key="DataGridCellStyle1" TargetType="{x:Type DataGridCell}">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderBrush" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type DataGridCell}">
+                        <Border BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" Background="{TemplateBinding Background}" 
+                                SnapsToDevicePixels="True">
+                            <ContentPresenter SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Style.Triggers>
+                <Trigger Property="IsSelected" Value="True">
+                    <Setter Property="Background" Value="{DynamicResource {x:Static SystemColors.HighlightBrushKey}}"/>
+                    <Setter Property="Foreground" Value="{DynamicResource {x:Static SystemColors.HighlightTextBrushKey}}"/>
+                    <Setter Property="BorderBrush" Value="{DynamicResource {x:Static SystemColors.HighlightBrushKey}}"/>
+                </Trigger>
+                <Trigger Property="IsKeyboardFocusWithin" Value="True">
+                    <Setter Property="BorderBrush" Value="{DynamicResource {x:Static DataGrid.FocusBorderBrushKey}}"/>
+                </Trigger>
+                <MultiTrigger>
+                    <MultiTrigger.Conditions>
+                        <Condition Property="IsSelected" Value="true"/>
+                        <Condition Property="Selector.IsSelectionActive" Value="false"/>
+                    </MultiTrigger.Conditions>
+                    <Setter Property="Background" Value="{DynamicResource {x:Static SystemColors.HighlightBrushKey}}"/>
+                    <Setter Property="BorderBrush" Value="{DynamicResource {x:Static SystemColors.HighlightBrushKey}}"/>
+                    <Setter Property="Foreground" Value="{DynamicResource {x:Static SystemColors.HighlightTextBrushKey}}"/>
+                </MultiTrigger>
+                <Trigger Property="IsEnabled" Value="false">
+                    <Setter Property="Foreground" Value="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+    </Window.Resources>
     <Grid>
-        <DataGrid ItemsSource="{Binding People}" AutoGenerateColumns="False">
+        <DataGrid x:Name="dgTest" ItemsSource="{Binding People}" AutoGenerateColumns="False" 
+                  LostFocus="dgTest_LostFocus" Foreground="Aqua"  CellStyle="{DynamicResource DataGridCellStyle1}"
+                  CanUserAddRows="False" >
             <DataGrid.Columns>
                 <DataGridTemplateColumn Header="Frequncy">
                     <DataGridTemplateColumn.CellTemplate>
@@ -22,9 +72,9 @@
                     </DataGridTemplateColumn.CellEditingTemplate>
                     
                 </DataGridTemplateColumn>
-                <DataGridTextColumn Header="Age" Binding="{Binding Age}" Foreground="#FF8c8c8c" IsReadOnly="False"/>
-                <DataGridTextColumn Header="Name" Binding="{Binding Name}" Foreground="#FF8c8c8c" IsReadOnly="False"/>
-                <DataGridTextColumn Header="Sex" Binding="{Binding Sex}" Foreground="#FF8c8c8c" IsReadOnly="False"/>
+                <DataGridTextColumn Header="Age" Binding="{Binding Age}" Foreground="#FF8c8c8c" IsReadOnly="False" EditingElementStyle="{StaticResource ColumnEditStyle}"/>
+                <DataGridTextColumn Header="Name" Binding="{Binding Name, UpdateSourceTrigger=PropertyChanged, Mode=OneWay}" Foreground="#FF8c8c8c" IsReadOnly="False" EditingElementStyle="{StaticResource ColumnEditStyle}"/>
+                <DataGridTextColumn Header="Sex" Binding="{Binding Sex}" Foreground="#FF8c8c8c" IsReadOnly="False" EditingElementStyle="{StaticResource ColumnEditStyle}"/>
                 <!-- Other columns -->
             </DataGrid.Columns>
         </DataGrid>
