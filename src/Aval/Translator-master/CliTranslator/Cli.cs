@@ -13,7 +13,9 @@ namespace CliTranslator
     internal class Cli
     {
         private readonly DeeplClient Deepl;
-
+        static string apiKey = "e2a7ad93-d7a1-4ea7-ac8d-a76e03829a2e:fx"; // DeepL API 키        
+        string textToTranslate = "Hello, world!";
+        string targetLanguage = "KO"; // 대상 언어 코드 (예: DE는 독일어)
         private Cli(string apikey)
         {
             Deepl = new DeeplClient(apikey);
@@ -21,8 +23,8 @@ namespace CliTranslator
 
         public static void Main()
         {
-            var config = new ConfigurationBuilder().AddUserSecrets<Cli>().Build();
-            var program = new Cli(config["ApiKey"]);
+            //var config = new ConfigurationBuilder().AddUserSecrets<Cli>().Build();
+            var program = new Cli(apiKey);
             program.AskToUser();
         }
 

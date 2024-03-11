@@ -13,7 +13,7 @@
     <StackPanel>
         <styles:Card MaxWidth="350" HorizontalAlignment="Stretch" Width="210">
             <TextBlock Classes="Headline6" Text="Deepl With Avalonia!"/>
-        </styles:Card>
+        </styles:Card>		
         <styles:MaterialUnderline></styles:MaterialUnderline>
         <styles:Card MaxHeight="300" Width="300" Margin="10" HorizontalAlignment="Left">
         <ScrollViewer>
@@ -48,6 +48,7 @@
                 <ComboBoxItem Tag="SL"> Slovenian</ComboBoxItem>
                 <ComboBoxItem Tag="SV"> Swedish</ComboBoxItem>
                 <ComboBoxItem Tag="ZH"> Chinese</ComboBoxItem>
+			    <ComboBoxItem Tag="KO"> Korean</ComboBoxItem>
             </ComboBox>
         </styles:Card>
         <styles:Card Width="200" x:Name="ErrorInputCard" Margin="10" HorizontalAlignment="Left" IsVisible="False">

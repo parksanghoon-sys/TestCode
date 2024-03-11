@@ -8,8 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="DeepL.net" Version="1.8.0" />
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+    <ProjectReference Include="..\KeyBoardMouseHook\KeyBoardMouseHook.csproj" />
   </ItemGroup>
 
 </Project>

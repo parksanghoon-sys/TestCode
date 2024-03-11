@@ -1,32 +1,37 @@
-﻿using System;
+﻿using cliDeepLTest;
+using DeepL.Model;
+using System;
 using System.Net.Http;
 using System.Threading.Tasks;
+using static System.Net.Mime.MediaTypeNames;
 
 class Program
 {
+    string apiKey = "e2a7ad93-d7a1-4ea7-ac8d-a76e03829a2e:fx"; // DeepL API 키
+    private DeeplClient Deepl;
+    string textToTranslate = "Hello, world!";
+    string targetLanguage = "KO"; // 대상 언어 코드 (예: DE는 독일어)
+
+    
     static async Task Main(string[] args)
+    {    
+        var program = new Program();
+        await program.AskToUser();
+    }
+    public Program()
     {
-        string textToTranslate = "Hello, world!";
-        string targetLanguage = "DE"; // 대상 언어 코드 (예: DE는 독일어)
+        Deepl = new(apiKey);
+    }
 
-        string apiKey = "e2a7ad93-d7a1-4ea7-ac8d-a76e03829a2e:fx"; // DeepL API 키
-
-        using (HttpClient client = new HttpClient())
-        {
-            string apiUrl = $"https://api.deepl.com/v2/translate?auth_key={apiKey}&text={textToTranslate}&target_lang={targetLanguage}";
-
-            HttpResponseMessage response = await client.GetAsync(apiUrl);
-
-            if (response.IsSuccessStatusCode)
-            {
-                string responseContent = await response.Content.ReadAsStringAsync();
-                Console.WriteLine(responseContent);
-                // 여기서 응답을 적절히 처리합니다.
-            }
-            else
-            {
-                Console.WriteLine($"Error: {response.StatusCode}");
-            }
-        }
+    private async Task AskToUser()
+    {
+        var response = Deepl.Translate(textToTranslate, targetLanguage);
+        DisplayTranslate(await response);
+    }
+    private static void DisplayTranslate(Translation datas)
+    {
+        var (assumeLanguage, translated) = datas;
+        Console.WriteLine($"le texte traduit est: {translated}");
+        Console.WriteLine($"La langue reconnue est {assumeLanguage}");
     }
 }
