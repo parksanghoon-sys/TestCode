@@ -4,6 +4,9 @@ class Program
 {
     private static void Main(string[] args)
     {
+        var test = 12.000099000001;
+        var t = test * 1000;
+        Console.WriteLine(t.ToString("000000"));
         IValueToByteConverter converter = new BitHelper4();
         byte[] bytes = new byte[2];
 

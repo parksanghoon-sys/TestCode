@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "GUITranslator": {
+      "commandName": "Project",
+      "environmentVariables": {
+        "ApiKey": "e2a7ad93-d7a1-4ea7-ac8d-a76e03829a2e:fx"
+      }
+    }
+  }
+}

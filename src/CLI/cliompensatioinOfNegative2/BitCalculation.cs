@@ -51,5 +51,27 @@ namespace cliompensatioinOfNegative2
                 
             return convertData;
         }
+        public int GetTwoComplement(int number, int bitLength)
+        {
+            int mask = (1 << bitLength) - 1;
+            int trimmedNumber = number % mask;
+            int complement = (~trimmedNumber + 1) & mask;
+            return complement;
+        }
+        public int GetOriginalFromTwoComplement(int twosComplement, int bitLength)
+        {
+            bool isNegative = (twosComplement & (1 << (bitLength -1)))!= 0.0;
+            
+            if(isNegative)
+            {
+                int mask = (1 << bitLength) - 1;
+                int originalValue = (twosComplement ^ mask) + 1;
+                originalValue *= -1;
+                return originalValue;
+            }
+            return twosComplement;
+
+            return 0;
+        }
     }
 }
