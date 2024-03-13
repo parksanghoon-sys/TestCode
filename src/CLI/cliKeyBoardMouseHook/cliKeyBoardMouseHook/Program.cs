@@ -11,7 +11,7 @@ class Program
         KeyboardHook.KeyUp += KeyboardHook_KeyUp;
         MouseHook.MouseDown += MouseHook_MouseDown;
         MouseHook.MouseUp += MouseHook_MouseUp;
-        // MouseHook.MouseMove += MouseHook_MouseMove;
+        MouseHook.MouseMove += MouseHook_MouseMove;
         MouseHook.MouseScroll += MouseHook_MouseScroll;
         KeyboardHook.HookStart();
         if (!MouseHook.HookStart())
@@ -21,6 +21,12 @@ class Program
         Console.ReadLine();
 
     }
+
+    private static bool MouseHook_MouseMove(MouseEventType type, int x, int y)
+    {
+        throw new NotImplementedException();
+    }
+
     private static void AppendText(string text)
     {
         Console.WriteLine(text);

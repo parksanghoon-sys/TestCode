@@ -19,7 +19,7 @@ namespace RedisSubscriberService.Services
         {
             _connection = ConnectionMultiplexer.Connect(new ConfigurationOptions { EndPoints = { "localhost:7002" } });
             _logger = logger;
-            var db = _connection.GetDatabase();
+            var db = _connection.GetDatabase();            
             var pong = db.Ping();
             Console.WriteLine(pong);
             _lifeTime = lifetime;
@@ -36,7 +36,7 @@ namespace RedisSubscriberService.Services
             pubsub.Unsubscribe(topic, ReceivedMessage);            
         }
         public Task Publish(string topic, string message)
-        {
+        {            
             var pubsub = _connection.GetSubscriber();
             return pubsub.PublishAsync(topic, message);
         }
