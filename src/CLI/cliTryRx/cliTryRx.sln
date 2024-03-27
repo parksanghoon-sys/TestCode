@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.6.33829.357
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "cliTryRx", "cliTryRx.csproj", "{1EB80BDC-CAA4-4B0B-BFAA-0F7287BEDE5C}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "KeyBoardMouseHook", "..\cliKeyBoardMouseHook\KeyBoardMouseHook\KeyBoardMouseHook.csproj", "{33F6EE95-2BD8-4577-BD84-6C5A2B374F0F}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{1EB80BDC-CAA4-4B0B-BFAA-0F7287BEDE5C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1EB80BDC-CAA4-4B0B-BFAA-0F7287BEDE5C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1EB80BDC-CAA4-4B0B-BFAA-0F7287BEDE5C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1EB80BDC-CAA4-4B0B-BFAA-0F7287BEDE5C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{33F6EE95-2BD8-4577-BD84-6C5A2B374F0F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{33F6EE95-2BD8-4577-BD84-6C5A2B374F0F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{33F6EE95-2BD8-4577-BD84-6C5A2B374F0F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{33F6EE95-2BD8-4577-BD84-6C5A2B374F0F}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {DA70AA92-5970-491B-8831-C2E5D86F9B63}
+	EndGlobalSection
+EndGlobal
