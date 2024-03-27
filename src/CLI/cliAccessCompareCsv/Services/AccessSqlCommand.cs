@@ -14,16 +14,16 @@ namespace cliAccessCompareCsv.Services
         IList<T> GetAllAccessRead();
         T GetAccessRead();
     }
-    internal class AccessSqlCommand : IAccessControl<StatusNimonic>
+    public class AccessStatusNimonicCommand : IAccessControl<string>
     {
         private readonly string _connectionString;
-        public AccessSqlCommand(string accssconectionString)
+        public AccessStatusNimonicCommand(string accssconectionString)
         {
             _connectionString = accssconectionString;
         }    
-        public IList<StatusNimonic> GetAllAccessRead()
+        public IList<string> GetAllAccessRead()
         {
-            IList<StatusNimonic> access = new List<StatusNimonic>();
+            IList<string> nimonics = new List<string>();
             // 데이터 출력 또는 처리
 
             for(int i = 0; i < (int)EBAccessTables.TOTAL; i ++)
@@ -32,11 +32,11 @@ namespace cliAccessCompareCsv.Services
                 string fieldTableName = headerTableName.Replace("header", "field");
                 string bitTableName = headerTableName.Replace("header", "bit");
                 string sql = @$"
-                            SELECT DISTINCT {.[명칭(니모닉)], GCS_AVS_IMC_bit.[Bit Name], GCS_AVS_IMC_field.[Field Name]
-                            FROM (GCS_AVS_IMC_header
-                            INNER JOIN GCS_AVS_IMC_field ON GCS_AVS_IMC_header.[명칭(니모닉)] = GCS_AVS_IMC_field.[명칭(니모닉)])
-                            INNER JOIN GCS_AVS_IMC_bit ON GCS_AVS_IMC_field.[Field Name] = GCS_AVS_IMC_bit.[Field Name]
-                            WHERE(GCS_AVS_IMC_field.[Field Default] = '전시' AND  GCS_AVS_IMC_field.[Field Type] <> 'UD')OR GCS_AVS_IMC_bit.[Bit Default] = '전시'
+                            SELECT DISTINCT {headerTableName}.[명칭(니모닉)], {bitTableName}.[Bit Name], {fieldTableName}.[Field Name]
+                            FROM ({headerTableName}
+                            INNER JOIN {fieldTableName} ON {headerTableName}.[명칭(니모닉)] = {fieldTableName}.[명칭(니모닉)])
+                            LEFT OUTER JOIN {bitTableName} ON {fieldTableName}.[Field Name] = {bitTableName}.[Field Name]
+                            WHERE({fieldTableName}.[Field Default] = '전시' AND  {fieldTableName}.[Field Type] <> 'UD')OR {bitTableName}.[Bit Default] = '전시'
                             ";
 
                 using (OleDbConnection connection = new OleDbConnection(_connectionString))
@@ -50,17 +50,24 @@ namespace cliAccessCompareCsv.Services
                         {
                             StatusNimonic statusNimonic = new StatusNimonic()
                             {
-
+                                Id = nimonicReader[0].ToString(),
+                                BitName = nimonicReader[1]?.ToString(),
+                                FieldName = nimonicReader[2].ToString(),
                             };
-                            Console.WriteLine(statusNimonic.FullName);
+                            //if(statusNimonic.FieldName == "IFF_STATUS_02")
+                            //{
+                            //    Console.WriteLine("T");
+                            //}
+                            //Console.WriteLine(statusNimonic.FullName);
+                            nimonics.Add(statusNimonic.FullName.Trim());
                         }
                     }
                 }
             }
-            
+            return nimonics ?? default(IList<string>);
         }
 
-        public StatusNimonic GetAccessRead(string sql)
+        public string GetAccessRead()
         {
             throw new NotImplementedException();
         }

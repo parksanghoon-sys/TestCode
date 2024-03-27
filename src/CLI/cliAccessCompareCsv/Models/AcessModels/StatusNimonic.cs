@@ -12,6 +12,16 @@ namespace cliAccessCompareCsv.Models.AcessModels
         public string? BitName { get; set; }
         [Description("field Name")]
         public string? FieldName { get; set; }
-        public string FullName => Id + "_" + FieldName + "@" + BitName;
+        public string FullName
+        {
+            get
+            {
+                if (string.IsNullOrEmpty(BitName) == false)
+                    return Id + "_" + FieldName + "@" + BitName;
+                else
+                    return Id + "_" + FieldName;
+            }
+        }
+        
     }
 }

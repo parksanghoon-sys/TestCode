@@ -4,14 +4,14 @@ internal partial class Program
 {
     public interface IReadCsv
     {
-        List<CsvStatus> ReadCsv(string filePath);
+        List<string> ReadCsv(string filePath);
     }
     public class CsvReader : IReadCsv
     {
-        public List<CsvStatus> ReadCsv(string filePath)
-        {
-            List<CsvStatus> data = new List<CsvStatus>();
+        List<string> _csvList = new();
 
+        public List<string> ReadCsv(string filePath)
+        {            
             using (var reader = new StreamReader(filePath))
             {
                 while (!reader.EndOfStream)
@@ -24,15 +24,12 @@ internal partial class Program
                     {
                         Property = values[3],
                         StatusClass= values[4],
-                        Name= values[8],
+                        Name= values[8].Trim(),
                     };
-
-                    data.Add(model);
+                    _csvList.Add(model.Name);
                 }
-            }
-
-            data = data.OrderBy(x => x.StatusClass).ToList();
-            return data;
+            }            
+            return _csvList;
         }
     }
 
