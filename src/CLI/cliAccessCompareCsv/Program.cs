@@ -10,9 +10,9 @@ internal partial class Program
         string csvFileFolderPath = @"C:\B.Settings\Csv\StatusCsv";
         string[] csvFiless = Directory.GetFiles(csvFileFolderPath, "*.csv");
         string csvFileName = "UVHF_StatusDisplay.csv";
-        
+        string csvWriteFileName = "Not전시.csv";
         string dbFilePath = @"D:\Project\02.Document\2024\01.항전개조\2.ICD\B\2024.02.23_통합 ICD_V5.02.accdb";
-        string csvFilePath = @$"C:\B.Settings\Csv\StatusCsv\{csvFileName}";
+        string csvFilePath = @$"C:\B.Settings\Csv\StatusCsv\{csvWriteFileName}";
         string connectionString = $"Provider=Microsoft.ACE.OLEDB.16.0;Data Source={dbFilePath};Persist Security Info=False;";
 
         // Table : GCS_AVS_IMC_header, GCS_AVS_IMC_field, GCS_AVS_IMC_bit
@@ -33,22 +33,27 @@ internal partial class Program
         // CSV 파일 읽기
         CsvReader csvReader = new CsvReader();
         List<string> csvNames = new List<string>();
-        foreach(var csvFile in csvFiless)
+        foreach (var csvFile in csvFiless)
         {
             var csvList = csvReader.ReadCsv(csvFile);
             csvNames.AddRange(csvList);
         }
-        
+
 
         IAccessControl<string> accessControl = new AccessStatusNimonicCommand(connectionString);
 
         var nimonics = accessControl.GetAllAccessRead();
 
-        foreach(var nimonic in nimonics)
+        foreach (var nimonic in nimonics)
         {
-            if(csvNames.Contains(nimonic) == false)
+            if (csvNames.Contains(nimonic) == false)
             {
-                Console.WriteLine(nimonic);
+                if(nimonic.Contains("PPC") == true)
+                {
+                    Console.WriteLine(nimonic);
+                    AppendToCsv(nimonic, csvWriteFileName);
+                }
+                
             }
         }
         //foreach(var csv in csvList)
@@ -75,9 +80,40 @@ internal partial class Program
         //                INNER JOIN GCS_AVS_FLCC_bit ON GCS_AVS_FLCC_field.[Field Name] = GCS_AVS_FLCC_bit.[Field Name]
         //                WHERE(GCS_AVS_FLCC_field.[Field Default] = '전시' AND  GCS_AVS_FLCC_field.[Field Type] <> 'UD')OR GCS_AVS_FLCC_bit.[Bit Default] = '전시'
         //                ";
-
-
-
-
+    }
+    static void WriteToCsv(List<string> stringList, string filePath)
+    {
+        try
+        {
+            // StreamWriter를 사용하여 CSV 파일에 문자열을 작성
+            using (StreamWriter writer = new StreamWriter(filePath))
+            {
+                foreach (string item in stringList)
+                {
+                    // CSV 파일에 각 항목을 쉼표로 구분하여 씀
+                    writer.WriteLine(item);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"CSV 파일 작성 중 오류 발생: {ex.Message}");
+        }
+    }
+    static void AppendToCsv(string input, string filePath)
+    {
+        try
+        {
+            // StreamWriter를 사용하여 CSV 파일에 문자열 추가 모드로 열기
+            using (StreamWriter writer = new StreamWriter(filePath, true))
+            {
+                // CSV 파일에 입력된 문자열을 쓰기
+                writer.WriteLine(input);
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"CSV 파일에 문자열을 추가하는 중 오류 발생: {ex.Message}");
+        }
     }
 }

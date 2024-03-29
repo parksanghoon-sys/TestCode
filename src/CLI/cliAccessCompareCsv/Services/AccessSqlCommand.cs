@@ -43,7 +43,8 @@ namespace cliAccessCompareCsv.Services
                 {
                     connection.Open();
 
-                    using (OleDbCommand nimonicCommand = new OleDbCommand(sql, connection))
+                    using (OleDbCommand nimonicCommand = new OleDbCommand(sql, connection))                    
+
                     using (OleDbDataReader nimonicReader = nimonicCommand.ExecuteReader())
                     {
                         while (nimonicReader.Read())
@@ -62,6 +63,7 @@ namespace cliAccessCompareCsv.Services
                             nimonics.Add(statusNimonic.FullName.Trim());
                         }
                     }
+                  
                 }
             }
             return nimonics ?? default(IList<string>);
