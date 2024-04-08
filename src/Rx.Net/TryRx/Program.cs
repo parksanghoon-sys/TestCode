@@ -119,13 +119,23 @@ internal class Program
         //    () => Console.WriteLine($"{Environment.CurrentManagedThreadId} completed"));
         #endregion
 
-        Subject<int> s = new();
-        s.Subscribe(x => Console.WriteLine($"{Environment.CurrentManagedThreadId} Sub1: {x}"));
-        s.Subscribe(x => Console.WriteLine($"{Environment.CurrentManagedThreadId} Sub2: {x}"));
+        //Subject<int> s = new();
+        //s.Subscribe(x => Console.WriteLine($"{Environment.CurrentManagedThreadId} Sub1: {x}"));
+        //s.Subscribe(x => Console.WriteLine($"{Environment.CurrentManagedThreadId} Sub2: {x}"));
 
-        s.OnNext(1);
-        s.OnNext(2);
-        s.OnNext(3);
+        //s.OnNext(1);
+        //s.OnNext(2);
+        //s.OnNext(3);
+
+        IObservable<int> xs = Observable.Range(0, 10); // The numbers 0-9
+        //IObservable<int> evenNumbers = xs.Where(i => i % 2 == 0);
+
+        IObservable<int> evenNumbers =
+                from i in xs
+                where i % 2 == 0
+                select i;
+
+        evenNumbers.Dump("Where");
 
         Console.WriteLine($"{Environment.CurrentManagedThreadId} : Console Thread Id");
         Console.ReadLine();
@@ -173,6 +183,16 @@ internal class Program
         start.Subscribe(
             Console.WriteLine,
             () => Console.WriteLine("Action completed"));
+    }
+}
+public static class SampleExtensions
+{
+    public static void Dump<T>(this IObservable<T> source, string name)
+    {
+        source.Subscribe(
+            value => Console.WriteLine($"{name}-->{value}"),
+            ex => Console.WriteLine($"{name} failed-->{ex.Message}"),
+            () => Console.WriteLine($"{name} completed"));
     }
 }
 

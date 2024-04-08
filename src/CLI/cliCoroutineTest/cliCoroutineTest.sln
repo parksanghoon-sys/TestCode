@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.6.33829.357
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "cliCoroutineTest", "cliCoroutineTest\cliCoroutineTest.csproj", "{78B7F5AD-9BCC-4433-B771-A06E8EE14264}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{78B7F5AD-9BCC-4433-B771-A06E8EE14264}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{78B7F5AD-9BCC-4433-B771-A06E8EE14264}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{78B7F5AD-9BCC-4433-B771-A06E8EE14264}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{78B7F5AD-9BCC-4433-B771-A06E8EE14264}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {FF2EAED6-3F9E-47E8-88C3-4F10AE61EA5C}
+	EndGlobalSection
+EndGlobal
