@@ -25,7 +25,7 @@ class Program
         public AsyncWrite(Coroutine coroutine, string fileName)
         {
             this.coroutine = coroutine;
-            Write(fileName);
+            Write(fileName);            
         }
         private async void Write(string filename)
         {
