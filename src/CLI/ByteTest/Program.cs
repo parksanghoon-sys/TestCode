@@ -1,4 +1,20 @@
-﻿byte[] data1 = new byte[2] {0x39,0x99};
+﻿var case1 = ("4,4,1,0,10");
+var case2 = ("1,4,1,0,110");
+var case3 = ("2,4,1,0,1111");
+
+var cases = new List<string> { case1, case2, case3 };
+
+foreach (var item in cases)
+{
+	var test = item.Substring(0, item.LastIndexOf(','));
+	if(test != null)
+	{
+		//break;
+	}
+
+}
+
+byte[] data1 = new byte[2] {0x39,0x99};
 byte[] data2 = new byte[2] {0x01,0x75};
 byte[] dataArray = new byte[4];
 Buffer.BlockCopy(data1, 0, dataArray, 0, 2);
