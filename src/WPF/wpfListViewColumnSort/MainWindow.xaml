@@ -7,32 +7,36 @@
         mc:Ignorable="d"
         Title="MainWindow" Height="450" Width="800">
     <Grid Margin="10">
-        <ListView x:Name="lvUsers">
-            <ListView.View>
-                <GridView>
-                    <GridViewColumn Width="120" DisplayMemberBinding="{Binding Name}">
-                        <GridViewColumn.Header>
-                            <GridViewColumnHeader Tag="Name" Click="lvUsersColumnHeader_Click">
-                                Name
-                            </GridViewColumnHeader>
-                        </GridViewColumn.Header>
-                    </GridViewColumn>
-                    <GridViewColumn Width="80" DisplayMemberBinding="{Binding Age}">
-                        <GridViewColumn.Header>
-                            <GridViewColumnHeader Tag="Age" Click="lvUsersColumnHeader_Click">
-                                Age
-                            </GridViewColumnHeader>
-                        </GridViewColumn.Header>
-                    </GridViewColumn>
-                    <GridViewColumn Width="80" DisplayMemberBinding="{Binding Sex}">
-                        <GridViewColumn.Header>
-                            <GridViewColumnHeader Tag="Sex" Click="lvUsersColumnHeader_Click">
-                                Sex
-                            </GridViewColumnHeader>
-                        </GridViewColumn.Header>
-                    </GridViewColumn>
-                </GridView>
-            </ListView.View>
-        </ListView>
+        <StackPanel>
+            <TextBox Width="200" Height="40" CaretBrush="White" Foreground="Black" Background="Gray"/>
+            <ListView x:Name="lvUsers">
+                <ListView.View>
+                    <GridView>
+                        <GridViewColumn Width="120" DisplayMemberBinding="{Binding Name}">
+                            <GridViewColumn.Header>
+                                <GridViewColumnHeader Tag="Name" Click="lvUsersColumnHeader_Click">
+                                    Name
+                                </GridViewColumnHeader>
+                            </GridViewColumn.Header>
+                        </GridViewColumn>
+                        <GridViewColumn Width="80" DisplayMemberBinding="{Binding Age}">
+                            <GridViewColumn.Header>
+                                <GridViewColumnHeader Tag="Age" Click="lvUsersColumnHeader_Click">
+                                    Age
+                                </GridViewColumnHeader>
+                            </GridViewColumn.Header>
+                        </GridViewColumn>
+                        <GridViewColumn Width="80" DisplayMemberBinding="{Binding Sex}">
+                            <GridViewColumn.Header>
+                                <GridViewColumnHeader Tag="Sex" Click="lvUsersColumnHeader_Click">
+                                    Sex
+                                </GridViewColumnHeader>
+                            </GridViewColumn.Header>
+                        </GridViewColumn>
+                    </GridView>
+                </ListView.View>
+            </ListView>
+        </StackPanel>
+
     </Grid>
 </Window>
