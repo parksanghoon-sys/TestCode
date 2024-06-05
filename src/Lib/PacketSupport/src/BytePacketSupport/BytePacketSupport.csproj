@@ -1,0 +1,19 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="PacketBuilder.Append.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="PacketBuilder.Append.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Services\CheckSum\" />
+  </ItemGroup>
+
+</Project>
