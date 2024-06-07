@@ -52,13 +52,13 @@ namespace BytePacketSupport.BytePacketSupport.Services.CRC
         {
             ushort crc = 0;
             if (_type == CRC16Type.Classic)
-                crc = (ComputeCRC16(source));
+                crc = (ComputeCRC16(data));
             else if (_type == CRC16Type.Modbus)
-                crc = (ComputeCRC16Modbus(source));
+                crc = (ComputeCRC16Modbus(data));
             else if (_type == CRC16Type.CCITTxModem)
-                crc = (ComputeCCITTxModem(source));
+                crc = (ComputeCCITTxModem(data));
             else if (_type == CRC16Type.DNP)
-                crc = (ComputeDNP(source));
+                crc = (ComputeDNP(data));
 
             ArrayBufferWriter<byte> retData = new ArrayBufferWriter<byte>();
             using var span = retData.Reserve(sizeof(ushort));
@@ -165,28 +165,7 @@ namespace BytePacketSupport.BytePacketSupport.Services.CRC
 
             result = (ushort)(result ^ 0xffff);
             return (ushort)((ushort)((result & 0xff) << 8) | ((result >> 8) & 0xff));
-        }
-        private void GenerateCCITTTable()
-        {
-            crc_tabccitt = new ushort[256];
-
-            for (int i = 0; i < 256; i++)
-            {
-                ushort crc = 0;
-                ushort c = (ushort)(i << 8);
-
-                for (int j = 0; j < 8; j++)
-                {
-                    if (((crc ^ c) & 0x8000) != 0)
-                        crc = (ushort)((crc << 1) ^ 0x1021);
-                    else
-                        crc = (ushort)(crc << 1);
-
-                    c = (ushort)(c << 1);
-                }
-                crc_tabccitt[i] = crc;
-            }
-        }
+        }    
         private void GenerateCRC16ModbusTable()
         {
             crc16ModbusTable = new ushort[256];
