@@ -1,4 +1,12 @@
-﻿var case1 = ("4,4,1,0,10");
+﻿
+using System.Buffers.Binary;
+
+short aa = 253;
+var bb = BitConverter.IsLittleEndian == true ? (UInt16)BinaryPrimitives.ReverseEndianness(aa) : (UInt16)aa;
+
+
+
+var case1 = ("4,4,1,0,10");
 var case2 = ("1,4,1,0,110");
 var case3 = ("2,4,1,0,1111");
 
