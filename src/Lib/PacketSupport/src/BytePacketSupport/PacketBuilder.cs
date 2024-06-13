@@ -1,11 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using System.Text;
 using System.Buffers;
 using BytePacketSupport.Enums;
 using BytePacketSupport.Interfaces;
 using BytePacketSupport.Extentions;
-using System.Linq;
 
 namespace BytePacketSupport
 {
@@ -139,17 +136,6 @@ namespace BytePacketSupport
         {
             return _packetData.ToArray();
         }
-        public PacketBuilder AppendByte(byte value) => Append(value);        
-        public PacketBuilder AppendBytes(byte[] value) => Append(value);
-        public PacketBuilder AppendString(string value) => Append(value);
 
-        public PacketBuilder AppendShort(short value) => Append(value);
-        public PacketBuilder AppendUShort(ushort value) => Append(value);
-        public PacketBuilder AppendInt(int value) => Append(value);
-        public PacketBuilder AppendUInt(uint value) => Append(value);
-        public PacketBuilder AppendLong(long value) => Append(value);
-        public PacketBuilder AppendULong(ulong value) => Append(value);
-        public PacketBuilder AppendPacketBuilder(PacketBuilder packetBuilder) => AppendBytes(packetBuilder.Build());
-        public PacketBuilder AppendClass<TSource>(TSource appendClass) where TSource : class => Append(appendClass);
     }
 }
