@@ -1,0 +1,181 @@
+﻿using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis;
+
+public class Program
+{    
+    static void Main(string[] args)
+    {
+        //string projectPath = @"D:\WPF_Test_UI\src\CLI\cliWeakEvents";
+        string projectPath = @"D:\Project\01.Program\2023\GcsProject\2.FlightSolution\B\Source\pspc-flight\TcasControls";
+        var files = Directory.GetFiles(projectPath, "*.cs", SearchOption.AllDirectories);
+        var parser = new CSharpParser();
+        var allFunctions = new List<FunctionInfo>();
+
+        foreach (var file in files)
+        {
+            string content = File.ReadAllText(file);
+            var functions = parser.Parse(content);
+            allFunctions.AddRange(functions);
+        }
+
+        foreach (var function in allFunctions)
+        {
+            Console.WriteLine($"Class: {function.ClassName}");
+            Console.WriteLine($"Function: {function.FunctionName}");
+            Console.WriteLine($"Parent Function: {function.ParentFunctionName}");
+            Console.WriteLine($"Summary: {function.Summary}");
+            Console.WriteLine($"Return Type: {function.ReturnType}");
+            Console.WriteLine("Variables:");
+            foreach (var variable in function.Variables)
+            {
+                Console.WriteLine($"  - {variable.Name}: {variable.Summary}");
+            }
+            Console.WriteLine("Parameters:");
+            foreach (var parameter in function.Parameters)
+            {
+                Console.WriteLine($"  - Name: {parameter.Name}, Type: {parameter.Type}");
+            }
+            Console.WriteLine();
+        }
+    }
+}
+
+public class VariableInfo
+{
+    public string Name { get; set; }
+    public string Summary { get; set; }
+}
+public class ParameterInfo
+{
+    public string Name { get; set; }
+    public string Type { get; set; }
+}
+public class FunctionInfo
+{
+    public string ClassName { get; set; }
+    public string FunctionName { get; set; }
+    public string ParentFunctionName { get; set; }
+    public string Summary { get; set; }
+    public string ReturnType { get; set; }
+    public List<ParameterInfo> Parameters { get; set; } = new List<ParameterInfo>();
+    public List<VariableInfo> Variables { get; set; } = new List<VariableInfo>();
+}
+
+public class CSharpParser
+{
+    public List<FunctionInfo> Parse(string code)
+    {
+        var tree = CSharpSyntaxTree.ParseText(code);
+        var root = tree.GetRoot() as CompilationUnitSyntax;
+        var functions = new List<FunctionInfo>();
+
+        var classes = root.DescendantNodes().OfType<ClassDeclarationSyntax>();
+        foreach (var classNode in classes)
+        {
+            var className = classNode.Identifier.Text;
+            var methods = classNode.DescendantNodes().OfType<MethodDeclarationSyntax>();
+            var variables = GetVariables(classNode);
+
+            foreach (var method in methods)
+            {
+                var functionInfo = new FunctionInfo
+                {
+                    ClassName = className,
+                    FunctionName = method.Identifier.Text,
+                    ParentFunctionName = null,
+                    Summary = GetSummary(method),
+                    ReturnType = method.ReturnType.ToString(),
+                    Variables = variables
+                };
+                foreach (var parameter in method.ParameterList.Parameters)
+                {
+                    functionInfo.Parameters.Add(new ParameterInfo
+                    {
+                        Name = parameter.Identifier.Text,
+                        Type = parameter.Type.ToString()
+                    });
+                }
+                functions.Add(functionInfo);
+            }
+        }
+
+        // 부모 함수 찾기
+        foreach (var function in functions)
+        {
+            var parentFuncName = FindParentFunction(root, function.FunctionName);
+            function.ParentFunctionName = parentFuncName == null ?  function.ClassName : parentFuncName;
+        }
+
+        return functions;
+    }
+
+    private string GetSummary(SyntaxNode node)
+    {
+        var trivia = node.GetLeadingTrivia();
+        var docComment = trivia.Select(trivium => trivium.GetStructure())
+                               .OfType<DocumentationCommentTriviaSyntax>()
+                               .FirstOrDefault();
+
+        if (docComment != null)
+        {
+            var summaryElement = docComment.ChildNodes()
+                                           .OfType<XmlElementSyntax>()
+                                           .FirstOrDefault(e => e.StartTag.Name.ToString() == "summary");
+
+            if (summaryElement != null)
+            {
+                return summaryElement.Content.ToString().Trim().Replace("///", "");
+            }
+        }
+
+        return null;
+    }
+
+    private string FindParentFunction(SyntaxNode root, string functionName)
+    {
+        var methodCalls = root.DescendantNodes().OfType<InvocationExpressionSyntax>()
+                             .Where(invocation => invocation.Expression.ToString().EndsWith(functionName));
+
+        foreach (var call in methodCalls)
+        {
+            var parentMethod = call.Ancestors().OfType<MethodDeclarationSyntax>().FirstOrDefault();
+            if (parentMethod != null)
+            {
+                return parentMethod.Identifier.Text;
+            }
+        }
+
+        return null;
+    }
+
+    private List<VariableInfo> GetVariables(ClassDeclarationSyntax classNode)
+    {
+        var variables = new List<VariableInfo>();
+
+        var fields = classNode.DescendantNodes().OfType<FieldDeclarationSyntax>();
+        foreach (var field in fields)
+        {
+            foreach (var variable in field.Declaration.Variables)
+            {
+                variables.Add(new VariableInfo
+                {
+                    Name = variable.Identifier.Text,
+                    Summary = GetSummary(field)
+                });
+            }
+        }
+
+        var properties = classNode.DescendantNodes().OfType<PropertyDeclarationSyntax>();
+        foreach (var property in properties)
+        {
+            variables.Add(new VariableInfo
+            {
+                Name = property.Identifier.Text,
+                Summary = GetSummary(property)
+            });
+        }
+
+        return variables;
+    }
+}
