@@ -9,6 +9,7 @@
         public PacketBuilder AppendShort(short value) => Append(value);
         public PacketBuilder AppendUShort(ushort value) => Append(value);
         public PacketBuilder AppendInt(int value) => Append(value);
+        public PacketBuilder AppendInt16(short value) => Append(value);
         public PacketBuilder AppendUInt(uint value) => Append(value);
         public PacketBuilder AppendLong(long value) => Append(value);
         public PacketBuilder AppendULong(ulong value) => Append(value);

@@ -5,6 +5,10 @@ VisualStudioVersion = 17.8.34322.80
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BytePacketSupport", "BytePacketSupport.csproj", "{89428536-E3AE-4982-AB2B-60E6B011E4A6}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Test", "Test", "{FD432B8F-003A-4FD9-8CF6-277BAC31F410}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AppendTest", "..\AppendTest\AppendTest.csproj", "{6BB9CEBE-A04A-4308-988D-FBAFA63F1011}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,9 +19,16 @@ Global
 		{89428536-E3AE-4982-AB2B-60E6B011E4A6}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{89428536-E3AE-4982-AB2B-60E6B011E4A6}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{89428536-E3AE-4982-AB2B-60E6B011E4A6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6BB9CEBE-A04A-4308-988D-FBAFA63F1011}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6BB9CEBE-A04A-4308-988D-FBAFA63F1011}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6BB9CEBE-A04A-4308-988D-FBAFA63F1011}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6BB9CEBE-A04A-4308-988D-FBAFA63F1011}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{6BB9CEBE-A04A-4308-988D-FBAFA63F1011} = {FD432B8F-003A-4FD9-8CF6-277BAC31F410}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {80F3675C-B189-4165-9E39-245AE236F527}
