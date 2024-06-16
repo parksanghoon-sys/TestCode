@@ -1,9 +1,12 @@
-﻿namespace BytePacketSupport
+﻿using System.Collections.Generic;
+
+namespace BytePacketSupport
 {
     public partial class PacketBuilder
 	{
         public PacketBuilder AppendByte(byte value) => Append(value);
         public PacketBuilder AppendBytes(byte[] value) => Append(value);
+        public PacketBuilder AppendBytes(IEnumerable<byte> datas) => Append(datas);
         public PacketBuilder AppendString(string value) => Append(value);
 
         public PacketBuilder AppendShort(short value) => Append(value);
