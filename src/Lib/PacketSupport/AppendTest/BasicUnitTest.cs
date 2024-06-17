@@ -40,5 +40,10 @@ namespace AppendTest
                 .Build();
             _testOutputHelper.WriteLine(builder1.ToHexString());
         }
+        [Fact]
+        public void Test3()
+        {
+            var builder1 = new PacketBuilder().AppendInt(0).Build();   
+        }
     }
 }

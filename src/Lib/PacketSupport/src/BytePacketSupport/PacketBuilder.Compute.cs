@@ -1,5 +1,6 @@
 ﻿using BytePacketSupport.BytePacketSupport.Services;
 using BytePacketSupport.BytePacketSupport.Services.Checksum;
+using BytePacketSupport.BytePacketSupport.Services.CheckSum;
 using BytePacketSupport.BytePacketSupport.Services.CRC;
 using BytePacketSupport.Extentions;
 
@@ -17,6 +18,18 @@ namespace BytePacketSupport
             Compute(new CheckSum8(type), this._packetData.ToArray());
             return this;
         }
+        public PacketBuilder Compute(CheckSum16Type type)
+        {
+            bool isLittleEndia = GetendianType();
+            Compute(new CheckSum16(type, isLittleEndia), this._packetData.ToArray());
+            return this;
+        }
+        public PacketBuilder Compute(CheckSum16Type type, bool isEndian)
+        {            
+            Compute(new CheckSum16(type, isEndian), this._packetData.ToArray());
+            return this;
+        }
+
         public PacketBuilder Compute(CheckSum8Type type, int start)
         {
             Compute(new CheckSum8(type), GetBytes(start));
@@ -43,20 +56,7 @@ namespace BytePacketSupport
             Compute(new CRC8(type), GetBytes(start, count));
             return this;
         }
-        private bool GetendianType()
-        {
-            if (BitConverter.IsLittleEndian == true)
-            {
-                if (_endianType == Enums.EEndian.BIG || _endianType == Enums.EEndian.LITTLEBYTESWAP)
-                    return true;
-            }
-            else
-            {
-                if (_endianType == Enums.EEndian.LITTLE || _endianType == Enums.EEndian.BIGBYTESWAP)
-                    return true;
-            }
-            return false;
-        }
+   
         public PacketBuilder Compute(CRC16Type type)
         {
             bool isLittleEndia = GetendianType();
@@ -145,6 +145,20 @@ namespace BytePacketSupport
 
             this.Compute(type, bytesKeyPoint[key].Item1, bytesKeyPoint[key].count);
             return this;
+        }
+        private bool GetendianType()
+        {
+            if (BitConverter.IsLittleEndian == true)
+            {
+                if (_endianType == Enums.EEndian.BIG || _endianType == Enums.EEndian.LITTLEBYTESWAP)
+                    return true;
+            }
+            else
+            {
+                if (_endianType == Enums.EEndian.LITTLE || _endianType == Enums.EEndian.BIGBYTESWAP)
+                    return true;
+            }
+            return false;
         }
     }
 }

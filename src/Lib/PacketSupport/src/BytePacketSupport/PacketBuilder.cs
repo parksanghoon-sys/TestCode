@@ -65,6 +65,15 @@ namespace BytePacketSupport
             }
             return this;
         }
+        private PacketBuilder Append(byte[] datas)
+        {
+            if (!(datas is byte[] b))
+            {
+                b = datas.ToArray();
+            }
+            _packetData.Write(b);
+            return this;
+        }
         public PacketBuilder Append(IEnumerable<byte> datas)
         {
             if(!(datas is byte[] b))

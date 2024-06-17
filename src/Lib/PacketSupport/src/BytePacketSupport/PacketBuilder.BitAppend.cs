@@ -1,25 +1,64 @@
-﻿namespace BytePacketSupport.BytePacketSupport
+﻿namespace BytePacketSupport
 {
     public partial class PacketBuilder
     {
-        public PacketBuilder ParseBitValue<T>(byte[] buffer, int startBit, int endBit, uint value, bool isBigEndian = false)
+        public PacketBuilder ParseBitValue<T>(byte[] buffer, int startBit, int endBit, T value, bool isBigEndian = false)
         {
             int bitLength = endBit - startBit + 1;
-            byte[] valueBytes = BitConverter.GetBytes(value);
 
-            uint mask = (uint)((1 << bitLength) - 1);
-            value &= mask;
-
-            for(int i = 0; i <bitLength; i++)
+            byte[] valueBytes = GetBytes(value);
+            if (isBigEndian)
             {
-                var bitValue = (value >> i) & 1;
+                Array.Reverse(valueBytes);
+            }
+
+            ulong valueAsInt = 0;
+            for (int i = 0; i < valueBytes.Length; i++)
+            {
+                valueAsInt |= ((ulong)valueBytes[i] << (i * 8));
+            }
+
+            ulong mask = (1UL << bitLength) - 1;
+            valueAsInt &= mask;
+
+            for (int i = 0; i < bitLength; i++)
+            {
+                var bitValue = (valueAsInt >> i) & 1UL; // Ensure bitValue is ulong
                 var byteIndex = (startBit + i) / 8;
                 int bitIndex = (startBit + i) % 8;
 
-                buffer[byteIndex] = (byte)((buffer[byteIndex] & ~(1 << bitIndex)) | (bitValue << bitIndex));
+                buffer[byteIndex] = (byte)((buffer[byteIndex] & ~(1 << bitIndex)) | ((int)bitValue << bitIndex)); // Cast bitValue to int
             }
+
             return this;
         }
+
+        private byte[] GetBytes<T>(T value)
+        {
+            if (value is byte b)
+                return new byte[] { b };
+            if (value is sbyte sb)
+                return new byte[] { unchecked((byte)sb) };
+            if (value is short s)
+                return BitConverter.GetBytes(s);
+            if (value is ushort us)
+                return BitConverter.GetBytes(us);
+            if (value is int i)
+                return BitConverter.GetBytes(i);
+            if (value is uint ui)
+                return BitConverter.GetBytes(ui);
+            if (value is long l)
+                return BitConverter.GetBytes(l);
+            if (value is ulong ul)
+                return BitConverter.GetBytes(ul);
+            if (value is float f)
+                return BitConverter.GetBytes(f);
+            if (value is double d)
+                return BitConverter.GetBytes(d);
+
+            throw new ArgumentException($"Type {typeof(T)} is not supported.");
+        }
+
 
         public static uint GetValue(byte[] buffer, int startBit, int endBit, bool isBigEndian)
         {
