@@ -7,6 +7,25 @@ namespace BytePacketSupport.Interfaces
     {
         public static ReverseSwapPacketWriter Instance { get; } = new ReverseSwapPacketWriter();
 
+        public void @byte(ReservedSpan span, byte value)
+        {
+            MemoryMarshal.Write(span, in value);
+        }
+
+        public void @bytes(ReservedSpan span, byte[] values)
+        {
+            for (int i = 0; i < values.Length; i += 2)
+            {
+                if (i + 3 > values.Length)
+                {
+                    MemoryMarshal.Write(span, in values[i + 3]);
+                    break;
+                }
+                ushort value = ReverseSwap(BitConverter.ToUInt16(values, i));
+                MemoryMarshal.Write(span.Span.Slice(i, 2), ref value);
+            }
+        }
+
         public void @int(ReservedSpan span, int value)
         {
             value = ReverseSwap(value);
@@ -46,8 +65,9 @@ namespace BytePacketSupport.Interfaces
         private ushort ReverseSwap(ushort value) => value;
         private int ReverseSwap(int value) => (value << 16) | (value >> 16);
         private uint ReverseSwap(uint value) => (value << 16) | (value >> 16);
-        private long ReverseSwap(long value) => (unchecked(((value & (long)0xFF00FF00FF00FF00) >> 8) + ((value & 0x00FF00FF00FF00FF) << 8)));
-        private ulong ReverseSwap(ulong value) => (unchecked(((value & (ulong)0xFF00FF00FF00FF00) >> 8) + ((value & 0x00FF00FF00FF00FF) << 8)));
-
+        private long ReverseSwap(long value) => ((long)RotateLeft((uint)value, 16) << 32) + RotateLeft((uint)(value >> 32), 16);
+        private ulong ReverseSwap(ulong value) => ((ulong) RotateLeft ((uint) value, 16) << 32) + RotateLeft((uint)(value >> 32), 16);
+        public uint RotateLeft(uint value, int offset)
+  => (value << offset) | (value >> (32 - offset));
     }
 }

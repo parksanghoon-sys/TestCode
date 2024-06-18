@@ -14,5 +14,7 @@ namespace BytePacketSupport.Interfaces
         void @ushort(ReservedSpan span, ushort value);
         void @uint(ReservedSpan span, uint value);
         void @ulong(ReservedSpan span, ulong value);
+        void @byte(ReservedSpan span, byte value);
+        void @bytes(ReservedSpan span, byte[] values);
     }
 }

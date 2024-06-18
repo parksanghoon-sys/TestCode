@@ -7,6 +7,26 @@ namespace BytePacketSupport.Interfaces
     public class SwapPacketWriter : IPacketWriter
     {
         public static SwapPacketWriter Instance { get;  } = new SwapPacketWriter();
+
+        public void @byte(ReservedSpan span, byte value)
+        {            
+            MemoryMarshal.Write(span, in value);
+        }
+
+        public void @bytes(ReservedSpan span, byte[] values)
+        {
+            for (int i = 0; i < values.Length; i += 2)
+            {
+                if(i +  3 > values.Length)
+                {                
+                    MemoryMarshal.Write(span, in values[i +3]);
+                    break;
+                }
+                ushort value = Swap(BitConverter.ToUInt16(values, i));
+                MemoryMarshal.Write(span.Span.Slice(i, 2), ref value);
+            }
+        }
+
         public void @int(ReservedSpan span, int value)
         {
             value = Swap(value);

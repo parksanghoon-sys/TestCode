@@ -7,6 +7,20 @@ namespace BytePacketSupport.Interfaces
     public class ReversePacketWriter : IPacketWriter
     {
         public static ReversePacketWriter Instance { get; } = new ReversePacketWriter();
+
+        public void @byte(ReservedSpan span, byte value)
+        {
+            value = BinaryPrimitives.ReverseEndianness(value);
+            MemoryMarshal.Write(span, ref value);
+        }
+
+        public void @bytes(ReservedSpan span, byte[] values)
+        {
+            Array.Reverse(values);
+            new Span<byte>(values).CopyTo(span);
+            values.CopyTo(span);
+        }
+
         public void @int(ReservedSpan span, int value)
         {
             value = BinaryPrimitives.ReverseEndianness(value);

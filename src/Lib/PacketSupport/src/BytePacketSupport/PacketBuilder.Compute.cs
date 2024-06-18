@@ -21,7 +21,7 @@ namespace BytePacketSupport
         public PacketBuilder Compute(CheckSum16Type type)
         {
             bool isLittleEndia = GetendianType();
-            Compute(new CheckSum16(type, isLittleEndia), this._packetData.ToArray());
+            Compute(new CheckSum16(type), this._packetData.ToArray());
             return this;
         }
         public PacketBuilder Compute(CheckSum16Type type, bool isEndian)

@@ -3,6 +3,8 @@ using System.Buffers;
 using BytePacketSupport.Enums;
 using BytePacketSupport.Interfaces;
 using BytePacketSupport.Extentions;
+using System.Buffers.Binary;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace BytePacketSupport
 {
@@ -59,19 +61,30 @@ namespace BytePacketSupport
         }
         private PacketBuilder Append(byte data)
         {
-            using (var span = _packetData.Reserve(sizeof(byte)))
-            {
-                span.Span[0] = data;
-            }
+            using var span = _packetData.Reserve(sizeof(byte));
+
+            writer.@byte(span, data);
+            //using (var span = _packetData.Reserve(sizeof(byte)))
+            //{
+            //    var value = _endianType == EEndian.LITTLE ? BinaryPrimitives.ReverseEndianness(data) : data;
+            //    span.Span[0] = value;
+            //}
             return this;
         }
         private PacketBuilder Append(byte[] datas)
         {
-            if (!(datas is byte[] b))
-            {
-                b = datas.ToArray();
-            }
-            _packetData.Write(b);
+            using var span = _packetData.Reserve(datas.Length);
+
+            writer.@bytes(span, datas);
+            //if (!(datas is byte[] b))
+            //{
+            //    b = datas.ToArray();
+            //}
+            //if(_endianType == EEndian.LITTLE)
+            //{
+            //    Array.Reverse(b);
+            //}
+            //_packetData.Write(b);
             return this;
         }
         public PacketBuilder Append(IEnumerable<byte> datas)

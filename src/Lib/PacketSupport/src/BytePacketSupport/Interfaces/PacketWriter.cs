@@ -6,6 +6,18 @@ namespace BytePacketSupport.Interfaces
     public class PacketWriter : IPacketWriter
     {
         public static PacketWriter Instance { get; } = new PacketWriter();
+
+        public void @byte(ReservedSpan span, byte value)
+        {
+            MemoryMarshal.Write(span, ref value);
+        }
+
+        public void @bytes(ReservedSpan span, byte[] values)
+        {
+            new Span<byte>(values).CopyTo(span);
+            values.CopyTo(span);            
+        }
+
         public void @int(ReservedSpan span, int value)
         {
             MemoryMarshal.Write(span, ref value);
