@@ -1,6 +1,8 @@
 ﻿using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis;
+using System.Reflection;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 public class Program
 {    
@@ -10,7 +12,7 @@ public class Program
         string projectPath = @"D:\Project\01.Program\2023\GcsProject\2.FlightSolution\B\Source\pspc-flight\TcasControls";
         var files = Directory.GetFiles(projectPath, "*.cs", SearchOption.AllDirectories);
         var parser = new CSharpParser();
-        var allFunctions = new List<FunctionInfo>();
+        var allFunctions = new List<ClassInfo>();
 
         foreach (var file in files)
         {
@@ -21,26 +23,39 @@ public class Program
 
         foreach (var function in allFunctions)
         {
+            string func = string.Join(", ", function.FunctionInfos.Select(p => $"{p.FunctionName} {p.ParentFunctionName} {p.Summary} {p.ReturnType}"));            
             Console.WriteLine($"Class: {function.ClassName}");
-            Console.WriteLine($"Function: {function.FunctionName}");
-            Console.WriteLine($"Parent Function: {function.ParentFunctionName}");
-            Console.WriteLine($"Summary: {function.Summary}");
-            Console.WriteLine($"Return Type: {function.ReturnType}");
+            Console.WriteLine($"Function: {func}");                                    
             Console.WriteLine("Variables:");
             foreach (var variable in function.Variables)
             {
                 Console.WriteLine($"  - Name: {variable.Name} Summary : {variable.Summary},  Type: {variable.Type}");
             }
             Console.WriteLine("Parameters:");
-            foreach (var parameter in function.Parameters)
-            {
-                Console.WriteLine($"  - Name: {parameter.Name}, Type: {parameter.Type}");
-            }
+            //foreach (var parameter in function.Parameters)
+            //{
+            //    Console.WriteLine($"  - Name: {parameter.Name}, Type: {parameter.Type}");
+            //}
             Console.WriteLine();
         }
     }
 }
 
+public class FunctionInfo
+{
+    public string FunctionName { get; set; }
+    public string ParentFunctionName { get; set; }
+    public string Summary { get; set; }
+    public string ReturnType { get; set; }
+    public List<ParameterInfo> Parameters { get; set; } = new List<ParameterInfo>();
+}
+public class ClassInfo
+{
+    public string ClassName { get; set; }
+    public string ClassPath { get; set; }
+    public List<FunctionInfo> FunctionInfos { get; set; } = new List<FunctionInfo>();
+    public List<VariableInfo> Variables { get; set; } = new List<VariableInfo>();
+}
 public class VariableInfo
 {
     public string Name { get; set; }
@@ -52,24 +67,14 @@ public class ParameterInfo
     public string Name { get; set; }
     public string Type { get; set; }
 }
-public class FunctionInfo
-{
-    public string ClassName { get; set; }
-    public string FunctionName { get; set; }
-    public string ParentFunctionName { get; set; }
-    public string Summary { get; set; }
-    public string ReturnType { get; set; }
-    public List<ParameterInfo> Parameters { get; set; } = new List<ParameterInfo>();
-    public List<VariableInfo> Variables { get; set; } = new List<VariableInfo>();
-}
-
 public class CSharpParser
 {
-    public List<FunctionInfo> Parse(string code)
+    public IList<ClassInfo> Parse(string code)
     {
         var tree = CSharpSyntaxTree.ParseText(code);
         var root = tree.GetRoot() as CompilationUnitSyntax;
         var functions = new List<FunctionInfo>();
+        var classInfos = new List<ClassInfo>();
 
         var classes = root.DescendantNodes().OfType<ClassDeclarationSyntax>();
         foreach (var classNode in classes)
@@ -78,37 +83,42 @@ public class CSharpParser
             var methods = classNode.DescendantNodes().OfType<MethodDeclarationSyntax>();
             var variables = GetVariables(classNode);
 
+            var classinfo = new ClassInfo()
+            {
+                ClassName = classNode.Identifier.Text,
+                ClassPath = code,
+                Variables = variables
+            };
+
+
             foreach (var method in methods)
             {
                 var functionInfo = new FunctionInfo
                 {
-                    ClassName = className,
                     FunctionName = method.Identifier.Text,
                     ParentFunctionName = null,
                     Summary = GetSummary(method),
                     ReturnType = method.ReturnType.ToString(),
-                    Variables = variables
                 };
                 foreach (var parameter in method.ParameterList.Parameters)
                 {
                     functionInfo.Parameters.Add(new ParameterInfo
                     {
                         Name = parameter.Identifier.Text,
-                        Type = parameter.Type.ToString()
+                        Type = parameter.Type!.ToString()
                     });
                 }
+                var parentFuncName = FindParentFunction(root, functionInfo.FunctionName);
+                functionInfo.ParentFunctionName = parentFuncName == null ? className : parentFuncName;
                 functions.Add(functionInfo);
             }
+            classinfo.FunctionInfos = functions;
+            classInfos.Add(classinfo);
         }
 
-        // 부모 함수 찾기
-        foreach (var function in functions)
-        {
-            var parentFuncName = FindParentFunction(root, function.FunctionName);
-            function.ParentFunctionName = parentFuncName == null ?  function.ClassName : parentFuncName;
-        }
 
-        return functions;
+
+        return classInfos;
     }
 
     private string GetSummary(SyntaxNode node)
