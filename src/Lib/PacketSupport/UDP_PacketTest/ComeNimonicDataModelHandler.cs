@@ -1,41 +1,19 @@
-﻿using System.Buffers.Binary;
-using System.Net.Sockets;
-using System.Net;
-public class UdpMulticastSender
+﻿using System.Reflection;
+
+public class ComeNimonicDataModelHandler
 {
-    private static string MulticastGroupAddress = "10.20.11.31";
-    //private static readonly string MulticastGroupAddress = "192.168.3.206";
-    private static int MulticastGroupPort = 5010;
-
-    public static async Task<int> SendMulticastMessage(byte[] message)
+    private DataModel model = null;
+    public DataModel? Model
     {
-        using (UdpClient udpClient = new UdpClient())
-        {
-            //udpClient.JoinMulticastGroup(IPAddress.Parse(MulticastGroupAddress));
-
-            IPEndPoint remoteEndPoint = new IPEndPoint(IPAddress.Parse(MulticastGroupAddress), MulticastGroupPort);
-
-            try
-            {
-                var isSucessed = await udpClient.SendAsync(message, message.Length, remoteEndPoint);
-                Console.WriteLine("Message sent to multicast group");
-                return isSucessed;
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine("Exception: " + e.Message);
-                return 0;
-            }
-        }
+        get => model; set => model = value;
     }
-}
-internal class Program
-{
-    private static void Main(string[] args)
+
+    public ComeNimonicDataModelHandler()
     {
-        var model = new DataModel(true);
-
-
+        model = new DataModel();
+    }
+    public async Task<int> SendComeUDPNimoic()
+    {
         BitManipulation.SetBitsInByteArray(model.SW_Version_In_PPC, 0, 8, (int)model.SW_Version_In_PPC_Build_Number);
         BitManipulation.SetBitsInByteArray(model.SW_Version_In_PPC, 8, 8, (int)model.SW_Version_In_PPC_Minor_Version);
         BitManipulation.SetBitsInByteArray(model.SW_Version_In_PPC, 16, 8, (int)model.SW_Version_In_PPC_Major_Version);
@@ -106,14 +84,39 @@ internal class Program
 
         BitManipulation.SetBitsInByteArray(model.LRU_BIT_SPVSR, 0, 2, (int)model.ENT_1_Card);
 
-
-        //Array.Reverse(model.LRU_BIT_MAIN);
-        //Array.Reverse(model.SW_BIT);
-        //Array.Reverse(model.LRU_BIT_ANTENA);
-
         var data = model.SerializeToByteArray();
 
         // 메시지를 전송합니다.
-        Task.Run(() => UdpMulticastSender.SendMulticastMessage(data)).Wait();
+        
+        var issuccess = await UdpMulticastSender.SendMulticastMessage(data);
+
+        return issuccess;
+
+    }
+    public IEnumerable<string> GetModelsNameString()
+    {
+        List<string> list = new List<string>();
+        Type type = typeof(DataModel);
+        PropertyInfo[] properties = type.GetProperties();
+
+        foreach (PropertyInfo prop in properties)
+        {
+            // 속성이 읽기/쓰기 가능하고, 인덱서가 없는 경우에만 설정
+            if (prop.CanWrite && prop.GetIndexParameters().Length == 0)
+            {
+                // 속성의 타입이 int나 bool인 경우에만 값을 1로 설정 (다른 타입에 대한 처리는 필요에 따라 추가)
+                if (prop.PropertyType == typeof(double))
+                {
+                    list.Add(prop.Name);
+
+                }
+                else if (prop.PropertyType == typeof(bool))
+                {
+                    prop.SetValue(this, true);
+                }
+                // 필요에 따라 다른 타입의 속성도 처리할 수 있음
+            }
+        }
+        return list;
     }
 }

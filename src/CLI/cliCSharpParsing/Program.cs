@@ -29,7 +29,7 @@ public class Program
             Console.WriteLine("Variables:");
             foreach (var variable in function.Variables)
             {
-                Console.WriteLine($"  - {variable.Name}: {variable.Summary}");
+                Console.WriteLine($"  - Name: {variable.Name} Summary : {variable.Summary},  Type: {variable.Type}");
             }
             Console.WriteLine("Parameters:");
             foreach (var parameter in function.Parameters)
@@ -45,6 +45,7 @@ public class VariableInfo
 {
     public string Name { get; set; }
     public string Summary { get; set; }
+    public string Type { get; set; }
 }
 public class ParameterInfo
 {
@@ -161,7 +162,8 @@ public class CSharpParser
                 variables.Add(new VariableInfo
                 {
                     Name = variable.Identifier.Text,
-                    Summary = GetSummary(field)
+                    Summary = GetSummary(field),
+                    Type = field.Declaration.Type.ToString()
                 });
             }
         }
@@ -172,7 +174,8 @@ public class CSharpParser
             variables.Add(new VariableInfo
             {
                 Name = property.Identifier.Text,
-                Summary = GetSummary(property)
+                Summary = GetSummary(property),
+                Type = property.Type.ToString()
             });
         }
 

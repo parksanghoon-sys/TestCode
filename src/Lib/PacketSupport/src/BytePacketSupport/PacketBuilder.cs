@@ -4,7 +4,6 @@ using BytePacketSupport.Enums;
 using BytePacketSupport.Interfaces;
 using BytePacketSupport.Extentions;
 using System.Buffers.Binary;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace BytePacketSupport
 {

@@ -10,7 +10,7 @@ namespace BytePacketSupport.Interfaces
 
         public void @byte(ReservedSpan span, byte value)
         {            
-            MemoryMarshal.Write(span, in value);
+            MemoryMarshal.Write(span, ref value);
         }
 
         public void @bytes(ReservedSpan span, byte[] values)
@@ -19,7 +19,7 @@ namespace BytePacketSupport.Interfaces
             {
                 if(i +  3 > values.Length)
                 {                
-                    MemoryMarshal.Write(span, in values[i +3]);
+                    MemoryMarshal.Write(span, ref values[i +3]);
                     break;
                 }
                 ushort value = Swap(BitConverter.ToUInt16(values, i));
