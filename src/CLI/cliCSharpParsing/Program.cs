@@ -2,7 +2,7 @@
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis;
 using System.Reflection;
-using static System.Runtime.InteropServices.JavaScript.JSType;
+using cliCSharpParsing;
 
 public class Program
 {    
@@ -36,8 +36,13 @@ public class Program
             //{
             //    Console.WriteLine($"  - Name: {parameter.Name}, Type: {parameter.Type}");
             //}
-            Console.WriteLine();
+
+          
         }
+        TestWord word = new TestWord();
+        string filePath = Path.GetFullPath(@"D:\Temp\TcasControls.doc");
+        word.CreateWordFile(filePath, allFunctions);
+        Console.WriteLine();
     }
 }
 
