@@ -1,0 +1,33 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.WindowsDesktop">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net6.0-windows</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+	<UseWindowsForms>true</UseWindowsForms>
+	<PlatformTarget>x86</PlatformTarget>	  
+  </PropertyGroup>
+
+  <ItemGroup>
+    <COMReference Include="Microsoft.Vbe.Interop.Forms">
+      <WrapperTool>tlbimp</WrapperTool>
+      <VersionMinor>0</VersionMinor>
+      <VersionMajor>2</VersionMajor>
+      <Guid>ac2de821-36a2-11cf-8053-00aa006009fa</Guid>
+      <Lcid>0</Lcid>
+      <Isolated>false</Isolated>
+      <EmbedInteropTypes>true</EmbedInteropTypes>
+    </COMReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="AxInterop.HWPCONTROLLib">
+      <HintPath>AxInterop.HWPCONTROLLib.dll</HintPath>
+    </Reference>
+    <Reference Include="Interop.HWPCONTROLLib">
+      <HintPath>Interop.HWPCONTROLLib.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
+</Project>

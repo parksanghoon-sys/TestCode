@@ -10,16 +10,39 @@ public class Program
     {
         //string projectPath = @"D:\WPF_Test_UI\src\CLI\cliWeakEvents";
         string projectPath = @"D:\Project\01.Program\2023\GcsProject\2.FlightSolution\B\Source\pspc-flight\TcasControls";
-        var files = Directory.GetFiles(projectPath, "*.cs", SearchOption.AllDirectories);
+        string[] excludeFiles = { "App.xaml.cs", "App.xaml", "AssemblyInfo.cs", "Resources.Designer.cs", "Settings.Designer.cs" };
+
+        DirectoryInfo dirInfo = new DirectoryInfo(projectPath);
+        DirectoryInfo[] infos = dirInfo.GetDirectories("*.*", SearchOption.TopDirectoryOnly);
+
         var parser = new CSharpParser();
         var allFunctions = new List<ClassInfo>();
 
-        foreach (var file in files)
+        foreach (DirectoryInfo info in infos)
         {
-            string content = File.ReadAllText(file);
-            var functions = parser.Parse(content);
-            allFunctions.AddRange(functions);
+            string projectName = info.Name;
+            if (projectName == ".svn") continue;
+            //FileInfo[] fileInfos = new string[] { "*.dll", "*.exe", "*.cxx", "*.cpp", "*.h", "*.cs", "*.xaml", "*.png", "*.config", "*.resx", "*.settings" }
+            FileInfo[] fileInfos = new string[] { "*.cs"}
+                    .SelectMany(i => info.GetFiles(i, SearchOption.AllDirectories))
+                    .Where(file => !excludeFiles.Contains(file.Name, StringComparer.OrdinalIgnoreCase))
+                    .ToArray();
+
+            foreach (var fi in fileInfos)
+            {
+                string content = File.ReadAllText(fi.FullName);
+                var functions = parser.Parse(content,fi.FullName );
+                allFunctions.AddRange(functions);
+            }
         }
+        
+
+        //foreach (var file in files)
+        //{
+        //    string content = File.ReadAllText(file);
+        //    var functions = parser.Parse(content);
+        //    allFunctions.AddRange(functions);
+        //}
 
         foreach (var function in allFunctions)
         {
@@ -74,7 +97,7 @@ public class ParameterInfo
 }
 public class CSharpParser
 {
-    public IList<ClassInfo> Parse(string code)
+    public IList<ClassInfo> Parse(string code, string classPath)
     {
         var tree = CSharpSyntaxTree.ParseText(code);
         var root = tree.GetRoot() as CompilationUnitSyntax;
@@ -91,7 +114,7 @@ public class CSharpParser
             var classinfo = new ClassInfo()
             {
                 ClassName = classNode.Identifier.Text,
-                ClassPath = code,
+                ClassPath = classPath,
                 Variables = variables
             };
 
@@ -141,7 +164,8 @@ public class CSharpParser
 
             if (summaryElement != null)
             {
-                return summaryElement.Content.ToString().Trim().Replace("///", "");
+                var summertStr = summaryElement.Content.ToString().Trim().Replace("///", "");
+                return summertStr.Replace("\n","").Replace("\r","").Trim();
             }
         }
 
