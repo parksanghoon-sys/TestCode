@@ -1,27 +1,61 @@
-﻿using System.Data.Entity;
+﻿using MySql.Data.MySqlClient;
+using System.Data.Entity;
 
 class Program
 {
-    static void Main(string[] args)
+    static async Task Main(string[] args)
     {
-        IRepository<Person> repo = new Repository<Person>();
+        MysqlConnectionTest mysqlConnectionTest = new MysqlConnectionTest();
+        //IRepository<Person> repo = new Repository<Person>();
 
-        // Insert
-        Person person = new Person { Name = "HA", Email = "john@example.com" };
-        repo.Insert(person);
+        //// Insert
+        //Person person = new Person { Name = "HA", Email = "john@example.com" };
+        //await repo.Insert(person);
 
-        // Update
-        person.Name = "Jane";
-        repo.Update(person);
+        //// Update
+        //person.Name = "Jane";
+        //await repo.Update(person);
 
-        // Get all
-        var allPeople = repo.GetAll();
+        //// Get all
+        //var allPeople = repo.GetAll();
 
-        // Get by id
-        var singlePerson = repo.GetById(1);
+        //// Get by id
+        //var singlePerson = repo.GetById(1);
 
-        // Delete
-        repo.Delete(1);
+        //// Delete
+        //await repo.Delete(1);
+    }
+}
+public class MysqlConnectionTest
+{
+    public MysqlConnectionTest()
+    {
+        string server = "localhost";
+        string database = "test";
+        string user = "parksanghoon";
+        string password = "tjb4048796"; // MySQL의 비밀번호를 여기에 입력
+
+        string connectionString = $"Server={server};Database={database};User ID={user};Password={password};";
+
+        try
+        {
+            using (MySqlConnection conn = new MySqlConnection(connectionString))
+            {
+                conn.Open();
+                Console.WriteLine("MySQL 데이터베이스에 성공적으로 접속했습니다.");
+
+                string query = "SELECT VERSION()"; // MySQL 서버 버전을 가져오는 쿼리
+                using (MySqlCommand cmd = new MySqlCommand(query, conn))
+                {
+                    string version = cmd.ExecuteScalar().ToString();
+                    Console.WriteLine($"MySQL 버전: {version}");
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"데이터베이스 연결 실패: {ex.Message}");
+        }
     }
 }
 public class Person
@@ -41,9 +75,9 @@ public interface IRepository<T> where T : class
 {
     IEnumerable<T> GetAll();
     T GetById(int id);
-    void Insert(T obj);
-    void Update(T obj);
-    void Delete(int id);
+    Task Insert(T obj);
+    Task Update(T obj);
+    Task Delete(int id);
 }
 
 public class Repository<T> : IRepository<T> where T : class
@@ -67,23 +101,23 @@ public class Repository<T> : IRepository<T> where T : class
         return table.Find(id);
     }
 
-    public void Insert(T obj)
+    public async Task Insert(T obj)
     {
         table.Add(obj);
-        context.SaveChangesAsync();
+        await context.SaveChangesAsync();
     }
 
-    public void Update(T obj)
+    public async Task Update(T obj)
     {
         table.Attach(obj);
         context.Entry(obj).State = EntityState.Modified;
-        context.SaveChanges();
+        await context.SaveChangesAsync();
     }
 
-    public void Delete(int id)
+    public async Task Delete(int id)
     {
         T existing = table.Find(id);
         table.Remove(existing);
-        context.SaveChanges();
+        await context.SaveChangesAsync();
     }
 }
