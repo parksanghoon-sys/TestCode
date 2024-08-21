@@ -1,0 +1,19 @@
+docker run --name postgres-container -d --restart unless-stopped -e POSTGRES_PASSWORD=123456 -v D:/Temp/DB_Data/ProgressSql/postgres13-data:/var/lib/postgresql/data postgreDb:13.1
+$ docker build -t postgres-ko:13.1 .
+
+docker exec -it postgreDb /bin/bash
+docker inspect postgresql
+psql -U postgres
+docker exec -it fullstackhero-postgres /bin/bash
+docker-compose up --build -d
+
+\l => 데이터베이스
+\du => 사용자 및 권한
+CREATE DATABASE fullstackhero;
+CREATE USER parksanghoon WITH PASSWORD '123456';
+권한 부여
+GRANT ALL PRIVILEGES ON DATABASE fullstackhero TO parksanghoon;
+GRANT ALL ON ALL TABLES IN SCHEMA fullstackhero  TO parksanghoon;
+GRANT ALL ON ALL SEQUENCES IN SCHEMA fullstackhero TO parksanghoon;
+GRANT EXECUTE ON ALL FUNCTIONS IN SCHEMA fullstackhero TO parksanghoon;
+GRANT EXECUTE ON ALL PROCEDURES IN SCHEMA fullstackhero TO parksanghoon;
