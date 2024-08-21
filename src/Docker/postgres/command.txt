@@ -1,6 +1,8 @@
 docker run --name postgres-container -d --restart unless-stopped -e POSTGRES_PASSWORD=123456 -v D:/Temp/DB_Data/ProgressSql/postgres13-data:/var/lib/postgresql/data postgreDb:13.1
 $ docker build -t postgres-ko:13.1 .
 
+docker run --name postgres-hub -d --restart=always -e POSTGRES_PASSWORD=123456 -e POSTGRES_USER=postgres -e POSTGRES_DB=postgres -v D:/Temp/DB_Data/ProgressSql/postgres13-data:/var/lib/postgresql/data -p 5432:5432 -e TZ=Asia/Seoul 8e0cf9a18d9d
+
 docker exec -it postgreDb /bin/bash
 docker inspect postgresql
 psql -U postgres
