@@ -9,7 +9,7 @@ public class Program
     static void Main(string[] args)
     {
         //string projectPath = @"D:\WPF_Test_UI\src\CLI\cliWeakEvents";
-        string projectPath = @"D:\Project\01.Program\2023\GcsProject\2.FlightSolution\B\Source\pspc-flight\TcasControls";
+        string projectPath = @"D:\Project\01.Program\2023\GcsProject\2.FlightSolution\B\Source\pspc-flight\UvhfControls";
         string[] excludeFiles = { "App.xaml.cs", "App.xaml", "AssemblyInfo.cs", "Resources.Designer.cs", "Settings.Designer.cs" };
 
         DirectoryInfo dirInfo = new DirectoryInfo(projectPath);
