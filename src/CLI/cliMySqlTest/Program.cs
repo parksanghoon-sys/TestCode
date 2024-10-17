@@ -31,7 +31,7 @@ public class MysqlConnectionTest
     public MysqlConnectionTest()
     {
         string server = "localhost";
-        string database = "test";
+        string database = "db_hr_leavemanagement";
         string user = "parksanghoon";
         string password = "tjb4048796"; // MySQL의 비밀번호를 여기에 입력
 
