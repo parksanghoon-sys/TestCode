@@ -13,9 +13,12 @@ docker-compose up --build -d
 \du => 사용자 및 권한
 CREATE DATABASE fullstackhero;
 CREATE USER parksanghoon WITH PASSWORD '123456';
+alter user parksanghoon with createdb;
+alter user parksanghoon with superuser;
+
 권한 부여
-GRANT ALL PRIVILEGES ON DATABASE fullstackhero TO parksanghoon;
-GRANT ALL ON ALL TABLES IN SCHEMA fullstackhero  TO parksanghoon;
-GRANT ALL ON ALL SEQUENCES IN SCHEMA fullstackhero TO parksanghoon;
-GRANT EXECUTE ON ALL FUNCTIONS IN SCHEMA fullstackhero TO parksanghoon;
-GRANT EXECUTE ON ALL PROCEDURES IN SCHEMA fullstackhero TO parksanghoon;
+GRANT ALL PRIVILEGES ON DATABASE "BloggieAuthDb" TO parksanghoon;
+GRANT ALL ON ALL TABLES IN SCHEMA "BloggieDb" TO parksanghoon;
+GRANT ALL ON ALL SEQUENCES IN SCHEMA "BloggieDb" TO parksanghoon;
+GRANT EXECUTE ON ALL FUNCTIONS IN SCHEMA "BloggieDb" TO parksanghoon;
+GRANT EXECUTE ON ALL PROCEDURES IN SCHEMA "BloggieDb TO parksanghoon;
