@@ -10,8 +10,7 @@
 		<PackageReference Include="Aspire.Npgsql" Version="8.2.2" />
 		<PackageReference Include="Aspire.Npgsql.EntityFrameworkCore.PostgreSQL" Version="8.2.2" />
 		<PackageReference Include="Aspire.Pomelo.EntityFrameworkCore.MySql" Version="8.2.2" />
-		<PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.10" />
-		<PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="8.0.10" />		
+	
 		<PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="8.0.7" />
 		<PackageReference Include="Microsoft.EntityFrameworkCOre" Version="8.0.10" />
 		<PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="8.0.10">
