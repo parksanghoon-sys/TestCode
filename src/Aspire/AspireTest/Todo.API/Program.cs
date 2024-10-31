@@ -1,5 +1,7 @@
 using System.Text;
 using Todo.API.Todo;
+using Todo.Identity;
+using Todo.Identity.DbContext;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -12,14 +14,11 @@ builder.AddServiceDefaults();
 
 builder.AddNpgsqlDataSource("pgdb");
 
-builder.AddNpgsqlDbContext<TodoDbContext>("todo");
+
+builder.AddNpgsqlDbContext<TodoIdentityDbContext>("todo");
 
 //builder.AddMySqlDbContext<TodoDbContext>("todo");
-
-
-
-
-
+builder.Services.AddIdentityServices(builder.Configuration);
 
 
 var app = builder.Build();
@@ -33,7 +32,7 @@ if (app.Environment.IsDevelopment())
 
 using (var scope = app.Services.CreateScope())
 {
-    var context = scope.ServiceProvider.GetRequiredService<TodoDbContext>();
+    var context = scope.ServiceProvider.GetRequiredService<TodoIdentityDbContext>();
     await context.InitializeDatabaseAsync().ConfigureAwait(false);    
 }
 

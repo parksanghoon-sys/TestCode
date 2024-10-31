@@ -22,7 +22,8 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\ServiceDefaults\Todo.ServiceDefaults.csproj" />
+		<ProjectReference Include="..\ServiceDefaults\01.Todo.ServiceDefaults.csproj" />
+		<ProjectReference Include="..\Todo.Identity\Todo.Identity.csproj" />
 	</ItemGroup>
 
 </Project>

@@ -4,6 +4,11 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using Todo.Application.Identity;
+using Todo.Application.Identity.Model;
+using Todo.Domain;
+using Todo.Identity.DbContext;
+using Todo.Identity.Services;
 
 namespace Todo.Identity
 {
@@ -11,9 +16,12 @@ namespace Todo.Identity
     {
         public static IServiceCollection AddIdentityServices(this IServiceCollection services, IConfiguration configuration)
         {
+            services.Configure<JwtSettings>(configuration.GetSection("JwtSettings"));            
+
             services.AddIdentity<ApplicationUser, IdentityRole>()
-                .AddEntityFrameworkStores<TodoDbContext>()
-                .AddDefaultTokenProviders();
+                .AddEntityFrameworkStores<TodoIdentityDbContext>().AddDefaultTokenProviders();
+
+            services.AddTransient<IAuthService, AuthService>();
 
             services.AddAuthentication(options =>
             {
@@ -39,6 +47,8 @@ namespace Todo.Identity
                 options.AddPolicy("/todo", policy =>
                 policy.RequireAuthenticatedUser());
             });
+
+            services.AddAuthorizationCore();
 
             services.Configure<IdentityOptions>(options =>
             {

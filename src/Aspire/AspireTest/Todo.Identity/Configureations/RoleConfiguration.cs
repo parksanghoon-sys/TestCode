@@ -12,8 +12,8 @@ namespace Todo.Identity.Configureations
                 new IdentityRole
                 {
                     Id = "cac43a6e-f7bb-4448-baaf-1add431ccbbf",
-                    Name = "Employee",
-                    NormalizedName = "EMPLOYEE"
+                    Name = "User",
+                    NormalizedName = "USER"
                 },
                 new IdentityRole
                 {

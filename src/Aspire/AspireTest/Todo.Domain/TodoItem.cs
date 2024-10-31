@@ -1,10 +1,8 @@
 ﻿using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
-using Todo.API.Identity;
 
-namespace Todo.API.Todo.Model
+namespace Todo.Domain.Common
 {
-    public class TodoItem
+    public class TodoItem : BaseEntity
     {
         [Key]
         public int Id { get; set; }
