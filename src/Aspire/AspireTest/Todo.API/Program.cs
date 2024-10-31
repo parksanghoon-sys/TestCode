@@ -2,6 +2,7 @@ using System.Text;
 using Todo.API.Todo;
 using Todo.Identity;
 using Todo.Identity.DbContext;
+using Todo.Identity.EndPoints;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -62,6 +63,8 @@ app.MapGet("/weatherforecast", () =>
 .WithOpenApi();
 
 app.AddTodoEndpoints();
+
+app.AddIdentityEndpoints();
 
 app.Run();
 

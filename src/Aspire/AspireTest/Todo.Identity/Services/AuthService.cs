@@ -30,6 +30,19 @@ namespace Todo.Identity.Services
             _jwtSettings = jwtSettings.Value;
             _signInManager = signInManager;
         }
+
+        public async Task<List<Employee>> GetEmployees()
+        {
+            var employees = await _userManager.GetUsersInRoleAsync("User");
+            return employees.Select(q => new Employee
+            {
+                Id = q.Id,
+                Email = q.Email,
+                Firstname = q.FirstName,
+                Lastname = q.LastName
+            }).ToList();
+        }
+
         public async Task<AuthResponse> LoginAsync(AuthRequest request)
         {
             var user = await _userManager.FindByEmailAsync(request.Email);
@@ -51,10 +64,7 @@ namespace Todo.Identity.Services
             );
 
             return response;
-        }
-
-   
-
+        }   
         public async Task<RegistrationResponse> Register(RegistrationRequest request)
         {
             var user = new ApplicationUser

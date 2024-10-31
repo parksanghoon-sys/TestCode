@@ -11,5 +11,6 @@ namespace Todo.Application.Identity
     {
         Task<AuthResponse> LoginAsync(AuthRequest request);
         Task<RegistrationResponse> Register(RegistrationRequest request);
+        Task<List<Employee>> GetEmployees();
     }
 }

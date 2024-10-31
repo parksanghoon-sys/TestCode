@@ -15,7 +15,7 @@ namespace Todo.API.Todo
                 });
         }
 
-        private static async Task<Ok<string>> GetTodo()
+        private static async Task<Ok<string>> GetTodo(string key)
         {
             return TypedResults.Ok("Hellow");
         }

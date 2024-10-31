@@ -1,4 +1,10 @@
 ﻿namespace Todo.Application.Identity.Model
 {
-    public record JwtSettings(string Key, string Issuer, string Audience, double DurationInMinutes);
+    public class JwtSettings
+    {
+        public string Key { get; set; }
+        public string Issuer { get; set; }
+        public string Audience { get; set; }
+        public double DurationInMinutes { get; set; }
+    }
 }
