@@ -7,7 +7,8 @@ var builder = DistributedApplication.CreateBuilder(args);
 //builder.AddProject<Projects.Todo_API>("webapi");
 
 var postgres = builder.AddPostgres("postgresdb")
-    .WithPgAdmin().AddDatabase("todo");
+                    .WithPgAdmin().AddDatabase("todo");
+
 
 //var mysql = builder.AddMySql("mysqldb").AddDatabase("todo");
 

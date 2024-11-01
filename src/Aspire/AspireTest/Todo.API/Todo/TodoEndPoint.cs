@@ -12,10 +12,11 @@ namespace Todo.API.Todo
                 .WithOpenApi(x => new Microsoft.OpenApi.Models.OpenApiOperation(x)
                 {
                     Summary = "My Todo List"
-                });
+                })
+                .RequireAuthorization();
         }
 
-        private static async Task<Ok<string>> GetTodo(string key)
+        private static async Task<Ok<string>> GetTodo()
         {
             return TypedResults.Ok("Hellow");
         }

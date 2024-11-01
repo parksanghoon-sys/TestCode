@@ -15,10 +15,8 @@ builder.AddServiceDefaults();
 
 builder.AddNpgsqlDataSource("pgdb");
 
-
 builder.AddNpgsqlDbContext<TodoIdentityDbContext>("todo");
 
-//builder.AddMySqlDbContext<TodoDbContext>("todo");
 builder.Services.AddIdentityServices(builder.Configuration);
 
 

@@ -34,7 +34,32 @@ namespace Todo.Identity.Configureations
                      NormalizedUserName = "USER@LOCALHOST.COM",
                      PasswordHash = hasher.HashPassword(null, "123456"),
                      EmailConfirmed = true
-                 }
+                 },
+                new ApplicationUser
+                {
+                    Id = "9e224968-33e4-4652-b7b7-8574d048cd10",
+                    Email = "user2@localhost.com",
+                    NormalizedEmail = "USER@LOCALHOST.COM",
+                    FirstName = "System1",
+                    LastName = "User",
+                    UserName = "user2@localhost.com",
+                    NormalizedUserName = "USER@2LOCALHOST.COM",
+                    PasswordHash = hasher.HashPassword(null, "123456"),
+                    EmailConfirmed = true
+                },       
+                new ApplicationUser
+                {
+                    Id = "9e224968-33e4-4652-b7b7-8574d048cd11",
+                    Email = "user3@localhost.com",
+                    NormalizedEmail = "USER@LOCALHOST.COM",
+                    FirstName = "System2",
+                    LastName = "User",
+                    UserName = "user3@localhost.com",
+                    NormalizedUserName = "USER23LOCALHOST.COM",
+                    PasswordHash = hasher.HashPassword(null, "123456"),
+                    EmailConfirmed = true
+                }
+
             );
         }
     }

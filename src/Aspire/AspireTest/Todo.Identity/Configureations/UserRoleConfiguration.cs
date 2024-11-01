@@ -18,6 +18,16 @@ namespace Todo.Identity.Configureations
                 {
                     RoleId = "cac43a6e-f7bb-4448-baaf-1add431ccbbf",
                     UserId = "9e224968-33e4-4652-b7b7-8574d048cdb9"
+                },
+                new IdentityUserRole<string>
+                {
+                    RoleId = "cac43a6e-f7bb-4448-baaf-1add431ccbbf",
+                    UserId = "9e224968-33e4-4652-b7b7-8574d048cd11"
+                },
+                new IdentityUserRole<string>
+                {
+                    RoleId = "cac43a6e-f7bb-4448-baaf-1add431ccbbf",
+                    UserId = "9e224968-33e4-4652-b7b7-8574d048cd10"
                 }
             );
         }
