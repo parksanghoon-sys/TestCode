@@ -14,4 +14,9 @@
 	  <PackageReference Include="Aspire.Hosting.MySql" Version="8.2.2" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\OrderService.API\OrderService.API.csproj" />
+    <ProjectReference Include="..\ProductService.API\ProductService.API.csproj" />
+  </ItemGroup>
+
 </Project>
