@@ -7,7 +7,7 @@ string dockerComposeFilePath = Path.GetFullPath(Path.Combine(AppContext.BaseDire
 var processStartInfo = new ProcessStartInfo
 {
     FileName = "docker-compose",
-    Arguments = $"-f {dockerComposeFilePath} up --abort-on-container-exit --remove-orphans",
+    Arguments = $"-f {dockerComposeFilePath} up -d",
     RedirectStandardOutput = true,
     RedirectStandardError = true,
     UseShellExecute = false,
