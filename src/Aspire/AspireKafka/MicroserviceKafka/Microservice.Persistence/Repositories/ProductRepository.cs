@@ -6,7 +6,7 @@ namespace Microservice.Persistence.Repositories
 {
     public class ProductRepository : GenericRepository<ProductModel>, IProductRepository
     {
-        public ProductRepository(MicrosoftDatabaseContext microsoftDatabaseContext) : base(microsoftDatabaseContext)
+        public ProductRepository(ProductDbContext microsoftDatabaseContext) : base(microsoftDatabaseContext)
         {
         }
     }

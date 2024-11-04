@@ -6,7 +6,7 @@ namespace Microservice.Persistence.Repositories
 {
     public class OrderRepository : GenericRepository<OrderModel>, IOrderRepository
     {
-        public OrderRepository(MicrosoftDatabaseContext microsoftDatabaseContext) : base(microsoftDatabaseContext)
+        public OrderRepository(OrderDbContext microsoftDatabaseContext) : base(microsoftDatabaseContext)
         {
         }
     }

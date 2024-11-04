@@ -13,9 +13,9 @@ namespace Microservice.Persistence.Repositories
     public class GenericRepository<T> : IGenericRepository<T>
         where T : BaseEntity
     {
-        private readonly MicrosoftDatabaseContext _microsoftDatabaseContext;
+        private readonly DbContext _microsoftDatabaseContext;
 
-        public GenericRepository(MicrosoftDatabaseContext microsoftDatabaseContext)
+        public GenericRepository(DbContext microsoftDatabaseContext)
         {
             _microsoftDatabaseContext = microsoftDatabaseContext;
         }

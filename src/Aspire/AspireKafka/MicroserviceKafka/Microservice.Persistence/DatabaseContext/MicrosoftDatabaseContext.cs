@@ -1,37 +1,35 @@
-﻿using Microservice.Doamin;
-using Microservice.Doamin.Common;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using System.Data.Common;
 
 namespace Microservice.Persistence.DatabaseContext;
 
-public class MicrosoftDatabaseContext : DbContext
+public interface IDbProvider
 {
-    public MicrosoftDatabaseContext(DbContextOptions<MicrosoftDatabaseContext> option)
-        : base(option)
-    {
-        
-    }
-    public DbSet<OrderModel> OrderModels { get; set; }
-    public DbSet<ProductModel> ProductModels { get; set; }
+    DbContext CreateDbContext(string options);
+}
+public class MicrosoftDatabaseContextFactory : IDbProvider
+{
+    private readonly IConfiguration _configuration;
 
-    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    public MicrosoftDatabaseContextFactory(IConfiguration configuration)        
     {
-        modelBuilder.ApplyConfigurationsFromAssembly(typeof(MicrosoftDatabaseContext).Assembly);
-        base.OnModelCreating(modelBuilder);
+        _configuration = configuration;
     }
-    public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+
+    public DbContext CreateDbContext(string options)
     {
-        foreach(var entity in base.ChangeTracker.Entries<BaseEntity>()
-            .Where(q => q.State == EntityState.Added || q.State == EntityState.Modified))
+        var db = new DbContextOptionsBuilder();
+        switch (options)
         {
-            entity.Entity.DateModified = DateTime.UtcNow;
-            
-            if(entity.State == EntityState.Added)
-            {
-                entity.Entity.DateModified = DateTime.UtcNow;
-            }    
-        }
-        return base.SaveChangesAsync(cancellationToken);
-    }
+            case "Order":
+                db = new DbContextOptionsBuilder<OrderDbContext>();
+                break;
 
+            case "Product":
+                db = new DbContextOptionsBuilder<ProductDbContext>();
+                break;
+        };
+        throw new NotImplementedException();        
+    }
 }
