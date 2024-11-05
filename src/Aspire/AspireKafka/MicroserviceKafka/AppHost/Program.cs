@@ -41,8 +41,17 @@ catch (Exception ex)
     Console.WriteLine($"Exception: {ex.Message}");
 }
 
-var mysqlproduct = builder.AddMySql("Productdb").AddDatabase("product");
-var mysqlorder = builder.AddMySql("Orderdb").AddDatabase("order");
+//var mysqlproduct = builder.AddMySql("Productdb").AddDatabase("product");
+//var mysqlorder = builder.AddMySql("Orderdb").AddDatabase("order");
+
+//var mysqlproduct = builder.AddMySql("Productdb").AddDatabase("product");
+//var mysqlorder = builder.AddMySql("Orderdb").AddDatabase("order");
+
+
+var mysqlproduct = builder.AddPostgres("postgresdb1")
+                    .AddDatabase("product");
+var mysqlorder = builder.AddPostgres("postgresdb2")
+                    .AddDatabase("order");
 
 var apiProductService = builder.AddProject<Projects.ProductService_API>("apiservice-product").WithReference(mysqlproduct);
 

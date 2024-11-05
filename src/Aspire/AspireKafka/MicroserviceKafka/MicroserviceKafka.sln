@@ -3,19 +3,19 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OrderService.API", "OrderService.API\OrderService.API.csproj", "{AD523493-0167-4599-833E-B69571A50351}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ProductService.API", "ProductService.API\ProductService.API.csproj", "{F25880EE-CAC7-4DA8-8CC2-2EFC78BBA911}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Aspire.AppHost", "AppHost\Aspire.AppHost.csproj", "{889E0787-5392-4BDB-9193-53F15BE057CD}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Aspire.ServiceDefaults", "ServiceDefaults\Aspire.ServiceDefaults.csproj", "{190C2AD7-5627-4B5B-A648-0D9BBB7F1DD9}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microservice.Doamin", "Microservice.Doamin\Microservice.Doamin.csproj", "{C4EBB3C3-23FC-4511-B3B2-5D13BDDAF0B6}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microservice.Doamin", "Microservice.Doamin\Microservice.Doamin.csproj", "{C4EBB3C3-23FC-4511-B3B2-5D13BDDAF0B6}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microservice.Application", "Microservice.Application\Microservice.Application.csproj", "{2C9A6CA0-0369-4798-96B5-796ED7057BCB}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microservice.Application", "Microservice.Application\Microservice.Application.csproj", "{2C9A6CA0-0369-4798-96B5-796ED7057BCB}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microservice.Persistence", "Microservice.Persistence\Microservice.Persistence.csproj", "{81E197B7-BFD1-407D-A9CE-A1E2833831FA}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microservice.Persistence", "Microservice.Persistence\Microservice.Persistence.csproj", "{81E197B7-BFD1-407D-A9CE-A1E2833831FA}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OrderService.API", "OrderService.API\OrderService.API.csproj", "{B39553DD-45F1-469B-ADFE-59388834CB13}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ProductService.API", "ProductService.API\ProductService.API.csproj", "{7572F5E3-43C5-464F-BE87-04886B6F2D7E}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -23,14 +23,6 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{AD523493-0167-4599-833E-B69571A50351}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{AD523493-0167-4599-833E-B69571A50351}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{AD523493-0167-4599-833E-B69571A50351}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{AD523493-0167-4599-833E-B69571A50351}.Release|Any CPU.Build.0 = Release|Any CPU
-		{F25880EE-CAC7-4DA8-8CC2-2EFC78BBA911}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{F25880EE-CAC7-4DA8-8CC2-2EFC78BBA911}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{F25880EE-CAC7-4DA8-8CC2-2EFC78BBA911}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{F25880EE-CAC7-4DA8-8CC2-2EFC78BBA911}.Release|Any CPU.Build.0 = Release|Any CPU
 		{889E0787-5392-4BDB-9193-53F15BE057CD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{889E0787-5392-4BDB-9193-53F15BE057CD}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{889E0787-5392-4BDB-9193-53F15BE057CD}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -51,6 +43,14 @@ Global
 		{81E197B7-BFD1-407D-A9CE-A1E2833831FA}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{81E197B7-BFD1-407D-A9CE-A1E2833831FA}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{81E197B7-BFD1-407D-A9CE-A1E2833831FA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B39553DD-45F1-469B-ADFE-59388834CB13}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B39553DD-45F1-469B-ADFE-59388834CB13}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B39553DD-45F1-469B-ADFE-59388834CB13}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B39553DD-45F1-469B-ADFE-59388834CB13}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7572F5E3-43C5-464F-BE87-04886B6F2D7E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7572F5E3-43C5-464F-BE87-04886B6F2D7E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7572F5E3-43C5-464F-BE87-04886B6F2D7E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7572F5E3-43C5-464F-BE87-04886B6F2D7E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

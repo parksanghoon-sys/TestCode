@@ -33,7 +33,9 @@ namespace Microservice.Persistence.Repositories
 
         public async Task<IReadOnlyList<T>> GetAsync()
         {
-            return await _microsoftDatabaseContext.Set<T>().AsNoTracking().ToListAsync();
+            var lists = await _microsoftDatabaseContext.Set<T>().AsNoTracking().ToListAsync();
+
+            return lists;
         }
 
         public async Task<T> GetByIdAsync(int id)

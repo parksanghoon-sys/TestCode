@@ -6,7 +6,7 @@ namespace Microservice.Persistence.DatabaseContext;
 
 public interface IDbProvider
 {
-    DbContext CreateDbContext(string options);
+    //DbContext CreateDbContext(string options);
 }
 public class MicrosoftDatabaseContextFactory : IDbProvider
 {
@@ -17,19 +17,5 @@ public class MicrosoftDatabaseContextFactory : IDbProvider
         _configuration = configuration;
     }
 
-    public DbContext CreateDbContext(string options)
-    {
-        var db = new DbContextOptionsBuilder();
-        switch (options)
-        {
-            case "Order":
-                db = new DbContextOptionsBuilder<OrderDbContext>();
-                break;
-
-            case "Product":
-                db = new DbContextOptionsBuilder<ProductDbContext>();
-                break;
-        };
-        throw new NotImplementedException();        
-    }
+   
 }

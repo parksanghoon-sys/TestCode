@@ -12,7 +12,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Features\Order\Queries\GetOrderDetails\" />
     <Folder Include="Models\" />
   </ItemGroup>
 
