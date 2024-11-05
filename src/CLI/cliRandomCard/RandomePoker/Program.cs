@@ -90,7 +90,10 @@ class Program
             }
             else
             {
-                break;
+                if (deck.RemainingCards() == 0)
+                {
+                    break;
+                }
             }
         }
 
