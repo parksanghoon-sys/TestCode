@@ -15,6 +15,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Microservice.Infrastructure\Microservice.Infrastructure.csproj" />
     <ProjectReference Include="..\Microservice.Persistence\Microservice.Persistence.csproj" />
     <ProjectReference Include="..\ServiceDefaults\Aspire.ServiceDefaults.csproj" />
   </ItemGroup>

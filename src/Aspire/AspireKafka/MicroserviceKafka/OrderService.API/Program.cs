@@ -8,6 +8,9 @@ using System.Reflection;
 using OrderService.API.DatabaseContext;
 using MediatR;
 using OrderService.API.Features.Order.Queries.GetAllOrder;
+using Microservice.Infrastructure.Models;
+using Microservice.Application.Kafka;
+using Microservice.Infrastructure.KafkaService;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -17,6 +20,7 @@ builder.AddServiceDefaults();
 builder.AddNpgsqlDataSource("pgdb");
 
 builder.AddNpgsqlDbContext<OrderDbContext>("order");
+builder.Services.AddOptions<KafkaConfig>().BindConfiguration(nameof(KafkaConfig));
 
 builder.Services.AddAutoMapper(Assembly.GetExecutingAssembly());
 builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(Assembly.GetExecutingAssembly()));
@@ -24,6 +28,8 @@ builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(Assembly.Get
 builder.Services.AddAPersistenceServiceService();
 
 builder.Services.AddScoped<IOrderRepository, OrderRepository>();
+
+
 // Add services to the container.
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
