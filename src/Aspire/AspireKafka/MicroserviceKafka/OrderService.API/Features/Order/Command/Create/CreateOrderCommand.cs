@@ -9,6 +9,7 @@ namespace OrderService.API.Features.Order.Command.Create
 {
     public class CreateOrderCommand : IRequest<int>
     {
+        public int OrderId { get; set; }
         public int ProductId { get; set; }
         public string CustomerName { get; set; }
     }

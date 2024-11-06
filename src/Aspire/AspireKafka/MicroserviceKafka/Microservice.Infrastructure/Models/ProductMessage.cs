@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Microservice.Infrastructure.Models
 {
-    public class ProductMessage
+    public class OrderMessage
     {
         public int OrderId { get; set; }
         public int ProductId { get; set; }

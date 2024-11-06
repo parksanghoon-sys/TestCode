@@ -1,9 +1,6 @@
 using Microservice.Application.Repositories;
-using Microservice.Persistence.DatabaseContext;
 using Microservice.Persistence.Repositories;
-using Microservice.Application;
 using Microservice.Persistence;
-using Autofac.Core;
 using System.Reflection;
 using OrderService.API.DatabaseContext;
 using MediatR;
@@ -11,6 +8,11 @@ using OrderService.API.Features.Order.Queries.GetAllOrder;
 using Microservice.Infrastructure.Models;
 using Microservice.Application.Kafka;
 using Microservice.Infrastructure.KafkaService;
+using Microservice.Doamin;
+using Confluent.Kafka;
+using System.Text.Json;
+using Microsoft.AspNetCore.Http.HttpResults;
+using OrderService.API.Features.Order.Command.Create;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -29,7 +31,7 @@ builder.Services.AddAPersistenceServiceService();
 
 builder.Services.AddScoped<IOrderRepository, OrderRepository>();
 
-
+builder.Services.AddSingleton<IKafkaProducer<string,string>, KafkaProducer>();
 // Add services to the container.
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
@@ -75,6 +77,27 @@ app.MapGet("/order", (IMediator mediator) =>
         return orderList;         
     })
 .WithName("Order")
+.WithOpenApi();
+
+app.MapPost("/order/postorder",async (CreateOrderCommand model, IMediator mediator, IKafkaProducer<string, string> kafkaProducer) =>
+{
+    var response = await mediator.Send(model);
+    var pruductMessage = new OrderMessage
+    {
+        OrderId = model.OrderId,
+        ProductId = model.ProductId,
+        Quantity = 1
+    };
+
+    await kafkaProducer.ProduceAsync("order-topic", new Message<string, string>
+    {
+        Key = model.OrderId.ToString(),
+        Value = JsonSerializer.Serialize(pruductMessage)
+    });
+
+    return response;
+
+}).WithName("PostOrder")
 .WithOpenApi();
 
 app.Run();

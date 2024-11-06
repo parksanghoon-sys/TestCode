@@ -11,10 +11,10 @@ namespace OrderService.API.Features.Order.Command.Create
         {
             _orderRepository = orderRepository;
 
-            RuleFor(p => p.CustomerName)
-                .NotEmpty().WithMessage("{PropertyName} is required")
-                .NotNull()
-                .MaximumLength(50).WithMessage("{PropertyName} must be fewer than 50 characters");
+            //RuleFor(p => p.CustomerName)
+            //    .NotEmpty().WithMessage("{PropertyName} is required")
+            //    .NotNull()
+            //    .MaximumLength(50).WithMessage("{PropertyName} must be fewer than 50 characters");
         }
 
     }

@@ -27,6 +27,8 @@ namespace OrderService.API.Features.Order.Command.Create
             }
 
             var orderCreate = _mapper.Map<OrderModel>(request);
+            orderCreate.Quantity = 1;
+            orderCreate.CreatedBy = "user";
             await _orderRepository.CreateAsync(orderCreate);
 
             return orderCreate.ProductId;
