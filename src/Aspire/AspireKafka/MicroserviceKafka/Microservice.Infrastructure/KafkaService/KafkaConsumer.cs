@@ -57,7 +57,7 @@ namespace Microservice.Infrastructure.KafkaService
                             _kafkaConsumProvidor.Action?.Invoke(order!.ProductId);
                         }
                     }
-                  
+                    consumer.Close();                  
                 }
                 
             },stoppingToken);
