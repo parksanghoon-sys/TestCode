@@ -1,0 +1,48 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Protocols.Channels", "Protocols.Channels\Protocols.Channels.csproj", "{5C41B97F-04A9-4162-B7A7-9A075E98AF34}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Protocols.Abstractions", "Protocols.Abstractions\Protocols.Abstractions.csproj", "{EC97016C-A068-4A00-995A-AE32523ED689}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Protocols.Channels.SerialPort", "Protocols.Channels.SerialPort\Protocols.Channels.SerialPort.csproj", "{6F2E7DEC-94DF-4A97-B099-D140D60E929B}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Protocols.Modbus", "Protocols.Modbus\Protocols.Modbus.csproj", "{12171835-16E6-411A-8169-A00F7C283DE9}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{29AB9214-EAE5-4E8C-BC39-F7F770AAED82}"
+	ProjectSection(SolutionItems) = preProject
+		Protocols.Channels.SerialPort.nuspec = Protocols.Channels.SerialPort.nuspec
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{5C41B97F-04A9-4162-B7A7-9A075E98AF34}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5C41B97F-04A9-4162-B7A7-9A075E98AF34}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5C41B97F-04A9-4162-B7A7-9A075E98AF34}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5C41B97F-04A9-4162-B7A7-9A075E98AF34}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EC97016C-A068-4A00-995A-AE32523ED689}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EC97016C-A068-4A00-995A-AE32523ED689}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EC97016C-A068-4A00-995A-AE32523ED689}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EC97016C-A068-4A00-995A-AE32523ED689}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6F2E7DEC-94DF-4A97-B099-D140D60E929B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6F2E7DEC-94DF-4A97-B099-D140D60E929B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6F2E7DEC-94DF-4A97-B099-D140D60E929B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6F2E7DEC-94DF-4A97-B099-D140D60E929B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{12171835-16E6-411A-8169-A00F7C283DE9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{12171835-16E6-411A-8169-A00F7C283DE9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{12171835-16E6-411A-8169-A00F7C283DE9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{12171835-16E6-411A-8169-A00F7C283DE9}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {D58B02DC-FD2A-4CA8-AE65-072AAB680F55}
+	EndGlobalSection
+EndGlobal
