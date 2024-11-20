@@ -1,11 +1,12 @@
-﻿using Protocols.Modbus.Loggging;
+﻿using Protocols.Abstractions;
+using Protocols.Modbus.Loggging;
 
 namespace Protocols.Modbus.Requests
 {
     /// <summary>
     /// Modbus 요청
     /// </summary>
-    public abstract class ModbusRequest : IModbusMessage, IRequest
+    public abstract class ModbusRequest : IModbusMessage, IRequest<ModbusCommErrorCode>
     {
         /// <summary>
         /// Modbus Object 형식

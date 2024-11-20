@@ -7,4 +7,8 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\Protocols.Abstractions\Protocols.Abstractions.csproj" />
+  </ItemGroup>
+
 </Project>

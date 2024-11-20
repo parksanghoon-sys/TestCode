@@ -1,4 +1,5 @@
-﻿using Protocols.Modbus.Requests;
+﻿using Protocols.Abstractions;
+using Protocols.Modbus.Requests;
 
 namespace Protocols.Modbus
 {

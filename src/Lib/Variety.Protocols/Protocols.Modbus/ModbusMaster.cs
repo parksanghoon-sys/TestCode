@@ -27,7 +27,7 @@ namespace Protocols.Modbus
         public ModbusMaster()
         {
             
-        }
+        }        
         public ModbusMaster(IChannel channel)
         {
             this.channel = channel;
@@ -41,7 +41,11 @@ namespace Protocols.Modbus
         // TODO : ChannelProvider 생성하기
         public ModbusResponse Request(ModbusRequest request, int timeout)
         {
-            Channel channel = (Channel as Channel);
+            Channel channel = (Channel as Channel) ?? (Channel as ChannelProvider)?.PrimaryChannel;
+
+            if(channel == null)
+                throw new ArgumentNullException(nameof(channel));
+            
 
             return default(ModbusResponse);
         }
