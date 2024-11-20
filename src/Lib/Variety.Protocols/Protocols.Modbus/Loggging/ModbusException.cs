@@ -18,4 +18,8 @@ namespace Protocols.Modbus.Loggging
 
         }
     }
+    public class ModbusExceptionLog : ChannelResponseLog
+    {
+
+    }
 }
