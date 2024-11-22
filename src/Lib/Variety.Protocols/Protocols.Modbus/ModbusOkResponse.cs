@@ -17,11 +17,11 @@ namespace Protocols.Modbus
     /// </summary>
     public class ModbusExceptionResponse : ModbusOkResponse
     {
-        private readonly ModbusExceptionCode _exceptionCode;
+        public  ModbusExceptionCode ExceptionCode;
 
         internal ModbusExceptionResponse(ModbusExceptionCode exceptionCode, ModbusRequest request) :base(request)
-        {            
-            _exceptionCode = exceptionCode;
+        {
+            ExceptionCode = exceptionCode;
         }
         /// <summary>
         /// 직렬화
@@ -31,7 +31,7 @@ namespace Protocols.Modbus
         {
             yield return Request.SlaveAddress;
             yield return (byte)((int)Request.Function | 0x80);
-            yield return (byte)_exceptionCode;
+            yield return (byte)ExceptionCode;
         }
         /// <summary>
         /// Modbus 메시지 카테고리

@@ -1,5 +1,6 @@
 ﻿using Protocols.Abstractions.Channels;
 using Protocols.Abstractions.Logging;
+using Protocols.Modbus.Loggging;
 using Protocols.Modbus.Requests;
 using Protocols.Modbus.Serialization;
 using System;
@@ -60,7 +61,15 @@ namespace Protocols.Modbus
         /// <param name="request">Modbus 요청</param>
         /// <returns>응답</returns>
         public ModbusResponse Requuest(ModbusRequest request) => Request(request, timeout);
-        // TODO : ChannelProvider 생성하기
+        /// <summary>
+        /// Modbus 요청하기
+        /// </summary>
+        /// <param name="request">Modbus 요청</param>
+        /// <param name="timeout">응답 제한 시간</param>
+        /// <returns>Modbus 응답</returns>
+        /// <exception cref="ArgumentNullException"></exception>
+        /// <exception cref="RequestException{ModbusCommErrorCode}"></exception>
+        /// <exception cref="ModbusException"></exception>
         public ModbusResponse Request(ModbusRequest request, int timeout)
         {
             Channel channel = (Channel as Channel) ?? (Channel as ChannelProvider)?.PrimaryChannel;
@@ -96,8 +105,6 @@ namespace Protocols.Modbus
 
 
             return result;
-
-            return default(ModbusResponse);
         }
         public void Dispose()
         {
