@@ -56,6 +56,14 @@ namespace Protocols.Modbus
             this.channel = channel;
         }
         /// <summary>
+        /// 생성자
+        /// </summary>
+        /// <param name="serializer">Modbus Serializer</param>
+        public ModbusMaster(ModbusSerializer serializer)
+        {
+            this.serializer = serializer;
+        }
+        /// <summary>
         /// Modubus 요청하기
         /// </summary>
         /// <param name="request">Modbus 요청</param>

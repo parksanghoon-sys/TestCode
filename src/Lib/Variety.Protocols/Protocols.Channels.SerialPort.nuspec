@@ -6,7 +6,7 @@
     <authors>shPark</authors>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>        
     <projectUrl>https://github.com/Vagabond-K/Protocols/tree/master/Protocols.Channels.SerialPort</projectUrl>
-    <description>¿©·¯ ÇÁ·ÎÅäÄÝµé¿¡ »ç¿ëµÇ´Â ½Ã¸®¾ó Æ÷Æ® ±â¹Ý Ã¤³Î ¶óÀÌºê·¯¸®ÀÔ´Ï´Ù.</description>
+    <description>ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ýµé¿¡ ï¿½ï¿½ï¿½Ç´ï¿½ ï¿½Ã¸ï¿½ï¿½ï¿½ ï¿½ï¿½Æ® ï¿½ï¿½ï¿½ Ã¤ï¿½ï¿½ ï¿½ï¿½ï¿½Ìºê·¯ï¿½ï¿½ï¿½Ô´Ï´ï¿½.</description>
     <repository type="git" url="https://github.com/Vagabond-K/Protocols/tree/master/Protocols.Channels.SerialPort" />
     <dependencies>
       <group targetFramework=".NETStandard2.0">
