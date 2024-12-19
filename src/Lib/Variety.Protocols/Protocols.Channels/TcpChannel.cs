@@ -59,6 +59,15 @@ namespace Protocols.Channels
             ConnectTimeout = connectTimeout;
             description = $"{host}:{port}";
         }
+        public TcpChannel(TcpChannelProvider provider, TcpClient tcpClient)
+        {
+            Guid = Guid.NewGuid();
+
+            this.provider = provider;
+            this.tcpClient = tcpClient;
+            stream = tcpClient.GetStream();
+            description = tcpClient.Client.RemoteEndPoint.ToString();
+        }
         ~TcpChannel()
         {
             Dispose();
