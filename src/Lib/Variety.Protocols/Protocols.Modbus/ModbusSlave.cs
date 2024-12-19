@@ -20,6 +20,10 @@ namespace Protocols.Modbus
         /// </summary>
         public ModbusBits Coils { get => coils; set => this.Set(ref coils, value, PropertyChanged); }
         /// <summary>
+        /// Discrete Inputs
+        /// </summary>
+        public ModbusBits DiscreteInputs { get => discreteInputs; set => this.Set(ref discreteInputs, value, PropertyChanged); }
+        /// <summary>
         /// 속성 값이 변경될 때 발생합니다.
         /// </summary>
         public event PropertyChangedEventHandler PropertyChanged;

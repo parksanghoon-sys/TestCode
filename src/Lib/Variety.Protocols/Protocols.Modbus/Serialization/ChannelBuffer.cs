@@ -36,9 +36,6 @@ namespace Protocols.Modbus.Serialization
         public ModbusSlaveService ModbusSlave { get; }
     }
 
-    internal class ModbusSlaveService
-    {
-    }
 
     class ResponseBuffer : ChannelBuffer
     {
