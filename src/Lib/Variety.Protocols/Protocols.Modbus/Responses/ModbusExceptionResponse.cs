@@ -9,7 +9,7 @@ namespace Protocols.Modbus.Responses
     {
         public ModbusExceptionCode ExceptionCode { get; }
         public override ModbusMessageCategory MessageCategory => ModbusMessageCategory.ResponseException;
-        public ModbusExceptionResponse(ModbusRequest request, ModbusExceptionCode exceptionCode)
+        public ModbusExceptionResponse(ModbusExceptionCode exceptionCode, ModbusRequest request)
             : base(request)
         {
             ExceptionCode = exceptionCode;

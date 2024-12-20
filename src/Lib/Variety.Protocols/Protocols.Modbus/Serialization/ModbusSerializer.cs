@@ -1,16 +1,21 @@
 ﻿using Protocols.Abstractions.Channels;
 using Protocols.Abstractions.Logging;
 using Protocols.Modbus.Requests;
+using Protocols.Modbus.Responses;
 using System;
 using System.Collections.Generic;
 using System.Text;
 
 namespace Protocols.Modbus.Serialization
 {
+    /// <summary>
+    /// Modbus Serializer
+    /// </summary>
     public abstract class ModbusSerializer
     {
         internal void RaiseUnrecognized(IChannel channel, IReadOnlyList<byte> errorMessage)
-                => channel?.Logger?.Log(new UnrecognizedErrorLog(channel, errorMessage.ToArray()));
+            => channel?.Logger?.Log(new UnrecognizedErrorLog(channel, errorMessage.ToArray()));
+
         /// <summary>
         /// Modbus 메시지 직렬화
         /// </summary>
@@ -26,15 +31,17 @@ namespace Protocols.Modbus.Serialization
                 return OnSerialize(message);
         }
 
+
         internal abstract IEnumerable<byte> OnSerialize(IModbusMessage message);
+
         internal virtual byte Read(ResponseBuffer buffer, int index, int timeout)
         {
-            if(index >= buffer.Count)
-            {
+            if (index >= buffer.Count)
                 buffer.Read((uint)(index - buffer.Count + 1), timeout);
-            }
+
             return buffer[index];
         }
+
         internal virtual IEnumerable<byte> Read(ResponseBuffer buffer, int index, int count, int timeout)
         {
             if (index + count > buffer.Count)
@@ -47,11 +54,13 @@ namespace Protocols.Modbus.Serialization
         {
             return (ushort)(buffer[index] << 8 | buffer[index + 1]);
         }
+
+
         internal ModbusResponse Deserialize(ResponseBuffer buffer, ModbusRequest request, int timeout)
         {
             ModbusResponse result;
             try
-            {               
+            {
                 result = DeserializeResponse(buffer, request, timeout);
             }
             catch (TimeoutException ex)

@@ -1,8 +1,11 @@
 ﻿using Protocols.Abstractions.Channels;
+using Protocols.Modbus;
 using Protocols.Modbus.Loggging;
 using Protocols.Modbus.Requests;
+using Protocols.Modbus.Responses;
 using Protocols.Modbus.Serialization;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Text;
 
@@ -42,13 +45,13 @@ namespace Protocols.Modbus
             get => _modbusSlaves[slaveAddress];
             set
             {
-                lock(this)
+                lock (this)
                 {
-                    if(value != null)
+                    if (value != null)
                     {
-                        if(_modbusSlaves.TryGetValue(slaveAddress, out var oldModbusSlave))
+                        if (_modbusSlaves.TryGetValue(slaveAddress, out var oldModbusSlave))
                             _modbusSlaveKeyMap.Remove(oldModbusSlave);
-                        if(oldModbusSlave != value)
+                        if (oldModbusSlave != value)
                             _modbusSlaves[slaveAddress] = value;
 
                         _modbusSlaveKeyMap[value] = slaveAddress;
@@ -82,7 +85,7 @@ namespace Protocols.Modbus
         }
         public ModbusSlaveService()
         {
-            
+
         }
         public ModbusSlaveService(IChannel channel)
         {
@@ -97,7 +100,7 @@ namespace Protocols.Modbus
         }
         public ModbusSlaveService(ModbusSerializer serializer)
         {
-            
+
         }
         /// <summary>
         /// 슬레이브 주소 포함 여부
@@ -226,7 +229,7 @@ namespace Protocols.Modbus
         }
         protected virtual ModbusResponse OnReceivedModbusRequest(Channel channel, ModbusRequest request)
         {
-            if(request.Address + request.Length > 0xffff)
+            if (request.Address + request.Length > 0xffff)
                 throw new ModbusException(ModbusExceptionCode.IllegalDataAddress);
 
             switch (request.Function)
@@ -238,25 +241,56 @@ namespace Protocols.Modbus
                 case ModbusFunction.ReadDiscreteInputs:
                     if (request.Length > maxReadBitsLength)
                         throw new ModbusException(ModbusExceptionCode.IllegalDataAddress);
-                    break;
+                    return new ModbusReadBitResponse(OnRequestedReadDiscreteInputs((ModbusReadRequest)request, channel).Take(request.Length).ToArray(), (ModbusReadRequest)request);
                 case ModbusFunction.ReadHoldingRegisters:
-                    if (request.Length > maxReadBitsLength)
+                    if (request.Length > maxReadWordsLength)
                         throw new ModbusException(ModbusExceptionCode.IllegalDataAddress);
-                    break;
+                    return new ModbusReadWordResponse(OnRequestedReadHoldingRegisters((ModbusReadRequest)request, channel).Take(request.Length * 2).ToArray(), (ModbusReadRequest)request);
                 case ModbusFunction.ReadInputRegisters:
-                    if (request.Length > maxReadBitsLength)
+                    if (request.Length > maxReadWordsLength)
                         throw new ModbusException(ModbusExceptionCode.IllegalDataAddress);
-                    break;
+                    return new ModbusReadWordResponse(OnRequestedReadInputRegisters((ModbusReadRequest)request, channel).Take(request.Length * 2).ToArray(), (ModbusReadRequest)request);
                 case ModbusFunction.WriteSingleCoil:
-                    break;
-                case ModbusFunction.WriteSingleHoldingRegister:
-                    break;
                 case ModbusFunction.WriteMultipleCoils:
-                    break;
+                    OnRequestedWriteCoil((ModbusWriteCoilRequest)request, channel);
+                    return new ModbusWriteResponse((ModbusWriteCoilRequest)request);
+                case ModbusFunction.WriteSingleHoldingRegister:
                 case ModbusFunction.WriteMultipleHoldingRegisters:
-                    break;
+                    OnRequestedWriteHoldingRegister((ModbusWriteHoldingRegisterRequest)request, channel);
+                    return new ModbusWriteResponse((ModbusWriteHoldingRegisterRequest)request);
             }
+
+            throw new ModbusException(ModbusExceptionCode.IllegalFunction);
         }
+
+        /// <summary>
+        /// 슬레이브 주소 검증 이벤트
+        /// </summary>
+        public event EventHandler<ValidatingSlaveAddressEventArgs> ValidatingSlaveAddress;
+        /// <summary>
+        /// Coil 읽기 요청 이벤트
+        /// </summary>
+        public event EventHandler<RequestedReadBitEventArgs> RequestedReadCoils;
+        /// <summary>
+        /// Discrete Input 읽기 요청 이벤트
+        /// </summary>
+        public event EventHandler<RequestedReadBitEventArgs> RequestedReadDiscreteInputs;
+        /// <summary>
+        /// Holding Register 읽기 요청 이벤트
+        /// </summary>
+        public event EventHandler<RequestedReadWordEventArgs> RequestedReadHoldingRegisters;
+        /// <summary>
+        /// Input Register 읽기 요청 이벤트
+        /// </summary>
+        public event EventHandler<RequestedReadWordEventArgs> RequestedReadInputRegisters;
+        /// <summary>
+        /// Coil 쓰기 요청 이벤트
+        /// </summary>
+        public event EventHandler<RequestedWriteCoilEventArgs> RequestedWriteCoil;
+        /// <summary>
+        /// Holding Register 쓰기 요청 이벤트
+        /// </summary>
+        public event EventHandler<RequestedWriteHoldingRegisterEventArgs> RequestedWriteHoldingRegister;
         /// <summary>
         /// 슬레이브 주소 검증
         /// </summary>
@@ -269,9 +303,85 @@ namespace Protocols.Modbus
         /// <param name="e">Coil 읽기 요청 발생 이벤트 매개변수</param>
         protected virtual void OnRequestedReadCoils(RequestedReadBitEventArgs e)
             => e.Values = _modbusSlaves.TryGetValue(e.SlaveAddress, out var modbusSlave) && modbusSlave.Coils != null ? modbusSlave.Coils.GetData(e.Address, e.Length) : throw new ModbusException(ModbusExceptionCode.IllegalFunction);
-        private IEnumerable<bool> OnRequestedReadCoils(ModbusReadRequest request, Channel channel)
-                => InvokeOverrideMethodAndEvent(new RequestedReadBitEventArgs(request, channel),eventArgs => OnRequestedReadCoils(eventArgs),RequestedReadCoils).Values;
+        /// <summary>
+        /// Discrete Input 읽기 요청 처리
+        /// </summary>
+        /// <param name="e">Discrete Input 읽기 요청 발생 이벤트 매개변수</param>
+        protected virtual void OnRequestedReadDiscreteInputs(RequestedReadBitEventArgs e)
+            => e.Values = _modbusSlaves.TryGetValue(e.SlaveAddress, out var modbusSlave) && modbusSlave.DiscreteInputs != null ? modbusSlave.DiscreteInputs.GetData(e.Address, e.Length) : throw new ModbusException(ModbusExceptionCode.IllegalFunction);
+        /// <summary>
+        /// Holding Register 읽기 요청 처리
+        /// </summary>
+        /// <param name="e">Holding Register 읽기 요청 발생 이벤트 매개변수</param>
+        protected virtual void OnRequestedReadHoldingRegisters(RequestedReadWordEventArgs e)
+            => e.Bytes = _modbusSlaves.TryGetValue(e.SlaveAddress, out var modbusSlave) && modbusSlave.HoldingRegisters != null ? modbusSlave.HoldingRegisters.GetRawData(e.Address, e.Length * 2) : throw new ModbusException(ModbusExceptionCode.IllegalFunction);
+        /// <summary>
+        /// Input Register 읽기 요청 처리
+        /// </summary>
+        /// <param name="e">Input Register 읽기 요청 발생 이벤트 매개변수</param>
+        protected virtual void OnRequestedReadInputRegisters(RequestedReadWordEventArgs e)
+            => e.Bytes = _modbusSlaves.TryGetValue(e.SlaveAddress, out var modbusSlave) && modbusSlave.InputRegisters != null ? modbusSlave.InputRegisters.GetRawData(e.Address, e.Length * 2) : throw new ModbusException(ModbusExceptionCode.IllegalFunction);
+        /// <summary>
+        /// Holding Register 쓰기 요청 처리
+        /// </summary>
+        /// <param name="e">Holding Register 쓰기 요청 발생 이벤트 매개변수</param>
+        protected virtual void OnRequestedWriteHoldingRegister(RequestedWriteHoldingRegisterEventArgs e)
+        {
+            if (_modbusSlaves.TryGetValue(e.SlaveAddress, out var modbusSlave) && modbusSlave.HoldingRegisters != null)
+                modbusSlave.HoldingRegisters.SetRawData(e.Address, e.Bytes.ToArray());
+            else
+                throw new ModbusException(ModbusExceptionCode.IllegalFunction);
+        }
+        /// <summary>
+        /// Coil 쓰기 요청 처리
+        /// </summary>
+        /// <param name="e">Coil 쓰기 요청 발생 이벤트 매개변수</param>
+        protected virtual void OnRequestedWriteCoil(RequestedWriteCoilEventArgs e)
+        {
+            if (_modbusSlaves.TryGetValue(e.SlaveAddress, out var modbusSlave) && modbusSlave.Coils != null)
+                modbusSlave.Coils.SetData(e.Address, e.Values.ToArray());
+            else
+                throw new ModbusException(ModbusExceptionCode.IllegalFunction);
+        }
 
+        internal bool IsValidSlaveAddress(byte slaveAddress, Channel channel)
+        {
+            var eventArgs = new ValidatingSlaveAddressEventArgs(slaveAddress, channel);
+            OnValidatingSlaveAddress(eventArgs);
+            ValidatingSlaveAddress?.Invoke(this, eventArgs);
+
+            return eventArgs.IsValid;
+        }
+        private IEnumerable<bool> OnRequestedReadCoils(ModbusReadRequest request, Channel channel)
+            => InvokeOverrideMethodAndEvent(
+                new RequestedReadBitEventArgs(request, channel),
+                eventArgs => OnRequestedReadCoils(eventArgs),
+                RequestedReadCoils).Values;
+        private IEnumerable<bool> OnRequestedReadDiscreteInputs(ModbusReadRequest request, Channel channel)
+            => InvokeOverrideMethodAndEvent(
+                new RequestedReadBitEventArgs(request, channel),
+                eventArgs => OnRequestedReadDiscreteInputs(eventArgs),
+                RequestedReadDiscreteInputs).Values;
+        private IEnumerable<byte> OnRequestedReadHoldingRegisters(ModbusReadRequest request, Channel channel)
+            => InvokeOverrideMethodAndEvent(
+                new RequestedReadWordEventArgs(request, channel),
+                eventArgs => OnRequestedReadHoldingRegisters(eventArgs),
+                RequestedReadHoldingRegisters).Bytes;
+        private IEnumerable<byte> OnRequestedReadInputRegisters(ModbusReadRequest request, Channel channel)
+            => InvokeOverrideMethodAndEvent(
+                new RequestedReadWordEventArgs(request, channel),
+                eventArgs => OnRequestedReadInputRegisters(eventArgs),
+                RequestedReadInputRegisters).Bytes;
+        private void OnRequestedWriteCoil(ModbusWriteCoilRequest request, Channel channel)
+            => InvokeOverrideMethodAndEvent(
+                new RequestedWriteCoilEventArgs(request, channel),
+                eventArgs => OnRequestedWriteCoil(eventArgs),
+                RequestedWriteCoil);
+        private void OnRequestedWriteHoldingRegister(ModbusWriteHoldingRegisterRequest request, Channel channel)
+            => InvokeOverrideMethodAndEvent(
+                new RequestedWriteHoldingRegisterEventArgs(request, channel),
+                eventArgs => OnRequestedWriteHoldingRegister(eventArgs),
+                RequestedWriteHoldingRegister);
         private TEventArgs InvokeOverrideMethodAndEvent<TEventArgs>(TEventArgs eventArgs, Action<TEventArgs> action, EventHandler<TEventArgs> eventHandler)
                 where TEventArgs : RequestedEventArgs
         {
@@ -290,6 +400,13 @@ namespace Protocols.Modbus
 
             return eventArgs;
         }
+
+        /// <summary>
+        /// Modbus 슬레이브 목록 열거
+        /// </summary>
+        /// <returns>Modbus 슬레이브 목록 열거</returns>
+        public IEnumerator<KeyValuePair<byte, ModbusSlave>> GetEnumerator() => _modbusSlaves.GetEnumerator();
+        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
         class ChannelTask
         {
             private readonly ModbusSlaveService modbusSlaveService;
@@ -320,7 +437,7 @@ namespace Protocols.Modbus
 
                                 var request = serializer.Deserialize(buffer, channelTimeout);
 
-                                if(request != null)
+                                if (request != null)
                                 {
                                     var requestLog = new ModbusRequestLog(channel, request, buffer.ToArray(), serializer);
                                     channel.Logger?.Log(requestLog);
@@ -335,14 +452,14 @@ namespace Protocols.Modbus
                                     }
                                     catch
                                     {
-                                        response = new ModbusExceptionResponse(ModbusExceptionCode.SlaveDeviceFailure, request);                                    
+                                        response = new ModbusExceptionResponse(ModbusExceptionCode.SlaveDeviceFailure, request);
                                     }
-                                    if(response != null)
+                                    if (response != null)
                                     {
                                         var responseMessage = serializer.Serialize(response).ToArray();
                                         channel.Write(responseMessage);
 
-                                        if(response is ModbusExceptionResponse exceptionResponse)
+                                        if (response is ModbusExceptionResponse exceptionResponse)
                                             channel?.Logger?.Log(new ModbusExceptionLog(channel, exceptionResponse, responseMessage, requestLog, serializer));
                                         else
                                             channel?.Logger?.Log(new ModbusResponseLog(channel, response, responseMessage, requestLog, serializer));
@@ -352,13 +469,13 @@ namespace Protocols.Modbus
                             catch (Exception)
                             {
 
-                                if(createdFromProvider)
+                                if (createdFromProvider)
                                     modbusSlaveService.RemoveChannel(channel);
                             }
                         }
-                        if(channel.IsDisposed == false)
+                        if (channel.IsDisposed == false)
                             channel.Dispose();
-                    },TaskCreationOptions.LongRunning);
+                    }, TaskCreationOptions.LongRunning);
                 }
             }
             public void Stop()
@@ -366,7 +483,7 @@ namespace Protocols.Modbus
                 isRunning = false;
             }
         }
-    }
+    }           
     /// <summary>
     /// 슬레이브 주소 검증 이벤트 매개변수
     /// </summary>
@@ -449,5 +566,75 @@ namespace Protocols.Modbus
         /// 응답할 Bit(Coil, Discrete Input) 목록
         /// </summary>
         public IEnumerable<bool> Values { get; set; }
+    }
+    /// <summary>
+    /// Word(Holding Register, Input Register) 읽기 요청 발생 이벤트 매개변수
+    /// </summary>
+    public sealed class RequestedReadWordEventArgs : RequestedEventArgs
+    {
+        internal RequestedReadWordEventArgs(ModbusReadRequest request, Channel channel)
+            : base(request, channel) { }
+
+        /// <summary>
+        /// 요청 길이
+        /// </summary>
+        public ushort Length { get => request.Length; }
+
+        /// <summary>
+        /// 응답할 Word(Holding Register, Input Register)의 Raw Byte 목록
+        /// </summary>
+        public IEnumerable<byte> Bytes { get; set; }
+    }
+
+    /// <summary>
+    /// Coil 쓰기 요청 발생 이벤트 매개변수
+    /// </summary>
+    public sealed class RequestedWriteCoilEventArgs : RequestedEventArgs
+    {
+        internal RequestedWriteCoilEventArgs(ModbusWriteCoilRequest request, Channel channel)
+            : base(request, channel)
+        {
+            Values = request.Values;
+        }
+
+        /// <summary>
+        /// 받은 Bit(Coil, Discrete Input) 목록
+        /// </summary>
+        public IReadOnlyList<bool> Values { get; }
+    }
+
+    /// <summary>
+    /// Holding Register 쓰기 요청 발생 이벤트 매개변수
+    /// </summary>
+    public sealed class RequestedWriteHoldingRegisterEventArgs : RequestedEventArgs
+    {
+        internal RequestedWriteHoldingRegisterEventArgs(ModbusWriteHoldingRegisterRequest request, Channel channel)
+            : base(request, channel)
+        {
+            Bytes = request.Bytes;
+        }
+
+        private IReadOnlyList<ushort> words;
+
+        /// <summary>
+        /// 받은 Word(Holding Register, Input Register)의 Raw Byte 목록
+        /// </summary>
+        public IReadOnlyList<byte> Bytes { get; }
+
+        /// <summary>
+        /// 받은 Word(Holding Register, Input Register) 목록
+        /// </summary>
+        public IReadOnlyList<ushort> Words
+        {
+            get
+            {
+                if (words == null)
+                {
+                    var bytes = Bytes;
+                    words = Enumerable.Range(0, bytes.Count / 2).Select(i => (ushort)(bytes[i * 2] << 8 | bytes[i * 2 + 1])).ToArray();
+                }
+                return words;
+            }
+        }
     }
 }

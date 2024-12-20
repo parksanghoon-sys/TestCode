@@ -1,4 +1,5 @@
 ﻿using Protocols.Modbus.Requests;
+using Protocols.Modbus.Responses;
 using System;
 using System.Collections.Generic;
 using System.Text;

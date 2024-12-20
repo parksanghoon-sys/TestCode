@@ -2,6 +2,7 @@
 using Protocols.Abstractions.Logging;
 using Protocols.Modbus.Loggging;
 using Protocols.Modbus.Requests;
+using Protocols.Modbus.Responses;
 using Protocols.Modbus.Serialization;
 using System;
 using System.Collections.Generic;

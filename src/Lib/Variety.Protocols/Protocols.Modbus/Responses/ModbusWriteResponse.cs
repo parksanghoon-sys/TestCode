@@ -2,9 +2,9 @@
 
 namespace Protocols.Modbus.Responses
 {
-    public class ModbusWrtieResponse : ModbusOkResponse<ModbusWriteRequest>
+    public class ModbusWriteResponse : ModbusOkResponse<ModbusWriteRequest>
     {
-        internal ModbusWrtieResponse(ModbusWriteRequest request)
+        internal ModbusWriteResponse(ModbusWriteRequest request)
             : base(request)
         {
             switch (request.Function)

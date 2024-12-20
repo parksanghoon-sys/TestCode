@@ -1,5 +1,6 @@
 ﻿using Protocols.Abstractions.Channels;
 using Protocols.Abstractions.Logging;
+using Protocols.Modbus.Responses;
 using Protocols.Modbus.Serialization;
 using System;
 using System.Collections.Generic;
