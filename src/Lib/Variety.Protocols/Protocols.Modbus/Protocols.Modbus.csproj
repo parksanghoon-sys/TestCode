@@ -11,8 +11,4 @@
 	  <ProjectReference Include="..\Protocols.Abstractions\Protocols.Abstractions.csproj" />
 	</ItemGroup>
 
-	<ItemGroup>
-	  <Folder Include="Responses\" />
-	</ItemGroup>
-
 </Project>

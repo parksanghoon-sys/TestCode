@@ -148,7 +148,7 @@ namespace Protocols.Modbus.Datas
         /// <param name="dataCount">데이터 갯수</param>
         /// <returns>연속된 데이터</returns>
         /// <exception cref="ModbusException"></exception>
-        protected IEnumerable<TData> GetData(ushort startAddress, ushort dataCount)
+        public IEnumerable<TData> GetData(ushort startAddress, ushort dataCount)
         {
             if (dataCount == 0) return new TData[0];
 
