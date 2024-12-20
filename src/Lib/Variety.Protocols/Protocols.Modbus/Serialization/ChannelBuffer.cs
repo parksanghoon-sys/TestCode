@@ -8,8 +8,8 @@ namespace Protocols.Modbus.Serialization
 {
     class ChannelBuffer : List<byte>
     {
-        public IChannel Channel { get; }
-        internal ChannelBuffer(IChannel channel)
+        public Channel Channel { get; }
+        internal ChannelBuffer(Channel channel)
         {
             this.Channel = channel;
         }
