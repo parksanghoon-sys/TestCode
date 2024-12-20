@@ -1,7 +1,5 @@
 ﻿using Protocols.Modbus.Requests;
-using System;
-using System.Collections.Generic;
-using System.Text;
+using Protocols.Modbus.Responses;
 
 namespace Protocols.Modbus.Serialization
 {

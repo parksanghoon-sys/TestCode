@@ -64,6 +64,10 @@ namespace Protocols.Modbus.Datas
                     }
                 }
             }
+            set
+            {
+                SetData(address, new TData[] { value });
+            }
         }
         protected ModbusDataSet()
         {
@@ -180,9 +184,39 @@ namespace Protocols.Modbus.Datas
                 }
             }
         }
-     
-     
-        
+        internal IEnumerable<TRawData> GetRawDataCore(ushort startAddress, int rawDataCount)
+        {
+            if (rawDataCount == 0) return new TRawData[0];
+
+            lock (this)
+            {
+                dummyDataBlock.StartAddress = startAddress;
+                var index = dataBlocks.BinarySearch(dummyDataBlock, ModbusStartAddressComparer<TData, TRawData>.Instance);
+                ModbusDataBlock<TData, TRawData> dataBlock;
+                if (index >= 0)
+                {
+                    dataBlock = dataBlocks[index];
+                    if (dataBlock.rawData.Length < rawDataCount)
+                        throw new ModbusException(ModbusExceptionCode.IllegalDataAddress);
+                    return dataBlock.rawData.Take(rawDataCount);
+                }
+                else
+                {
+                    index = ~index - 1;
+                    if (index >= 0 && index < dataBlocks.Count)
+                    {
+                        dataBlock = dataBlocks[index];
+                        var skipCount = (startAddress - dataBlock.StartAddress) * dataBlock.NumberOfUnit;
+                        if (dataBlock.rawData.Length < skipCount + rawDataCount)
+                            throw new ModbusException(ModbusExceptionCode.IllegalDataAddress);
+                        return dataBlock.rawData.Skip(skipCount).Take(rawDataCount);
+                    }
+                    else
+                        throw new ModbusException(ModbusExceptionCode.IllegalDataAddress);
+                }
+            }
+        }
+
         internal void SetDataBlock(IModbusDataBlock<TData, TRawData> dataBlock)
         {
             lock (this) SetDataBlockCore(dataBlocks, dataBlock, autoAllocation);

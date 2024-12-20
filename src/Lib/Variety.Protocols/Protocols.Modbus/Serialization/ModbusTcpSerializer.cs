@@ -1,10 +1,6 @@
 ﻿using Protocols.Abstractions.Channels;
 using Protocols.Modbus.Requests;
 using Protocols.Modbus.Responses;
-using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Transactions;
 
 namespace Protocols.Modbus.Serialization
 {
@@ -13,7 +9,7 @@ namespace Protocols.Modbus.Serialization
         private ushort currentTransactionID = 0;
         private readonly Dictionary<ushort, ResponseWaitHandle> responseWaitHandles = new Dictionary<ushort, ResponseWaitHandle>();
         private bool isReceiving = false;
-        private readonly List<byte> errorBuffer = new List<byte>();
+        private readonly List<byte> errorBuffer = new();
         private readonly object lockSerialize = new object();
         private readonly object lockReceive = new object();
         class ResponseWaitHandle : EventWaitHandle

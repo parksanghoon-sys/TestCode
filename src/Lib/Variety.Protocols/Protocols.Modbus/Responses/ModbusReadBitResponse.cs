@@ -38,7 +38,7 @@ namespace Protocols.Modbus.Responses
             {
                 int bitIndex = i % 8;
                 value |= (Values[i] ? 1 : 0) << bitIndex;
-                if(bitIndex == 7 || i == Values.Count - 1)\
+                if(bitIndex == 7 || i == Values.Count - 1)
                         yield return (byte)value;
             }         
         }
