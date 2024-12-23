@@ -10,7 +10,7 @@ internal class Program
     {
         var logger = new ConsoleChannelLogger();
 
-        IChannel channel = new TcpChannelProvider(502) { Logger = logger };
+        IChannel channel = new TcpChannelProvider(532) { Logger = logger };
 
         var modbusSlaveService = new ModbusSlaveService(channel)
         {

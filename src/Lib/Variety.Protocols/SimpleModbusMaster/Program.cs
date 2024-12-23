@@ -10,7 +10,7 @@ internal class Program
     {
         var logger = new ConsoleChannelLogger();
         //IChannel channel = new SerialPortChannel("COM1", 9600, 8, System.IO.Ports.StopBits.One, System.IO.Ports.Parity.None, System.IO.Ports.Handshake.None) { Logger = logger };     //Serial Port
-        IChannel channel = new TcpChannel("127.0.0.1", 502) { Logger = logger };   //TCP Client
+        IChannel channel = new TcpChannel("127.0.0.1", 532) { Logger = logger };   //TCP Client
                                                                                    //IChannel channel = new TcpChannelProvider(502) { Logger = logger };        //TCP Server
                                                                                    //IChannel channel = new UdpChannel("127.0.0.1", 502) { Logger = logger };   //UDP
 

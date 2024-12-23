@@ -157,26 +157,26 @@ namespace Protocols.Modbus.Serialization
         internal override ModbusRequest DeserializeRequest(RequestBuffer buffer, int timeout)
         {
             ModbusRequest result = null;
-
-            while(buffer.Channel.IsDisposed == false)
+            while (!buffer.Channel.IsDisposed)
             {
-                if(errorBuffer.Count >= 256)
+                if (errorBuffer.Count >= 256)
                 {
                     RaiseUnrecognized(buffer.Channel, errorBuffer.ToArray());
                     errorBuffer.Clear();
                 }
-                while(buffer.Count < 12 && buffer.Channel.IsDisposed == false)
+
+                while (buffer.Count < 12 && !buffer.Channel.IsDisposed)
                     buffer.Read(1, timeout);
 
-                if(buffer.Channel.IsDisposed)
-                    break;  
+                if (buffer.Channel.IsDisposed) break;
 
                 var messageLength = ToUInt16(buffer, 4);
                 ushort transactionID = 0;
-                if(ToUInt16(buffer,2) == 0)
+                if (ToUInt16(buffer, 2) == 0)
                 {
                     transactionID = ToUInt16(buffer, 0);
                     var slaveAddress = buffer[6];
+
                     if (messageLength >= 6
                         && buffer.ModbusSlave.IsValidSlaveAddress(slaveAddress, buffer.Channel)
                         && Enum.IsDefined(typeof(ModbusFunction), buffer[7]))
@@ -247,8 +247,25 @@ namespace Protocols.Modbus.Serialization
                         }
                     }
                 }
+
+                if (result != null)
+                {
+                    if (errorBuffer.Count > 0)
+                    {
+                        RaiseUnrecognized(buffer.Channel, errorBuffer.ToArray());
+                        errorBuffer.Clear();
+                    }
+                    result.TransactionID = transactionID;
+                    return result;
+                }
+                else
+                {
+                    errorBuffer.Add(buffer[0]);
+                    buffer.RemoveAt(0);
+                    continue;
+                }
             }
-            return result;
+            return null;
         }
         internal override IEnumerable<byte> OnSerialize(IModbusMessage message)
         {

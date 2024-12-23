@@ -93,7 +93,7 @@ namespace Protocols.Channels
                                 _channels[channel.Guid] = new WeakReference<TcpChannel>(channel);
                                 RaiseCreatedEvent(new ChannelCreatedEventArgs(channel));
 
-                                foreach(var disposed in _channels.Where(c => c.Value == null || c.Value.TryGetTarget(out var target)).Select(c => c.Key).ToArray())
+                                foreach(var disposed in _channels.Where(c => c.Value == null || !c.Value.TryGetTarget(out var target)).Select(c => c.Key).ToArray())
                                 {
                                     _channels.Remove(disposed);
                                 }
