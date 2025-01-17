@@ -1,0 +1,23 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+	  <!-- 👇 소비하는 프로젝트에서 소스 생성기 dll을 직접 참조하고 싶지 않습니다. -->
+	  <IncludeBuildOutput>false</IncludeBuildOutput>
+	  <!-- 👇 새로운 프로젝트, 왜 안돼! -->
+	  <Nullable>enable</Nullable>
+	  <ImplicitUsings>true</ImplicitUsings>
+	  <LangVersion>Latest</LangVersion>
+  </PropertyGroup>
+
+	<!-- 다음 라이브러리에는 필요한 소스 생성기 인터페이스 및 유형이 포함되어 있습니다. -->
+	<ItemGroup>
+		<PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="3.3.2" PrivateAssets="all" />
+		<PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.0.1" PrivateAssets="all" />
+	</ItemGroup>
+
+	<!-- `dotnet pack`을 사용할 때 라이브러리가 소스 생성기로 패키징 되도록 합니다. -->
+	<ItemGroup>
+		<None Include="$(OutputPath)\$(AssemblyName).dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
+	</ItemGroup>
+</Project>
