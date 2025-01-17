@@ -37,7 +37,31 @@ namespace CodeGenerator
 
         static EnumDeclarationSyntax? GetSemanticTargetForGeneration(GeneratorSyntaxContext context)
         {
-          var 
+            // IsSyntaxTargetForGeneration에서 이미 확인했으므로 EnumDeclarationSyntax로 캐스팅할 수 있습니다.
+            var enumDeclarationSyntax = (EnumDeclarationSyntax)context.Node;
+
+            // 메서드의 모든 특성을 반복
+            foreach (var attributeList in enumDeclarationSyntax.AttributeLists)
+            {
+                foreach (var attribute in attributeList.Attributes)
+                {
+                    if (context.SemanticModel.GetSymbolInfo(attribute).Symbol is not IMethodSymbol attributeSymbol)
+                    {
+                        // 이상함, 기호를 가져올 수 없다 무시
+                        continue;
+                    }
+                    INamedTypeSymbol attributeContainingTypeSymbol = attributeSymbol.ContainingType;
+                    string fullName = attributeContainingTypeSymbol.ToDisplayString();
+
+                    if(fullName == EnumExtensionsAttribute)
+                        return enumDeclarationSyntax;
+                }
+            }
+            return null;
+        }
+        static void Excute(Compilation compilation, ImmutableArray<EnumDeclarationSyntax> enumDeclarations, SourceProductionContext context)
+        {
+
         }
     }
 }
