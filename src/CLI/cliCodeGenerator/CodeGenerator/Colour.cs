@@ -1,20 +1,9 @@
 ﻿using System;
 
 namespace CodeGenerator
-{
-    public readonly struct EnumToGenerator
-    {
-        public readonly string Name;
-        public readonly List<string> Values;
-
-        public EnumToGenerator(string name, List<string> values)
-        {
-            Name = name;
-            Values = values;
-        }
-    }
+{   
     [EnumExtensions]
-    public enum Color
+    public enum Colour
     {
         Red = 0,
         Blue = 1

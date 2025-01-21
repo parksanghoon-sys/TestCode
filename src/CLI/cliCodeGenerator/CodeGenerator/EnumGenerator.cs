@@ -33,6 +33,7 @@ namespace CodeGenerator
         }
         static bool IsSyntaxTargetForGeneration(SyntaxNode node)
                 => node is EnumDeclarationSyntax m && m.AttributeLists.Count > 0;
+
         private const string EnumExtensionsAttribute = "CodeGenerator.EnumExtensionsAttribute";
 
         static EnumDeclarationSyntax? GetSemanticTargetForGeneration(GeneratorSyntaxContext context)
@@ -59,9 +60,75 @@ namespace CodeGenerator
             }
             return null;
         }
-        static void Excute(Compilation compilation, ImmutableArray<EnumDeclarationSyntax> enumDeclarations, SourceProductionContext context)
+        static void Excute(Compilation compilation, ImmutableArray<EnumDeclarationSyntax> enums, SourceProductionContext context)
         {
+            if (enums.IsDefaultOrEmpty)
+                return;
+            // 이것이 실제로 필요한지 확실하지 않지만 `[LoggerMessage]`가 수행하므로 좋은 생각인 것 같습니다!
+            IEnumerable<EnumDeclarationSyntax> distinctEnums = enums.Distinct();
+
+            // 각 EnumDeclarationSyntax를 EnumToGenerate로 변환
+            List<EnumToGenerate> enumsToGenerate = GetTypesToGenerate(compilation, distinctEnums, context.CancellationToken);
+
+            // EnumDeclarationSyntax에 오류가 있는 경우 EnumToGenerate를 생성하지 않으므로 생성할 항목이 있는지 확인합니다. 
+            if (enumsToGenerate.Count > 0)
+            {
+                // 소스 코드를 생성하고 출력에 추가
+                string result = SourceGenerationHelper.GenerateExtensionClass(enumsToGenerate);
+                context.AddSource("EnumExtensions.g.cs", SourceText.From(result, Encoding.UTF8));
+            }
 
         }
+        static List<EnumToGenerate> GetTypesToGenerate(Compilation compilation, IEnumerable<EnumDeclarationSyntax> enums, CancellationToken ct)
+        {
+            // 출력을 저장할 목록을 만듭니다.
+            var enumsToGenerate = new List<EnumToGenerate>();
+            // 마커 특성의 의미론적 표현을 얻습니다.
+            INamedTypeSymbol? enumAttribute = compilation.GetTypeByMetadataName("NetEscapades.EnumGenerators.EnumExtensionsAttribute");
+
+            if (enumAttribute == null)
+            {
+                // 이것이 null이면 Compilation에서 마커 특성 유형을 찾을 수 없습니다.
+                // 이는 무언가 매우 잘못되었음을 나타냅니다. 구제..
+                return enumsToGenerate;
+            }
+
+            foreach (EnumDeclarationSyntax enumDeclarationSyntax in enums)
+            {
+                // 우리가 요청하면 중지
+                ct.ThrowIfCancellationRequested();
+
+                // 열거형 구문의 의미론적 표현 얻기 
+                SemanticModel semanticModel = compilation.GetSemanticModel(enumDeclarationSyntax.SyntaxTree);
+                if (semanticModel.GetDeclaredSymbol(enumDeclarationSyntax) is not INamedTypeSymbol enumSymbol)
+                {
+                    // 뭔가 잘못되었습니다, 구제  
+                    continue;
+                }
+
+                // 열거형의 전체 유형 이름을 가져옵니다. e.g. Colour,
+                // 또는 OuterClass<T>.Colour가 제네릭 형식에 중첩된 경우(예)
+                string enumName = enumSymbol.ToString();
+
+                // 열거형의 모든 멤버 가져오기 
+                ImmutableArray<ISymbol> enumMembers = enumSymbol.GetMembers();
+                var members = new List<string>(enumMembers.Length);
+
+                // 열거형에서 모든 필드를 가져오고 해당 이름을 목록에 추가합니다. 
+                foreach (ISymbol member in enumMembers)
+                {
+                    if (member is IFieldSymbol field && field.ConstantValue is not null)
+                    {
+                        members.Add(member.Name);
+                    }
+                }
+
+                // 생성 단계에서 사용할 EnumToGenerate 생성 
+                enumsToGenerate.Add(new EnumToGenerate(enumName, members));
+            }
+
+            return enumsToGenerate;
+        }
     }
+
 }
