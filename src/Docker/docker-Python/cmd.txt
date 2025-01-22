@@ -1,0 +1,2 @@
+docker build -t python-dev .
+docker run -it python-dev bash
