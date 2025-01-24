@@ -1,2 +1,2 @@
 docker build -t python-dev .
-docker run -it python-dev bash
+docker run -it -v D:/Temp/DB_Data:/app python-dev 

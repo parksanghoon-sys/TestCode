@@ -1,6 +1,49 @@
 ﻿
 using System.Buffers.Binary;
+static List<int> QuickSort(List<int> arr)
+{
+    if (arr.Count <= 1)
+    {
+        return arr;
+    }
 
+    int pivot = arr[arr.Count / 2];
+    List<int> left = new List<int>();
+    List<int> right = new List<int>();
+    List<int> equal = new List<int>();
+
+    foreach (int i in arr)
+    {
+        if (i < pivot)
+        {
+            left.Add(i);
+        }
+        else if (i > pivot)
+        {
+            right.Add(i);
+        }
+        else
+        {
+            equal.Add(i);
+        }
+    }
+
+    left = QuickSort(left);
+    right = QuickSort(right);
+
+    left.AddRange(equal);
+    left.AddRange(right);
+
+    return left;
+}
+List<int> arr = new List<int> { 3, 6, 8, 10, 1, 2, 1 };
+
+List<int> sortedArr = QuickSort(arr);
+
+foreach (int i in sortedArr)
+{
+    Console.WriteLine(i);
+}
 short aa = 253;
 var bb = BitConverter.IsLittleEndian == true ? (UInt16)BinaryPrimitives.ReverseEndianness(aa) : (UInt16)aa;
 

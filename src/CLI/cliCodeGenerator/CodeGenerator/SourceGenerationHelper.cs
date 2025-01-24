@@ -1,17 +1,11 @@
 ﻿using System.Collections.Immutable;
 using System.Drawing;
 using System.Text;
+using CodeGenerator;
 using Microsoft.CodeAnalysis.CSharp;
 
 namespace CodeGenerator
 {
-}
-public static class Constants
-    {
-        public const string Version = "1.0.0-beta11";
-
-        public const string EnabledPropertyName = "EnableEnumGeneratorInterceptor";
-    }
     public static class SourceGenerationHelper
     {
         public const string Attribute = @"
