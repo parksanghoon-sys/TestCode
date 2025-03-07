@@ -361,3 +361,50 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+
+# 빌드 결과물
+*.o
+*.a
+*.exe
+*.dll
+*.so
+*.dylib
+*.obj
+*.lib
+
+# 디버그 파일
+*.pdb
+*.ilk
+*.idb
+
+# 컴파일러 및 IDE 관련 파일
+*.cbp
+*.vcxproj
+*.vcxproj.filters
+*.sln
+*.suo
+*.user
+*.ncb
+*.sdf
+*.opensdf
+*.ipch/
+*.cachefile
+
+# 테스트 관련 파일
+*.gcda
+*.gcno
+
+# 운영체제 관련 파일
+.DS_Store
+Thumbs.db
+
+# 기타
+*.log
+*.swp
+*~
+# 추가적으로 필요에 따라 추가하세요.
+/build/
+/bin/
+/lib/
+/Debug/
+/Release/

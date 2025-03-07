@@ -1,2 +1,4 @@
 docker build -t python-dev .
 docker run -it -v D:/Temp/DB_Data:/app python-dev 
+
+docker run -it --name python --restart always -v /mnt/d/Temp/0.Docker_Volume/Python:/app python:3.11 bash
