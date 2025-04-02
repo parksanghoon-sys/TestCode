@@ -1,14 +1,18 @@
 ﻿namespace MessageBusLib;
-
 /// <summary>
-/// 메시지 버스 구성 옵션
+/// 공유 메모리 전송 계층 구성 옵션
 /// </summary>
-public class MessageBusOptions
+public class SharedMemoryTransportOptions : ITransportOptions
 {
     /// <summary>
-    /// 메시지 버스 이름
+    /// 버스 이름
     /// </summary>
     public string BusName { get; set; } = "default";
+
+    /// <summary>
+    /// 이름 접두사
+    /// </summary>
+    public string NamePrefix { get; set; } = "LightweightMessenger_";
 
     /// <summary>
     /// 최대 메시지 크기 (바이트)
@@ -24,11 +28,6 @@ public class MessageBusOptions
     /// 메시지 읽기 간격 (밀리초)
     /// </summary>
     public int MessageReadInterval { get; set; } = 1000;
-
-    /// <summary>
-    /// 이름 접두사
-    /// </summary>
-    public string NamePrefix { get; set; } = "LightweightMessenger_";
 
     /// <summary>
     /// 뮤텍스 이름
