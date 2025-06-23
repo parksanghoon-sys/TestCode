@@ -1,0 +1,5 @@
+V:\01.Study\03.TestCode\TestCode\src\window credential providers\01.Test\x64CSApp\bin\Debug\Ijwhost.dll
+V:\01.Study\03.TestCode\TestCode\src\window credential providers\01.Test\x64CSApp\bin\Debug\WinCredLib.deps.json
+V:\01.Study\03.TestCode\TestCode\src\window credential providers\01.Test\x64CSApp\bin\Debug\WinCredLib.runtimeconfig.json
+V:\01.Study\03.TestCode\TestCode\src\window credential providers\01.Test\lib\WinCredLib\x64Debug\WinCredLib.sourcelink.json
+V:\01.Study\03.TestCode\TestCode\src\window credential providers\01.Test\lib\WinCredLib\x64Debug\WinCredLib.genruntimeconfig.cache

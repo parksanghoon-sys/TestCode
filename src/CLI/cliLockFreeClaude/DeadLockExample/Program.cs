@@ -32,7 +32,7 @@ namespace DeadlockExample
 
             // 1. 교착상태 발생 예제
             Console.WriteLine("\n[1] 교착상태 발생 데모:");
-            CreateDeadlock();
+            //CreateDeadlock();
 
             // 2. 교착상태 예방 예제
             Console.WriteLine("\n[2] 교착상태 예방 데모:");

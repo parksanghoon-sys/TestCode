@@ -30,6 +30,8 @@ internal class OneActionTimer : IDisposable
     public OneActionTimer(Action action, int timeout)
     {
         Stopwatch.Start();
+        LinkedList<Action> list = new LinkedList<Action>();
+        Dictionary<int,string> dict = new Dictionary<int,string>();
         _timer = new Timer(delegate
         {
             action.Invoke();
