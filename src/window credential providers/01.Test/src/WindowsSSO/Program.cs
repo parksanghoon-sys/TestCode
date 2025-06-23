@@ -159,7 +159,7 @@ namespace WindowsSSO
                 if (string.IsNullOrEmpty(domain))
                 {
                     // 도메인을 지정하지 않으면 현재 컴퓨터가 속한 도메인 사용
-                    context = new PrincipalContext(ContextType.Domain);
+                    context = new PrincipalContext(ContextType.Machine);
                     Console.WriteLine("현재 도메인에서 사용자 정보 조회 중...");
                 }
                 else
@@ -526,7 +526,7 @@ namespace WindowsSSO
             Console.WriteLine($"\n=== WebClient로 Windows 인증 호출: {url} ===");
 
             try
-            {
+            {                
                 using (var client = new WebClient())
                 {
                     // DefaultCredentials: 현재 로그인한 사용자의 자격증명 사용
@@ -964,7 +964,7 @@ namespace WindowsSSO
                 Console.WriteLine(new string('=', 60));
 
                 WindowsIdentity identity = WindowsIdentity.GetCurrent();
-                var adUserInfo = ActiveDirectorySSO.GetUserInfoFromAD(identity.Name);
+                var adUserInfo = ActiveDirectorySSO.GetUserInfoFromAD(Environment.UserDomainName);
                 if (adUserInfo != null)
                 {
                     Console.WriteLine("✅ AD 사용자 정보 조회 성공");
