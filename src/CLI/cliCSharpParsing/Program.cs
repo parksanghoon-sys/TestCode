@@ -9,32 +9,44 @@ public class Program
     static void Main(string[] args)
     {
         //string projectPath = @"D:\WPF_Test_UI\src\CLI\cliWeakEvents";
-        string projectPath = @"D:\Project\01.Program\2023\GcsProject\2.FlightSolution\B\Source\pspc-flight\UvhfControls";
+        //string projectPath = @"D:\Project\01.Program\2023\GcsProject\2.FlightSolution\B\Source\pspc-flight\UvhfControls\UvhfManager\UvhfManagerViewModel.cs";
+
+        // string projectPath = @"D:\Project\01.Program\2023\GcsProject\2.FlightSolution\B\Source\pspc-flight\ImcControlManager\PopUp\IffKIV77ManagerViewModel.cs";
+        //string projectPath = @"D:\Project\01.Program\2023\GcsProject\2.FlightSolution\B\Source\pspc-flight\ImcControlManager\PopUp\IffManagerViewModel.cs";
+        string projectPath = @"D:\Project\01.Program\2023\GcsProject\2.FlightSolution\B\Source\pspc-flight\ImcControlManager\PopUp\TcasManagerViewModel.cs";
         string[] excludeFiles = { "App.xaml.cs", "App.xaml", "AssemblyInfo.cs", "Resources.Designer.cs", "Settings.Designer.cs" };
-
-        DirectoryInfo dirInfo = new DirectoryInfo(projectPath);
-        DirectoryInfo[] infos = dirInfo.GetDirectories("*.*", SearchOption.TopDirectoryOnly);
-
         var parser = new CSharpParser();
         var allFunctions = new List<ClassInfo>();
 
-        foreach (DirectoryInfo info in infos)
+        if (projectPath.Contains(".cs") == false)
         {
-            string projectName = info.Name;
-            if (projectName == ".svn") continue;
-            //FileInfo[] fileInfos = new string[] { "*.dll", "*.exe", "*.cxx", "*.cpp", "*.h", "*.cs", "*.xaml", "*.png", "*.config", "*.resx", "*.settings" }
-            FileInfo[] fileInfos = new string[] { "*.cs"}
-                    .SelectMany(i => info.GetFiles(i, SearchOption.AllDirectories))
-                    .Where(file => !excludeFiles.Contains(file.Name, StringComparer.OrdinalIgnoreCase))
-                    .ToArray();
-
-            foreach (var fi in fileInfos)
+            DirectoryInfo dirInfo = new DirectoryInfo(projectPath);
+            DirectoryInfo[] infos = dirInfo.GetDirectories("*.*", SearchOption.TopDirectoryOnly);
+            foreach (DirectoryInfo info in infos)
             {
-                string content = File.ReadAllText(fi.FullName);
-                var functions = parser.Parse(content,fi.FullName );
-                allFunctions.AddRange(functions);
+                string projectName = info.Name;
+                if (projectName == ".svn") continue;
+                //FileInfo[] fileInfos = new string[] { "*.dll", "*.exe", "*.cxx", "*.cpp", "*.h", "*.cs", "*.xaml", "*.png", "*.config", "*.resx", "*.settings" }
+                FileInfo[] fileInfos = new string[] { "*.cs" }
+                        .SelectMany(i => info.GetFiles(i, SearchOption.AllDirectories))
+                        .Where(file => !excludeFiles.Contains(file.Name, StringComparer.OrdinalIgnoreCase))
+                        .ToArray();
+
+                foreach (var fi in fileInfos)
+                {
+                    string content = File.ReadAllText(fi.FullName);
+                    var functions = parser.Parse(content, fi.FullName);
+                    allFunctions.AddRange(functions);
+                }
             }
         }
+        else
+        {
+            string content = File.ReadAllText(projectPath);
+            var functions = parser.Parse(content, projectPath);
+            allFunctions.AddRange(functions);
+        }   
+      
         
 
         //foreach (var file in files)
@@ -63,7 +75,7 @@ public class Program
           
         }
         TestWord word = new TestWord();
-        string filePath = Path.GetFullPath(@"D:\Temp\TcasControls.doc");
+        string filePath = Path.GetFullPath(@"D:\Temp\IffManagerViewModel.doc");
         word.CreateWordFile(filePath, allFunctions);
         Console.WriteLine();
     }

@@ -217,6 +217,9 @@ namespace cliCSharpParsing
 
             table.Cell(4, 1).Range.Text = "처   리";
 
+            if(data.Summary is not null)
+                table.Cell(5, 1).Range.Text = $"1. {data.Summary.Replace("함수","")}";
+
             table.Columns[1].Width = 65;
             table.Columns[2].Width = 154;
             table.Columns[3].Width = 65;
