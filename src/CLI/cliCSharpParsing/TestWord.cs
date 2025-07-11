@@ -194,9 +194,10 @@ namespace cliCSharpParsing
 
             Word.Paragraph funcParagraph = section.Range.Paragraphs.Add();
             funcParagraph.Range.InsertParagraphAfter();
-
+            funcParagraph.Range.Text = string.Format(" 함수명 : {0} \n", data.FunctionName);
             Word.Table table;
             Word.Range tableRng = word_doc.Bookmarks.get_Item(ref EndOfDoc).Range;
+
             table = word_doc.Tables.Add(tableRng, 5, 4, ref missing, ref missing);
             table.Borders.InsideLineStyle = Word.WdLineStyle.wdLineStyleSingle;
             table.Borders.OutsideLineStyle = Word.WdLineStyle.wdLineStyleSingle;
@@ -211,7 +212,7 @@ namespace cliCSharpParsing
             table.Cell(2, 4).Range.Text = fileName;
 
             table.Cell(3, 1).Range.Text = "입 력";
-            table.Cell(3, 2).Range.Text = string.Join(", ", data.Parameters.Select(p => $"{p.Type} {p.Name}"));
+            table.Cell(3, 2).Range.Text = data.Parameters.Count == 0 ? "void" :string.Join(", ", data.Parameters.Select(p => $"{p.Type} {p.Name}"));
             table.Cell(3, 3).Range.Text = "출 력";
             table.Cell(3, 4).Range.Text = data.ReturnType;
 
