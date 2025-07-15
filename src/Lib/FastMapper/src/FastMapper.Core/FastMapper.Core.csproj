@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <PackageId>FastMapper.Core</PackageId>
+    <Version>1.0.0</Version>
+    <Authors>FastMapper Team</Authors>
+    <Description>고성능 코드 제네레이션 기반 객체 매핑 라이브러리</Description>
+  </PropertyGroup>
+
+</Project>

@@ -1,0 +1,30 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <LangVersion>latest</LangVersion>
+    <IncludeBuildOutput>false</IncludeBuildOutput>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <PackageId>FastMapper.SourceGenerator</PackageId>
+    <Version>1.0.0</Version>
+    <Authors>FastMapper Team</Authors>
+    <Description>FastMapper Source Generator - 컴파일 타임 매핑 코드 생성</Description>
+    <DevelopmentDependency>true</DevelopmentDependency>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" PrivateAssets="all" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\FastMapper.Core\FastMapper.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="tools\install.ps1" Pack="true" PackagePath="tools\install.ps1" />
+    <None Include="tools\uninstall.ps1" Pack="true" PackagePath="tools\uninstall.ps1" />
+  </ItemGroup>
+
+</Project>
