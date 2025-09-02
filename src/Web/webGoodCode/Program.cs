@@ -1,3 +1,5 @@
+using webGoodCode.Services;
+
 namespace webGoodCode;
 
 public partial class Program
@@ -8,6 +10,7 @@ public partial class Program
 
         builder.Services.AddControllers();
         builder.Services.AddOpenApi();
+        builder.Services.AddSingleton<IReservationsRepository, NullRepository>();
 
         var app = builder.Build();
 
