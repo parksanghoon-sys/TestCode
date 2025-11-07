@@ -438,15 +438,28 @@ public class ConcurrencyBenchmarks
     [Benchmark]
     public UserDto[] Sequential_Mapping()
     {
-        return _users.Select(user => new UserDto
+        // Optimize: avoid LINQ allocations by using a for-loop with a pre-sized array,
+        // cache DateTime.Today and user list access to reduce repeated property lookups.
+        var count = _users.Count;
+        var result = new UserDto[count];
+        var today = DateTime.Today;
+        for (int i = 0; i < count; i++)
         {
-            Id = user.Id,
-            FullName = $"{user.FirstName} {user.LastName}",
-            Email = user.Email,
-            Age = DateTime.Today.Year - user.DateOfBirth.Year,
-            IsActive = user.IsActive,
-            CreatedAt = user.CreatedAt
-        }).ToArray();
+            var u = _users[i];
+            // Calculate age with day-of-year adjustment
+            var age = today.Year - u.DateOfBirth.Year - (today.DayOfYear < u.DateOfBirth.DayOfYear ? 1 : 0);
+            result[i] = new UserDto
+            {
+                Id = u.Id,
+                FullName = string.Concat(u.FirstName, " ", u.LastName),
+                Email = u.Email,
+                Age = age,
+                IsActive = u.IsActive,
+                CreatedAt = u.CreatedAt
+            };
+        }
+
+        return result;
     }
 
     private static List<User> GenerateUsers(int count)
