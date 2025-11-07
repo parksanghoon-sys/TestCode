@@ -1,0 +1,6 @@
+@webGoodCode_HostAddress = http://localhost:5247
+
+GET {{webGoodCode_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

@@ -11,7 +11,7 @@ public class Program
         //string projectPath = @"D:\WPF_Test_UI\src\CLI\cliWeakEvents";
         // string projectPath = @"D:\Project\01.Program\2023\GcsProject\2.FlightSolution\B\Source\pspc-flight\UvhfControls\UvhfManager\UvhfManagerViewModel.cs";
 
-         string projectPath = @"D:\Project\01.Program\2023\GcsProject\2.FlightSolution\B\Source\pspc-flight\ImcControlManager\PopUp\IffKIV77ManagerViewModel.cs";
+        string projectPath = @"D:\Project\01.Program\2023\GcsProject\2.FlightSolution\B\Source\pspc-flight\ImcControlManager\PopUp\IffKIV77ManagerViewModel.cs";
         //string projectPath = @"D:\Project\01.Program\2023\GcsProject\2.FlightSolution\B\Source\pspc-flight\ImcControlManager\PopUp\IffManagerViewModel.cs";
         // string projectPath = @"D:\Project\01.Program\2023\GcsProject\2.FlightSolution\B\Source\pspc-flight\ImcControlManager\PopUp\TcasManagerViewModel.cs";
         string[] excludeFiles = { "App.xaml.cs", "App.xaml", "AssemblyInfo.cs", "Resources.Designer.cs", "Settings.Designer.cs" };
@@ -75,7 +75,9 @@ public class Program
           
         }
         TestWord word = new TestWord();
-        string filePath = Path.GetFullPath(@"D:\Temp\IffKIV77ManagerViewModel.doc");
+
+        string fileName = Path.GetFileNameWithoutExtension(projectPath);
+        string filePath = Path.GetFullPath(@$"D:\Temp\{fileName}.doc");
         word.CreateWordFile(filePath, allFunctions);
         Console.WriteLine();
     }

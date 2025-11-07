@@ -1,0 +1,9 @@
+﻿/* Copyright (c) Mark Seemann 2020. All rights reserved. */
+CREATE TABLE [dbo].[Reservations](
+	[Id]	INT		NOT NULL IDENTITY,
+	[At]	DATETIME2	NOT NULL,
+	[Name]	VARCHAR(50) NOT NULL,
+	[Email]	VARCHAR(50) NOT NULL,
+	[Quantity] INT	NOT NULL
+	PRIMARY KEY CLUSTERED ([Id] ASC)
+)
