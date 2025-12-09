@@ -43,7 +43,6 @@ public sealed class DependencyInjectionIntegrationTests
     {
         // Arrange
         var services = new ServiceCollection();
-        services.AddLogging();
         services.AddFastMapper();
 
         var serviceProvider = services.BuildServiceProvider();
