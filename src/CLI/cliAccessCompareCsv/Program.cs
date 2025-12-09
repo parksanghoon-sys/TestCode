@@ -11,7 +11,7 @@ internal partial class Program
         string[] csvFiless = Directory.GetFiles(csvFileFolderPath, "*.csv");
         string csvFileName = "UVHF_StatusDisplay.csv";
         string csvWriteFileName = "Not전시.csv";
-        string dbFilePath = @"D:\Project\02.Document\2024\01.항전개조\2.ICD\B\2024.02.23_통합 ICD_V5.02.accdb";
+        string dbFilePath = @"D:\00_Project\02.Document\2024\01.항전개조\2.ICD\B\2024.02.23_통합 ICD_V5.02.accdb";
         string csvFilePath = @$"C:\B.Settings\Csv\StatusCsv\{csvWriteFileName}";
         string connectionString = $"Provider=Microsoft.ACE.OLEDB.16.0;Data Source={dbFilePath};Persist Security Info=False;";
 
