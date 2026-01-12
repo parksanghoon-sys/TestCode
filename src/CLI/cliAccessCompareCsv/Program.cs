@@ -13,7 +13,7 @@ internal partial class Program
         string csvWriteFileName = "Not전시.csv";
         string dbFilePath = @"D:\00_Project\02.Document\2024\01.항전개조\2.ICD\B\2024.02.23_통합 ICD_V5.02.accdb";
         string csvFilePath = @$"C:\B.Settings\Csv\StatusCsv\{csvWriteFileName}";
-        string connectionString = $"Provider=Microsoft.ACE.OLEDB.16.0;Data Source={dbFilePath};Persist Security Info=False;";
+        string connectionString = $"Provider=Microsoft.ACE.OLEDB.16.0;Data Source={dbFilePath};";
 
         // Table : GCS_AVS_IMC_header, GCS_AVS_IMC_field, GCS_AVS_IMC_bit
         // GCS_AVS_IMC_header 과 GCS_AVS_IMC_field 는 GCS_AVS_IMC_header.[명칭(니모닉)] 로 외래키
