@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="ReadableRingChainSample/ReadableRingChainSample.csproj" />
+  <Project Path="ReadableRingChainSampleTest/ReadableRingChainSampleTest.csproj" />
+</Solution>
