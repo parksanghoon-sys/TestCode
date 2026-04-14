@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+repo_root="$(git rev-parse --show-toplevel)"
+script="$repo_root/wpf-dev-pack/scripts/Invoke-CodexPrePush.ps1"
+
+if [ ! -f "$script" ]; then
+  echo "[codex-hooks] Missing script: $script" >&2
+  exit 1
+fi
+
+if command -v pwsh >/dev/null 2>&1; then
+  exec pwsh -NoProfile -ExecutionPolicy Bypass -File "$script"
+elif command -v powershell >/dev/null 2>&1; then
+  exec powershell -NoProfile -ExecutionPolicy Bypass -File "$script"
+else
+  echo "[codex-hooks] PowerShell (pwsh or powershell) is required." >&2
+  exit 1
+fi

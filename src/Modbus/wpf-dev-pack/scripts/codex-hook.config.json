@@ -1,0 +1,19 @@
+{
+  "preCommit": {
+    "formatCSharp": true,
+    "validateXaml": true,
+    "restageFiles": true,
+    "detectMvvmViolations": true,
+    "detectWpfKeywords": true,
+    "checkMcpDependencies": true,
+    "validateDotnetTools": true
+  },
+  "prePush": {
+    "build": true,
+    "test": true,
+    "configuration": "Debug",
+    "runBuildErrorDiagnoser": true,
+    "checkMcpDependencies": true,
+    "validateDotnetTools": true
+  }
+}

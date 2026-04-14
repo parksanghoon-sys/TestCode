@@ -1,0 +1,6 @@
+# Optional project-scoped Codex configuration.
+# Add MCP servers, sandbox preferences, or agent settings here when needed.
+# Example:
+# [agents]
+# max_depth = 1
+# max_threads = 4

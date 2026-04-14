@@ -1,0 +1,6 @@
+# Optional project-scoped Codex configuration for the WPF dev pack.
+# Add MCP servers, sandbox preferences, or agent settings here when needed.
+# Example:
+# [agents]
+# max_depth = 1
+# max_threads = 4
