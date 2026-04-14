@@ -1,0 +1,4 @@
+interface:
+  display_name: "MES System Architect"
+  short_description: "Design MES architecture and plant integrations."
+  default_prompt: "Use $designing-mes-systems to design an MES architecture for a factory, line, or multi-site rollout."
