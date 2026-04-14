@@ -15,6 +15,8 @@ This repository provides reusable Codex-first guidance for .NET, WPF, and Avalon
 - Prefer repo-local skills when the task matches an existing skill.
 - Keep reusable workflows under `.agents/skills/<skill-name>/SKILL.md`.
 - Keep repository guidance short and push detailed process into skill docs or focused rules.
+- When writing or modifying C# code, you must follow `rules/dotnet/csharp/xml-doc-comments.md`.
+- Every introduced or changed C# class and function must include Korean XML documentation comments. Treat this as mandatory, not optional.
 
 ## Shared skill areas
 
@@ -28,6 +30,12 @@ This repository provides reusable Codex-first guidance for .NET, WPF, and Avalon
 | `using-avalonia-collectionview` | `DataGridCollectionView`, ReactiveUI patterns |
 | `fixing-avaloniaui-radialgradientbrush` | Avalonia brush compatibility issues |
 | `converting-html-css-to-wpf-xaml` | HTML/CSS to WPF XAML conversion |
+
+### Manufacturing and solution design skills
+
+| Skill | Purpose |
+|---|---|
+| `designing-mes-systems` | MES capability scoping, execution modeling, system boundary definition, and rollout-oriented architecture guidance |
 
 
 ## Local automation workflow

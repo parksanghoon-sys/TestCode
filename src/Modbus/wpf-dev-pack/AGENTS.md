@@ -23,6 +23,7 @@ These should survive context loss:
 4. Keep `Generic.xaml` as a merged-dictionary hub.
 5. Verify unfamiliar API signatures with authoritative docs before coding.
 6. Prefer the most specific matching skill.
+7. Every introduced or changed C# class and function must include Korean XML documentation comments in XML format. This is mandatory for authored code.
 
 ## .NET defaults
 
