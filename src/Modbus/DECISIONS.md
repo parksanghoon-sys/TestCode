@@ -236,3 +236,16 @@ Implications:
 - Endpoint adapters should call `OperatorExecutionApplicationService` rather than interacting with `OperatorExecutionCommandHandler` or `GetStationWorkQueueQueryHandler` directly.
 - Concrete persistence adapters now have one narrow contract to satisfy: load the typed state bundle or work-queue source, return any existing receipt, and persist the accepted result through one `SaveAsync` call.
 - The remaining open design choice is the atomic write boundary inside that `SaveAsync` call, especially once `domain_outbox` publication is wired in.
+
+## 2026-04-16 ADR-019: Prove the first concrete adapter boundary with a separate in-memory infrastructure layer
+
+Decision:
+Introduce a dedicated `Mes.Infrastructure` project as the first concrete implementation of the current operator-execution application ports, and use an in-memory reference adapter plus a thin BFF endpoint adapter to validate the load/save contract before choosing durable persistence technology.
+
+Why:
+The application boundary was now stable enough to justify a real adapter, but the project still had not chosen SQL access strategy, transaction plumbing, or an actual HTTP host. Jumping straight to a durable adapter would have mixed persistence-technology decisions with boundary-validation work. A separate in-memory infrastructure layer keeps the contract testable and makes the minimum atomic write set explicit without forcing those later choices yet.
+
+Implications:
+- `Mes.Infrastructure` becomes the concrete home for adapter code, leaving `Mes.Application` focused on orchestration and business policy.
+- The first reference adapter now proves one write-set boundary for receipts, prepared actuals, and outbox capture, while still relying on store-owned aggregate references rather than detached persistence snapshots.
+- The next infrastructure step should either add a thin HTTP host over the endpoint adapter or replace the in-memory store with a durable operational adapter, without changing the current application contracts.

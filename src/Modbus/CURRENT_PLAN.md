@@ -2,7 +2,7 @@
 
 ## Current Goal
 
-Turn the MES baseline into an implementation-ready pilot slice by stabilizing the foundational domain model and deriving the first logical data model and BFF payload contracts.
+Turn the MES baseline into an executable pilot slice by carrying the current operator-execution flow through domain, application, infrastructure, and a thin shared BFF entry point.
 
 ## Current State
 
@@ -31,13 +31,16 @@ Turn the MES baseline into an implementation-ready pilot slice by stabilizing th
 - `Mes.Application.Tests` now cover handler acceptance, safe replay, production-actuals skeleton preparation, and work-queue contract mapping in addition to the earlier coordinator, projection, and idempotency tests.
 - `Mes.Application` now also contains `IOperatorExecutionCommandPort`, `IStationWorkQueueSourcePort`, and `OperatorExecutionApplicationService`, so handler/query orchestration can load state bundles, invoke application policies, and persist results without binding the current slice to a specific repository or endpoint technology.
 - `Mes.Application.Tests` now validate that the new application service loads state through ports, skips persistence on replay, persists prepared actuals on accepted completion, and composes work-queue queries through the source port.
+- A new `Mes.Infrastructure` project now provides the first concrete port implementation as an in-memory reference adapter for operator execution, including `InMemoryOperatorExecutionStore`, command/query adapters, and a thin `OperatorExecutionBffEndpointAdapter`.
+- The first concrete adapter now commits `command_receipt`, prepared `production_actuals_batch`, and in-memory outbox entries through one explicit write-set boundary, while aggregate mutations remain owned by the already-loaded domain objects.
+- `Mes.Application.Tests` now include end-to-end reference-adapter coverage for accepted command persistence, replay-safe outbox behavior, prepared actuals persistence, and station work-queue projection through the infrastructure boundary.
 - The repository now carries an explicit rule that new or modified C# classes and functions must include Korean XML documentation comments, and that requirement is now stated directly in both the root and `wpf-dev-pack` AGENT entry points.
 - The repository guidance now also prefers authored methods, constructors, and public APIs with five or fewer input parameters, using parameter objects when larger inputs are unavoidable.
 - Project-specific manufacturing assumptions are still provisional and must be validated against one pilot line.
 
 ## Next Meaningful Work Unit
 
-Implement concrete persistence and endpoint adapters for `IOperatorExecutionCommandPort` and `IStationWorkQueueSourcePort`, including one explicit atomic save boundary for aggregate state, `command_receipt`, `production_actuals_batch`, and eventual outbox writes.
+Add a thin reference `Experience API / BFF` host that maps HTTP routes to `OperatorExecutionBffEndpointAdapter` through dependency-injected in-memory adapters, without leaking business logic back into the host layer.
 
 ## Validation Path
 
@@ -55,5 +58,7 @@ Implement concrete persistence and endpoint adapters for `IOperatorExecutionComm
 - Re-run `Mes.Application.Tests` whenever handler-side state validation, stored-response replay restoration, or production-actuals preparation rules change.
 - Re-run `Mes.Application.Tests` whenever the work-queue query handler mapping or contract field ownership changes.
 - Re-run `Mes.Application.Tests` whenever application-service orchestration, load/save port contracts, or replay persistence conditions change.
+- Re-run `Mes.Application.Tests` whenever the reference infrastructure adapter changes its write-set composition, outbox capture, or state-loading assumptions.
+- Keep any future HTTP host thin: route handlers should call `OperatorExecutionBffEndpointAdapter` or the application service boundary rather than re-implementing orchestration or validation.
 - Preserve the rule that BFF payload semantics stay identical across WPF and Web even if channel UX diverges.
 - Prefer request or parameter objects over long authored signatures as the application layer grows past simple domain calls.

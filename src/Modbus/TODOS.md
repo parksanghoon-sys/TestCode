@@ -2,7 +2,8 @@
 
 ## Current TODOs
 
-- Implement concrete persistence and endpoint adapters for `IOperatorExecutionCommandPort` and `IStationWorkQueueSourcePort`, including one explicit atomic save boundary for aggregate state, `command_receipt`, `production_actuals_batch`, and eventual outbox writes.
+- Add a thin reference `Experience API / BFF` host that maps HTTP routes to `OperatorExecutionBffEndpointAdapter` through dependency-injected in-memory adapters.
+- Decide the first durable persistence adapter shape for replacing the current in-memory reference adapter without changing the application boundary.
 - Confirm the pilot manufacturing mode and required genealogy depth for the first rollout.
 - Confirm authoritative ownership for item, BOM, routing, resource, and quality master data.
 - Select one pilot line and one representative product family for release 1 scope validation.
@@ -235,6 +236,36 @@ Should `command_receipt`, aggregate state, `production_actuals_batch`, and `doma
 Natural next step:
 Choose the minimum atomic write set for each accepted command type, then let the first concrete port adapter implement exactly that boundary.
 
+### [P1_SOON] Replace the in-memory reference adapter with a durable operational store
+
+What remains:
+Design and implement the first durable persistence adapter that preserves the current `IOperatorExecutionCommandPort` and `IStationWorkQueueSourcePort` behavior while replacing the in-memory reference store.
+
+Why deferred:
+The current cycle intentionally used an in-memory reference adapter first so the project could validate the save boundary, outbox capture, and endpoint composition without prematurely committing to SQL access technology or transaction plumbing.
+
+Objective:
+Keep the now-proven application boundary stable while moving receipts, aggregate state, prepared actuals, and outbox records onto a durable operational store.
+
+Relevant context:
+`src/Mes.Infrastructure/OperatorExecution/InMemory/` now proves the concrete load/save contract and one explicit write-set boundary, but it still relies on store-owned aggregate references instead of detached persistence snapshots.
+
+Relevant files and scope:
+`src/Mes.Infrastructure/OperatorExecution/InMemory/InMemoryOperatorExecutionStore.cs`
+`src/Mes.Infrastructure/OperatorExecution/InMemory/InMemoryOperatorExecutionCommandAdapter.cs`
+`src/Mes.Application/OperatorExecution/OperatorExecutionApplicationPorts.cs`
+`docs/mes/persistence-schema-slice-01.sql`
+`docs/mes/logical-data-model-slice-01.md`
+
+Current status:
+The reference adapter is executable, replay-safe within the current process, and covered by end-to-end application tests, but it is not durable and does not yet model detached transaction snapshots.
+
+Known blockers or open questions:
+Whether the first durable adapter should use raw ADO.NET, Dapper, or another thin SQL mapping strategy, and how aggregate reconstruction versus projection-first loading should be split.
+
+Natural next step:
+Lock the first durable adapter technology and transaction ownership, then implement the smallest SQL-backed write model for `command_receipt`, `production_actuals_batch`, `domain_outbox`, and the currently touched aggregate state.
+
 ### [P2_LATER] Decide whether rejected material scans need durable storage
 
 What remains:
@@ -289,3 +320,4 @@ Validate the plant audit expectation for rejected scans, then either keep scan a
 - 2026-04-16: Implemented Work Unit 4 by compacting operator-execution command contracts to `Context + Payload`, introducing grouped command metadata contracts, and preserving replay semantics under the new request shape.
 - 2026-04-16: Implemented Work Unit 5 by adding application command handlers, a station work-queue query handler, stored-response serialization, production-actuals skeleton preparation, and application tests that validate acceptance, replay, and contract mapping.
 - 2026-04-16: Added operator-execution application ports and `OperatorExecutionApplicationService` so state loading, replay-aware handler invocation, and result persistence are now orchestrated through adapter-facing boundaries.
+- 2026-04-16: Added `src/Mes.Infrastructure` with an in-memory operator-execution reference store, concrete command/query adapters, a thin BFF endpoint adapter, and end-to-end adapter tests for receipts, outbox capture, prepared actuals, and station work-queue projection.

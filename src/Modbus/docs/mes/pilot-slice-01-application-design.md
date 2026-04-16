@@ -155,3 +155,10 @@ Acceptance:
 - final WPF versus Web workflow allocation
 
 These validations still matter, but they do not need to block Work Units 1 through 4 unless they materially change the first slice boundary.
+
+## 7. Current executable reference boundary
+
+- `Mes.Application` now owns the operator-execution workflow policy, replay semantics, and query composition.
+- `Mes.Infrastructure` now provides the first concrete reference adapter for the slice through an in-memory `IOperatorExecutionCommandPort`, an in-memory `IStationWorkQueueSourcePort`, and a thin `OperatorExecutionBffEndpointAdapter`.
+- The current reference adapter commits `command_receipt`, prepared `production_actuals_batch`, and outbox entries through one explicit write-set boundary so the slice can validate accepted-command side effects before durable persistence is chosen.
+- This reference adapter is intentionally not the final persistence design. It proves boundary shape and replay behavior first, while durable SQL-backed storage and a real shared HTTP host remain the next implementation steps.

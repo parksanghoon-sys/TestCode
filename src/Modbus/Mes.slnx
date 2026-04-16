@@ -3,6 +3,7 @@
     <Project Path="src/Mes.Application.Contracts/Mes.Application.Contracts.csproj" />
     <Project Path="src/Mes.Application/Mes.Application.csproj" />
     <Project Path="src/Mes.Domain/Mes.Domain.csproj" />
+    <Project Path="src/Mes.Infrastructure/Mes.Infrastructure.csproj" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/Mes.Application.Tests/Mes.Application.Tests.csproj" />
