@@ -210,3 +210,16 @@ Implications:
 - Operator-execution command request types now expose a two-argument constructor of `Context + Payload` instead of repeating flat envelope metadata on every contract.
 - Transport metadata remains available through `BffCommandEnvelope` convenience properties so current application code can keep reading `CommandId`, `ActorId`, `Channel`, `StationId`, `CorrelationId`, `IdempotencyKey`, `ClientTimestamp`, and `RevisionRefs` without handler-specific remapping.
 - Future handler and endpoint code should accept the compact request contracts as-is rather than reconstructing flat parameter lists.
+
+## 2026-04-16 ADR-017: Keep Work Unit 5 handlers pure over preloaded state bundles
+
+Decision:
+Implement the first operator-execution command handlers and work-queue query handler as pure application services over preloaded state bundles and source snapshots, returning replay-ready receipts and production-actuals artifacts rather than directly reaching into repositories or endpoint adapters.
+
+Why:
+Work Unit 5 needed an executable application boundary, but the project still has not chosen its persistence or endpoint-adapter shape. Letting handlers depend on repositories now would force infrastructure decisions too early and would risk pushing business branching back into BFF code while the persistence boundary is still unsettled.
+
+Implications:
+- `OperatorExecutionCommandHandler` now owns command-level validation, idempotency replay, coordinator invocation, and production-actuals preparation once the relevant aggregates have already been loaded.
+- `GetStationWorkQueueQueryHandler` now owns contract mapping over an already assembled MES-side source snapshot instead of reaching outward to live upstream systems.
+- The next work unit should add explicit application ports that load handler state bundles, persist receipts, and save post-command changes, while keeping the existing command and query policies unchanged.

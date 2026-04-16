@@ -2,7 +2,7 @@
 
 ## Current TODOs
 
-- Execute Work Unit 5 from `docs/mes/pilot-slice-01-application-design.md`: scaffold command handlers, query handlers, and production-actuals preparation only after the first four work units are stable.
+- Bridge `OperatorExecutionCommandHandler` and `GetStationWorkQueueQueryHandler` to persistence-facing load/save ports so the application layer can load state bundles, persist receipts, and save post-command changes without leaking business logic into BFF or infrastructure adapters.
 - Confirm the pilot manufacturing mode and required genealogy depth for the first rollout.
 - Confirm authoritative ownership for item, BOM, routing, resource, and quality master data.
 - Select one pilot line and one representative product family for release 1 scope validation.
@@ -177,6 +177,35 @@ Should the code vocabulary drive the docs from here, or should the docs remain c
 Natural next step:
 Review the implemented status and event names against the release-1 workflow documents, then either update the docs or rename the code before defining API payload contracts.
 
+### [P1_SOON] Decide production-order progression update rules for operation completion handlers
+
+What remains:
+Define when `complete-operation` should promote `ProductionOrder` to `PartiallyCompleted` versus `Completed`, and what additional loaded state is required to do that safely.
+
+Why deferred:
+The new Work Unit 5 handler intentionally completes `OperationExecution` and prepares production-actuals skeletons without mutating order-level completion state, because the current handler boundary only receives the parent order and the current operation. That is not enough evidence to infer whether sibling operations remain open.
+
+Objective:
+Avoid incorrect order-level lifecycle updates while still letting operation completion stay executable and replay-safe.
+
+Relevant context:
+`src/Mes.Application/OperatorExecution/OperatorExecutionCommandHandler.cs` now handles `complete-operation` and prepares a pending production-actuals batch, but it deliberately leaves `ProductionOrder` status unchanged beyond earlier start-operation progression.
+
+Relevant files and scope:
+`src/Mes.Application/OperatorExecution/OperatorExecutionCommandHandler.cs`
+`src/Mes.Domain/Aggregates/ProductionOrder.cs`
+`docs/mes/pilot-slice-01-operator-execution.md`
+`docs/mes/pilot-slice-01-application-design.md`
+
+Current status:
+Operation completion is executable, tested, and replay-safe, but order completion semantics are still unresolved for multi-operation orders.
+
+Known blockers or open questions:
+Will the eventual handler load sibling `OperationExecution` states, a summarized order progression view, or a dedicated completion projection before deciding order-level status.
+
+Natural next step:
+Choose the minimal authoritative source for sibling-operation completion visibility, then extend the completion handler and tests to update `ProductionOrder` status from that source.
+
 ### [P2_LATER] Decide whether rejected material scans need durable storage
 
 What remains:
@@ -229,3 +258,4 @@ Validate the plant audit expectation for rejected scans, then either keep scan a
 - 2026-04-16: Implemented Work Unit 2 with operation-attachment requirement projection, a MES-side station work-queue read service, and application tests that lock queue source ownership and quality gate derivation.
 - 2026-04-16: Implemented Work Unit 3 with command receipt scope, canonical fingerprinting, replay/conflict policy, and application tests that lock transport-metadata-independent replay semantics.
 - 2026-04-16: Implemented Work Unit 4 by compacting operator-execution command contracts to `Context + Payload`, introducing grouped command metadata contracts, and preserving replay semantics under the new request shape.
+- 2026-04-16: Implemented Work Unit 5 by adding application command handlers, a station work-queue query handler, stored-response serialization, production-actuals skeleton preparation, and application tests that validate acceptance, replay, and contract mapping.

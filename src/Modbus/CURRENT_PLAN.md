@@ -26,13 +26,16 @@ Turn the MES baseline into an implementation-ready pilot slice by stabilizing th
 - `Mes.Application` now contains the first command receipt policy and canonical fingerprint builder for the operator-execution slice, with receipt scope fixed to `channel + command_type + idempotency_key`.
 - The slice docs now explicitly state that `request_fingerprint` excludes transport-only metadata such as `command_id`, `correlation_id`, `client_timestamp`, and `revision_refs`.
 - `Mes.Application.Contracts` now groups command metadata into `CommandIdentityContract`, `CommandOriginContract`, and `CommandContextContract`, while operator-execution command requests themselves now use a compact `Context + Payload` constructor shape.
+- `Mes.Application` now contains command handling models, stored-response serialization, and production-actuals preparation primitives for the operator-execution slice.
+- `Mes.Application` now contains `OperatorExecutionCommandHandler` and `GetStationWorkQueueQueryHandler`, both operating on preloaded state bundles so command policy, replay behavior, and query composition stay inside the application layer instead of leaking into BFF-specific code.
+- `Mes.Application.Tests` now cover handler acceptance, safe replay, production-actuals skeleton preparation, and work-queue contract mapping in addition to the earlier coordinator, projection, and idempotency tests.
 - The repository now carries an explicit rule that new or modified C# classes and functions must include Korean XML documentation comments, and that requirement is now stated directly in both the root and `wpf-dev-pack` AGENT entry points.
 - The repository guidance now also prefers authored methods, constructors, and public APIs with five or fewer input parameters, using parameter objects when larger inputs are unavoidable.
 - Project-specific manufacturing assumptions are still provisional and must be validated against one pilot line.
 
 ## Next Meaningful Work Unit
 
-Execute Work Unit 5 from `docs/mes/pilot-slice-01-application-design.md`: scaffold command handlers, query handlers, and production-actuals preparation on top of the stabilized coordinator, work-queue, idempotency, and compact-contract foundations.
+Bridge the new application handlers to persistence-facing load/save ports and endpoint adapters so command state bundles, receipts, and work-queue source snapshots can be loaded and persisted without moving business logic into BFF or infrastructure code.
 
 ## Validation Path
 
@@ -47,5 +50,7 @@ Execute Work Unit 5 from `docs/mes/pilot-slice-01-application-design.md`: scaffo
 - Re-run `Mes.Application.Tests` whenever work-queue source ownership, projection ordering, or quality gate derivation rules change.
 - Re-run `Mes.Application.Tests` whenever receipt scope, fingerprint canonicalization, or replay/conflict policy changes.
 - Re-run `Mes.Application.Tests` whenever compact command-contract shapes change so canonical fingerprint semantics and scope extraction stay stable.
+- Re-run `Mes.Application.Tests` whenever handler-side state validation, stored-response replay restoration, or production-actuals preparation rules change.
+- Re-run `Mes.Application.Tests` whenever the work-queue query handler mapping or contract field ownership changes.
 - Preserve the rule that BFF payload semantics stay identical across WPF and Web even if channel UX diverges.
 - Prefer request or parameter objects over long authored signatures as the application layer grows past simple domain calls.
