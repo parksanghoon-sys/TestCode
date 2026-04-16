@@ -291,13 +291,13 @@ sequenceDiagram
 | 객체 | 키 식별자 | 대표 상태 | 비고 |
 |---|---|---|---|
 | Production Order | Order No | Released, Dispatched, In Progress, Partially Completed, Completed, Closed, Cancelled | 생성은 ERP, 실행 상태는 MES |
-| Operation Execution | Order No + Operation Seq + Execution Id | Ready, Queued, Running, Hold, Rework, Done, Aborted | 현장 작업의 최소 실행 단위 |
-| WIP Unit | Serial/Lot/Batch/WIP Id | Queued, In Process, Hold, Rework, Scrapped, Completed | discrete와 batch 모두 수용 가능해야 함 |
+| Operation Execution | Order No + Operation Seq + Execution Id | Ready, Queued, Running, Paused, Hold, Rework, Done, Aborted | 현장 작업의 최소 실행 단위 |
+| WIP Unit | Serial/Lot/Batch/WIP Id | Queued, InProcess, Hold, Rework, Scrapped, Completed | discrete와 batch 모두 수용 가능해야 함 |
 | Material Lot | Lot/Serial Id | Available, Issued, Consumed, Returned, Blocked | line-side truth는 MES 우선 |
-| Genealogy Link | Parent-Child Link Id | Created, Finalized, Reversed | reversal 정책 필요 |
+| Genealogy Link | Parent-Child Link Id | Created | 현재 도메인 seed는 link 생성만 우선 모델링하고 reversal/finalization은 후속으로 미룸 |
 | Quality Record | Inspection Id | Pending, In Inspection, Passed, Failed, Hold, Released | QMS/LIMS 연계 가능 |
 | Equipment Resource | Equipment Id | Available, Setup, Running, Down, Maintenance, Blocked | 제어 소유는 PLC/SCADA |
-| Operator Action | Action Id | Requested, Approved, Rejected, Applied | override와 e-signature 포함 가능 |
+| Override Request | Override Request Id | Requested, Approved, Rejected | 현재 예외 승인 흐름의 canonical object, e-signature 확장은 후속 선택 사항 |
 
 ## 9. Release Scope
 
