@@ -34,13 +34,15 @@ Turn the MES baseline into an executable pilot slice by carrying the current ope
 - A new `Mes.Infrastructure` project now provides the first concrete port implementation as an in-memory reference adapter for operator execution, including `InMemoryOperatorExecutionStore`, command/query adapters, and a thin `OperatorExecutionBffEndpointAdapter`.
 - The first concrete adapter now commits `command_receipt`, prepared `production_actuals_batch`, and in-memory outbox entries through one explicit write-set boundary, while aggregate mutations remain owned by the already-loaded domain objects.
 - `Mes.Application.Tests` now include end-to-end reference-adapter coverage for accepted command persistence, replay-safe outbox behavior, prepared actuals persistence, and station work-queue projection through the infrastructure boundary.
+- A new `Mes.ExperienceApi` project now provides the first thin shared BFF host for the slice, wiring minimal API routes to `OperatorExecutionBffEndpointAdapter` through dependency-injected in-memory reference services.
+- `Mes.ExperienceApi.Tests` now verify that the documented operator-execution endpoint signatures are exposed as concrete routes and that the host resolves the endpoint adapter plus in-memory store through DI.
 - The repository now carries an explicit rule that new or modified C# classes and functions must include Korean XML documentation comments, and that requirement is now stated directly in both the root and `wpf-dev-pack` AGENT entry points.
 - The repository guidance now also prefers authored methods, constructors, and public APIs with five or fewer input parameters, using parameter objects when larger inputs are unavoidable.
 - Project-specific manufacturing assumptions are still provisional and must be validated against one pilot line.
 
 ## Next Meaningful Work Unit
 
-Add a thin reference `Experience API / BFF` host that maps HTTP routes to `OperatorExecutionBffEndpointAdapter` through dependency-injected in-memory adapters, without leaking business logic back into the host layer.
+Replace the current in-memory reference adapter with the first durable operational persistence adapter while keeping the `Mes.Application` and `Mes.ExperienceApi` boundaries unchanged.
 
 ## Validation Path
 
@@ -60,5 +62,6 @@ Add a thin reference `Experience API / BFF` host that maps HTTP routes to `Opera
 - Re-run `Mes.Application.Tests` whenever application-service orchestration, load/save port contracts, or replay persistence conditions change.
 - Re-run `Mes.Application.Tests` whenever the reference infrastructure adapter changes its write-set composition, outbox capture, or state-loading assumptions.
 - Keep any future HTTP host thin: route handlers should call `OperatorExecutionBffEndpointAdapter` or the application service boundary rather than re-implementing orchestration or validation.
+- Re-run `Mes.ExperienceApi.Tests` whenever route signatures, host DI wiring, or the reference host composition changes.
 - Preserve the rule that BFF payload semantics stay identical across WPF and Web even if channel UX diverges.
 - Prefer request or parameter objects over long authored signatures as the application layer grows past simple domain calls.

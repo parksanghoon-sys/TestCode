@@ -54,3 +54,6 @@
 - Implemented one explicit in-memory write-set boundary that stores `command_receipt`, prepared `production_actuals_batch`, and outbox entries together while preserving the existing application-layer load/save contract.
 - Added `tests/Mes.Application.Tests/InMemoryOperatorExecutionAdapterTests.cs` to validate end-to-end accepted command persistence, replay-safe outbox behavior, prepared actuals persistence, and station work-queue projection through the new infrastructure boundary.
 - Revalidated the repository with `dotnet build Mes.slnx -v minimal` and `dotnet test Mes.slnx -v minimal`, now with infrastructure adapter coverage raising `Mes.Application.Tests` to 25 passing tests.
+- Added `src/Mes.ExperienceApi` as the first thin shared `Experience API / BFF` host for the operator-execution slice, using minimal API route mapping over the existing endpoint adapter and in-memory reference services.
+- Added `tests/Mes.ExperienceApi.Tests` to verify host DI resolution and that the documented operator-execution endpoint signatures are exposed as concrete routes.
+- Revalidated the repository with `dotnet build Mes.slnx -v minimal` and `dotnet test Mes.slnx -v minimal`, now with `Mes.ExperienceApi.Tests` adding 2 passing host smoke tests.

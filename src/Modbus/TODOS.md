@@ -2,8 +2,8 @@
 
 ## Current TODOs
 
-- Add a thin reference `Experience API / BFF` host that maps HTTP routes to `OperatorExecutionBffEndpointAdapter` through dependency-injected in-memory adapters.
 - Decide the first durable persistence adapter shape for replacing the current in-memory reference adapter without changing the application boundary.
+- Implement the first durable persistence adapter for operator execution while preserving the current `Mes.Application` and `Mes.ExperienceApi` contracts.
 - Confirm the pilot manufacturing mode and required genealogy depth for the first rollout.
 - Confirm authoritative ownership for item, BOM, routing, resource, and quality master data.
 - Select one pilot line and one representative product family for release 1 scope validation.
@@ -294,6 +294,35 @@ Whether the pilot line requires rejected-scan history for traceability, training
 Natural next step:
 Validate the plant audit expectation for rejected scans, then either keep scan attempts ephemeral in the BFF or add a dedicated persistence model and outbox event for them.
 
+### [P2_LATER] Normalize Experience API error responses
+
+What remains:
+Introduce a stable HTTP error-mapping policy for the new `Mes.ExperienceApi` host so deterministic not-found, validation, and idempotency-conflict outcomes do not fall back to generic framework exceptions.
+
+Why deferred:
+The current host work unit intentionally focused on proving route mapping and thin composition over the existing endpoint adapter. Adding a full error contract now would have widened the scope into transport semantics that were not required to prove the host boundary itself.
+
+Objective:
+Keep the first HTTP-facing BFF host usable and diagnosable without leaking raw exception behavior as the default operator experience.
+
+Relevant context:
+`src/Mes.ExperienceApi` now maps documented operator-execution routes directly to `OperatorExecutionBffEndpointAdapter`, but missing aggregate IDs or other invalid inputs still surface through default exception handling instead of explicit problem responses.
+
+Relevant files and scope:
+`src/Mes.ExperienceApi/Program.cs`
+`src/Mes.ExperienceApi/OperatorExecution/OperatorExecutionEndpointRouteBuilderExtensions.cs`
+`src/Mes.Infrastructure/OperatorExecution/OperatorExecutionBffEndpointAdapter.cs`
+`src/Mes.Application/OperatorExecution/`
+
+Current status:
+The shared host is buildable and route-tested, but it currently prioritizes thin composition over explicit HTTP error semantics.
+
+Known blockers or open questions:
+Which application exceptions should map to `400`, `404`, `409`, or `422`, and whether problem details should be standardized once for all slices or incrementally per slice.
+
+Natural next step:
+List the currently expected deterministic failure cases for the operator-execution slice, then add a single host-level exception mapping policy and tests for the chosen status codes.
+
 ## Completed
 
 - 2026-04-14: Created the initial MES project architecture baseline in `docs/mes/architecture-blueprint.md`.
@@ -321,3 +350,4 @@ Validate the plant audit expectation for rejected scans, then either keep scan a
 - 2026-04-16: Implemented Work Unit 5 by adding application command handlers, a station work-queue query handler, stored-response serialization, production-actuals skeleton preparation, and application tests that validate acceptance, replay, and contract mapping.
 - 2026-04-16: Added operator-execution application ports and `OperatorExecutionApplicationService` so state loading, replay-aware handler invocation, and result persistence are now orchestrated through adapter-facing boundaries.
 - 2026-04-16: Added `src/Mes.Infrastructure` with an in-memory operator-execution reference store, concrete command/query adapters, a thin BFF endpoint adapter, and end-to-end adapter tests for receipts, outbox capture, prepared actuals, and station work-queue projection.
+- 2026-04-16: Added `src/Mes.ExperienceApi` as the first thin shared BFF host for the operator-execution slice, with minimal API route mapping, DI composition over the in-memory reference adapter, and `Mes.ExperienceApi.Tests` route/DI smoke coverage.

@@ -249,3 +249,16 @@ Implications:
 - `Mes.Infrastructure` becomes the concrete home for adapter code, leaving `Mes.Application` focused on orchestration and business policy.
 - The first reference adapter now proves one write-set boundary for receipts, prepared actuals, and outbox capture, while still relying on store-owned aggregate references rather than detached persistence snapshots.
 - The next infrastructure step should either add a thin HTTP host over the endpoint adapter or replace the in-memory store with a durable operational adapter, without changing the current application contracts.
+
+## 2026-04-16 ADR-020: Keep the first Experience API host as a thin composition layer
+
+Decision:
+Introduce `Mes.ExperienceApi` as a thin shared BFF host that maps documented operator-execution routes directly to `OperatorExecutionBffEndpointAdapter`, and keep all workflow policy, replay handling, and state orchestration below the host layer.
+
+Why:
+The architecture already committed to `Experience API / BFF` as the only authoritative business-command entry point, but there was still no concrete HTTP host proving that the current contracts and endpoint signatures can be exposed without reintroducing business logic into controllers or route handlers. A thin host validates that boundary while keeping persistence technology and richer transport concerns decoupled.
+
+Implications:
+- `Mes.ExperienceApi` should stay focused on DI composition, route mapping, and later transport-level concerns such as authentication or error normalization.
+- `OperatorExecutionBffEndpointAdapter` remains the immediate host-facing boundary, so route handlers do not duplicate application-service invocation or command/query branching.
+- The next major execution step is durable persistence under the existing adapter and host surfaces, followed later by explicit HTTP error mapping and cross-slice transport concerns.
