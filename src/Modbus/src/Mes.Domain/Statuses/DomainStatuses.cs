@@ -68,6 +68,15 @@ public enum QualityRecordStatus
 }
 
 /// <summary>
+/// 품질 판정의 마지막 결과를 표현합니다.
+/// </summary>
+public enum QualityDecisionStatus
+{
+    Passed,
+    Failed
+}
+
+/// <summary>
 /// 예외 승인 요청의 검토 상태를 나타냅니다.
 /// </summary>
 public enum OverrideRequestStatus

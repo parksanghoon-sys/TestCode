@@ -1,8 +1,11 @@
 <Solution>
   <Folder Name="/src/">
+    <Project Path="src/Mes.Application.Contracts/Mes.Application.Contracts.csproj" />
+    <Project Path="src/Mes.Application/Mes.Application.csproj" />
     <Project Path="src/Mes.Domain/Mes.Domain.csproj" />
   </Folder>
   <Folder Name="/tests/">
+    <Project Path="tests/Mes.Application.Tests/Mes.Application.Tests.csproj" />
     <Project Path="tests/Mes.Domain.Tests/Mes.Domain.Tests.csproj" />
   </Folder>
 </Solution>

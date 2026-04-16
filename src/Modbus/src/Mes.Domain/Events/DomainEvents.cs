@@ -101,7 +101,7 @@ public sealed record HoldReleasedDomainEvent(
 /// </summary>
 public sealed record QualityResultRecordedDomainEvent(
     QualityRecordId QualityRecordId,
-    QualityRecordStatus Status,
+    QualityDecisionStatus DecisionStatus,
     DateTimeOffset OccurredAt) : DomainEvent(OccurredAt);
 
 /// <summary>
