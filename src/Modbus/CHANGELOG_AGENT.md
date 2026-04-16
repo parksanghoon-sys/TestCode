@@ -13,3 +13,33 @@
 - Added `rules/dotnet/csharp/xml-doc-comments.md` and updated `AGENTS.md` so new or modified C# classes and functions require Korean XML documentation comments.
 - Applied Korean XML documentation comments to the current `Mes.Domain` and `Mes.Domain.Tests` classes and methods.
 - Strengthened both `AGENTS.md` and `wpf-dev-pack/AGENTS.md` so the Korean XML documentation requirement is stated explicitly as mandatory for introduced or changed C# classes and functions.
+
+## 2026-04-16
+
+- Selected the first implementation-ready pilot slice as operator execution with material consumption and a quality hold gate.
+- Updated `docs/mes/architecture-blueprint.md` and `docs/mes/command-event-catalog.md` to align the documented vocabulary with the current executable domain seed, including `Paused`, `Override Request`, and `quality-result-recorded`.
+- Added `docs/mes/pilot-slice-01-operator-execution.md` to define the happy path, hold-gate exception path, and aggregate responsibilities for the first slice.
+- Added `docs/mes/logical-data-model-slice-01.md` as the first slice-specific logical data model draft.
+- Added `docs/mes/bff-payload-spec-slice-01.md` as the first slice-specific BFF payload draft.
+- Added `tests/Mes.Domain.Tests/OperatorExecutionWorkflowTests.cs` to cover one slice happy path and one hold-gate exception path end to end.
+- Added `src/Mes.Application.Contracts` and connected it to `Mes.slnx` so the first slice now has concrete transport contracts and endpoint signatures outside the domain layer.
+- Added `docs/mes/persistence-schema-slice-01.sql` as the first SQL Server style persistence draft for the selected operator-execution slice.
+- Updated the slice-specific logical model and BFF payload docs so they point to the new concrete contract and schema artifacts.
+- Revalidated the repository with `dotnet build Mes.slnx -v minimal` and `dotnet test Mes.slnx -v minimal`.
+- Updated both `AGENTS.md` entry points so authored methods, constructors, and public APIs should stay at five or fewer input parameters unless a framework-imposed signature requires otherwise.
+- Added `docs/mes/pilot-slice-01-application-design.md` to harden the next implementation plan around hold coordination, work-queue read-model sourcing, idempotency, compact request shapes, and delayed handler scaffolding.
+- Reordered the current execution plan so Work Unit 1 is now the quality hold gate coordinator instead of broad handler implementation.
+- Hardened the slice-01 docs and schema draft so Release 1 blocking quality outcomes materialize into persisted hold provenance, operator queue requirements come from `operation_material_requirement` snapshots, and `command_receipt` now expects canonical request fingerprints with tighter uniqueness.
+- Added `src/Mes.Application` and `tests/Mes.Application.Tests` so the first application-layer implementation now exists as a coordinator-centered boundary for Release 1 quality hold gating.
+- Updated `src/Mes.Domain/Aggregates/OperationExecution.cs`, `src/Mes.Domain/Aggregates/QualityRecord.cs`, and `src/Mes.Domain/Statuses/DomainStatuses.cs` to persist hold provenance and preserve quality decision outcome separately from hold state.
+- Revalidated the repository with `dotnet build Mes.slnx -v minimal` and `dotnet test Mes.slnx -v minimal`, now including `Mes.Application.Tests`.
+- Reviewed Work Unit 2 and fixed the current executable projection anchor as operation attachment, while keeping later order-release ingestion as a reuse path for the same requirement projector.
+- Added `src/Mes.Application/OperatorExecution/WorkQueue/` with `OperationMaterialRequirementProjector`, station work-queue query models, and `StationWorkQueueReadService` so `GetStationWorkQueue` can now be composed from MES-side snapshots without live upstream lookups.
+- Updated the slice docs so work-queue field ownership and the `quality_record -> wip_unit -> operation_execution` gate derivation path are explicit.
+- Revalidated the repository with `dotnet build Mes.slnx -v minimal` and `dotnet test Mes.slnx -v minimal`, now with work-queue projection and query coverage added to `Mes.Application.Tests`.
+- Added `src/Mes.Application/Idempotency/` with command receipt scope models, a replay/conflict policy, and a canonical fingerprint builder for the current operator-execution transport contracts.
+- Updated the slice docs so `request_fingerprint` is explicitly derived from canonical business fields plus actor and station context, while transport-only metadata is excluded from replay equality.
+- Revalidated the repository with `dotnet build Mes.slnx -v minimal` and `dotnet test Mes.slnx -v minimal`, now with idempotency coverage added to `Mes.Application.Tests`.
+- Updated `src/Mes.Application.Contracts/Common/BffContracts.cs` so command metadata is grouped into `CommandIdentityContract`, `CommandOriginContract`, and `CommandContextContract`, and compacted operator-execution command contracts to a `Context + Payload` shape.
+- Updated `docs/mes/bff-payload-spec-slice-01.md` and `docs/mes/pilot-slice-01-application-design.md` so the documented envelope shape matches the compact request contracts.
+- Revalidated the repository with `dotnet build Mes.slnx -v minimal` and `dotnet test Mes.slnx -v minimal`, now with the compact contract shape covered by the existing idempotency tests.

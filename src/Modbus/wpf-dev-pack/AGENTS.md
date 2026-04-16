@@ -24,6 +24,7 @@ These should survive context loss:
 5. Verify unfamiliar API signatures with authoritative docs before coding.
 6. Prefer the most specific matching skill.
 7. Every introduced or changed C# class and function must include Korean XML documentation comments in XML format. This is mandatory for authored code.
+8. Prefer authored methods, constructors, and public APIs with five or fewer input parameters. If more are needed, group them into a request or parameter object unless a framework signature forces the shape.
 
 ## .NET defaults
 

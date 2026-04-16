@@ -90,3 +90,123 @@ Implications:
 - `class`, `record`, `struct`, `interface`, `enum`, `method`, and `constructor` changes should carry XML documentation comments in Korean.
 - Test code follows the same documentation rule so executable examples stay self-explanatory.
 - The canonical guidance lives in `AGENTS.md` and `rules/dotnet/csharp/xml-doc-comments.md`.
+
+## 2026-04-16 ADR-008: Anchor the next implementation work on one operator-execution pilot slice
+
+Decision:
+Use `operator execution -> material consumption -> quality gate -> operation completion` as the first implementation-ready pilot slice, and treat material scan validation plus production-actuals preparation as application-layer workflow outputs for that slice rather than immediate `Mes.Domain` aggregate events.
+
+Why:
+This slice exercises the most operator-critical MES behavior with the aggregates that already exist in code. It also lets the project derive the first logical data model and BFF payload contracts without forcing broader warehouse or enterprise-quality decisions too early.
+
+Implications:
+- The current code vocabulary becomes the canonical baseline for this slice, including `Paused`, `InProcess`, `OverrideRequest`, and `quality-result-recorded`.
+- `material-scanned`, `material-validation-passed/failed`, and `production-actuals-ready` stay documented as application or integration workflow outputs until a later cycle proves they belong directly in `Mes.Domain`.
+- Next implementation work should translate this slice into concrete application contracts, persistence schema drafts, and workflow coordination logic.
+
+## 2026-04-16 ADR-009: Keep BFF transport contracts outside the domain layer
+
+Decision:
+Define the first operator-execution slice payloads and endpoint signatures in a dedicated `Mes.Application.Contracts` project rather than placing transport types inside `Mes.Domain`.
+
+Why:
+The current slice now has enough stability to require concrete command and query contracts, but those contracts still represent channel-facing transport concerns such as envelope metadata, endpoint routes, and response shapes. Keeping them outside the domain preserves the domain model as the owner of business state and transitions instead of HTTP or BFF semantics.
+
+Implications:
+- `Mes.Domain` remains focused on aggregates, value objects, statuses, and domain events.
+- `Mes.Application.Contracts` becomes the canonical home for WPF or Web shared BFF payloads, notification contracts, and endpoint-signature metadata.
+- Future application handlers and coordinators should translate between transport contracts and domain objects rather than leaking channel payload structures into domain types.
+
+## 2026-04-16 ADR-010: Prefer concise authored signatures
+
+Decision:
+Prefer authored methods, constructors, and public APIs with five or fewer input parameters, and switch to parameter objects, request records, or value objects when more inputs are otherwise needed.
+
+Why:
+Long parameter lists are harder to scan, easier to misuse, and create unnecessary friction when reading and maintaining code. A five-parameter preference keeps signatures easier to understand without forbidding framework-driven exceptions.
+
+Implications:
+- New application-layer handlers, coordinators, factories, and service methods should avoid long primitive-heavy signatures.
+- When an authored signature would exceed five inputs, the default move is to group related fields into a dedicated request or parameter type.
+- External framework callbacks, serializer contracts, or library-mandated signatures may exceed this limit when the shape is not under project control.
+
+## 2026-04-16 ADR-011: Harden slice-01 application design before handler scaffolding
+
+Decision:
+Before scaffolding the first operator-execution application handlers, first resolve four design gaps in order: the authoritative quality hold coordinator, the MES-side work-queue read-model source, command idempotency semantics, and compact request-envelope shapes.
+
+Why:
+The current domain seed, contracts, and persistence draft are strong enough to expose the remaining implementation risk clearly. If handler work starts before those four gaps are closed, the project is likely to grow temporary BFF logic, unstable handler signatures, and inconsistent retry behavior.
+
+Implications:
+- Work Unit 1 becomes the quality hold gate coordinator for `QualityRecord` and `OperationExecution`.
+- `GetStationWorkQueue` should not depend on ad hoc live upstream master-data lookups; the application design must first define one MES-side source for required-material data.
+- Idempotent replay behavior must be explicit before command handlers are treated as production-ready.
+- Handler and query scaffolding intentionally moves after the design hardening units rather than happening in parallel.
+
+## 2026-04-16 ADR-012: Make release-1 quality gating and queue sourcing explicit in persisted design
+
+Decision:
+For the first operator-execution slice, Release 1 blocking quality outcomes must be materialized into explicit persisted hold state, the operator queue must read required materials from an MES-side requirement snapshot, and command receipts must use a canonical idempotency fingerprint with tighter uniqueness.
+
+Why:
+The previous draft left three critical behaviors underspecified: how hold release restores pre-hold execution state after reload, where `GetStationWorkQueue.required_materials` comes from without live upstream joins, and how replay-safe receipts distinguish safe retries from conflicting duplicates.
+
+Implications:
+- `operation_execution` persistence now needs `status_before_hold`, `hold_source_type`, and `hold_source_id`.
+- `quality_record` persistence now needs to preserve the last decision outcome separately from the current hold state.
+- `operation_material_requirement` becomes the MES-side authoritative source for queue material requirements and should be projected from order-release ingestion or operation attachment, not operator commands.
+- The Release 1 operator queue should emit `quality_gate_state` as `open` or `hold`, while `review-required` stays reserved for a later supervisory slice.
+- `command_receipt` should treat `(channel, command_type, idempotency_key)` as the natural uniqueness scope and store a canonical request fingerprint plus deterministic response payload for replay.
+
+## 2026-04-16 ADR-013: Start the application layer with a coordinator-first MES boundary
+
+Decision:
+Implement the first `Mes.Application` code as a workflow coordinator boundary centered on `QualityHoldGateCoordinator`, and keep the Release 1 quality gate rule as an explicit cross-aggregate policy rather than burying it inside future handlers or transport code.
+
+Why:
+The current pilot slice already had enough stability to encode the authoritative hold propagation rule, but not enough stability yet to justify full handler or query scaffolding. Starting with a coordinator keeps the ownership of cross-aggregate behavior clear while preserving room to add transport handlers and persistence later without duplicating quality gate logic.
+
+Implications:
+- `Mes.Domain` now exposes hold provenance and quality decision outcome as aggregate state so persistence can restore coordinator behavior after reload.
+- `Mes.Application` owns the cross-aggregate policy that materializes blocking quality results into `QualityRecord` plus `OperationExecution` hold state and only releases operation hold when provenance matches.
+- Future handler and query layers should call the coordinator rather than re-implementing quality gate branching in endpoint-specific code.
+
+## 2026-04-16 ADR-014: Use operation attachment as the first executable anchor for work-queue requirement snapshots
+
+Decision:
+Implement the first MES-side `operation_material_requirement` projection from operation attachment in `Mes.Application`, and treat future order-release ingestion as a caller of the same projector rather than a separate requirement-building path.
+
+Why:
+The current code seed already has `ProductionOrder.AttachOperation` and `OperationExecution` objects, but it does not yet have an executable order-release ingestion pipeline. Using operation attachment as the first projection anchor keeps Work Unit 2 implementable now without creating a second competing source for `required_materials`.
+
+Implications:
+- `GetStationWorkQueue.required_materials` now has one executable MES-owned source in code instead of a placeholder dependency on future ingestion work.
+- Future order-release ingestion should reuse the same projector so queue requirements are built once and only once per execution context.
+- `quality_gate_state` derivation in the queue should join held `QualityRecord` entries through `WipUnit.current_operation_execution_id` rather than inventing a direct quality-to-operation link for Release 1.
+
+## 2026-04-16 ADR-015: Build command receipt fingerprints from canonical business fields, not transport metadata
+
+Decision:
+For the operator-execution slice, keep receipt uniqueness at `channel + command_type + idempotency_key`, and derive `request_fingerprint` from canonical business fields plus actor and station context rather than from the full transport constructor shape.
+
+Why:
+The current transport contracts still include metadata that should not redefine business equality, such as `command_id`, `correlation_id`, `client_timestamp`, and optional `revision_refs`. If those fields enter the fingerprint, safe retries and future contract compaction would produce false conflicts even when the business command is unchanged.
+
+Implications:
+- Safe retries with the same scope and the same business meaning now replay the stored response even if transport-only metadata changes.
+- Same scope with a different business payload now returns an idempotency conflict instead of silently replaying the wrong result.
+- Work Unit 4 can compact the contract shape without changing replay semantics, as long as the same canonical business fields remain available.
+
+## 2026-04-16 ADR-016: Compact command contracts with grouped context metadata
+
+Decision:
+For the operator-execution slice, represent command transport requests as `Request(Context, Payload)` and shape `CommandContextContract` itself as grouped metadata over `CommandIdentityContract`, `CommandOriginContract`, `ClientTimestamp`, and `RevisionRefs`.
+
+Why:
+The previous request contracts repeated nine transport parameters per command constructor, which directly violated the repository preference for authored signatures of five inputs or fewer and made the next handler layer harder to read. Grouping metadata once keeps the contract surface compact without changing command meaning or the canonical fingerprint inputs fixed by ADR-015.
+
+Implications:
+- Operator-execution command request types now expose a two-argument constructor of `Context + Payload` instead of repeating flat envelope metadata on every contract.
+- Transport metadata remains available through `BffCommandEnvelope` convenience properties so current application code can keep reading `CommandId`, `ActorId`, `Channel`, `StationId`, `CorrelationId`, `IdempotencyKey`, `ClientTimestamp`, and `RevisionRefs` without handler-specific remapping.
+- Future handler and endpoint code should accept the compact request contracts as-is rather than reconstructing flat parameter lists.

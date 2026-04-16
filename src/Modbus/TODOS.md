@@ -2,6 +2,7 @@
 
 ## Current TODOs
 
+- Execute Work Unit 5 from `docs/mes/pilot-slice-01-application-design.md`: scaffold command handlers, query handlers, and production-actuals preparation only after the first four work units are stable.
 - Confirm the pilot manufacturing mode and required genealogy depth for the first rollout.
 - Confirm authoritative ownership for item, BOM, routing, resource, and quality master data.
 - Select one pilot line and one representative product family for release 1 scope validation.
@@ -9,9 +10,7 @@
 - Validate the initial command/event catalog against pilot workflows and stakeholder terminology.
 - Validate the offline authority matrix with OT, production, and quality stakeholders.
 - Validate the release-1 WMS-lite reconciliation path with warehouse operations.
-- Align the implemented domain status and event vocabulary with `docs/mes/architecture-blueprint.md` and `docs/mes/command-event-catalog.md`.
-- Derive the first logical data model draft from the command/event catalog.
-- Derive the first BFF/API payload spec for operator-critical commands.
+- Validate the selected operator-execution pilot slice against one pilot line and one representative product family.
 
 ## Deferred Backlog
 
@@ -178,6 +177,34 @@ Should the code vocabulary drive the docs from here, or should the docs remain c
 Natural next step:
 Review the implemented status and event names against the release-1 workflow documents, then either update the docs or rename the code before defining API payload contracts.
 
+### [P2_LATER] Decide whether rejected material scans need durable storage
+
+What remains:
+Decide whether failed or rejected `record-material-scan` attempts must be persisted separately from accepted `material_consumption` records.
+
+Why deferred:
+The first schema draft intentionally models only accepted consumption and genealogy because that is enough for the current operator-execution slice. Persisting every rejected scan would add extra tables and workflow states before the pilot audit requirement is confirmed.
+
+Objective:
+Avoid under-modeling operator audit requirements while keeping the release-1 persistence design minimal and coherent.
+
+Relevant context:
+`docs/mes/bff-payload-spec-slice-01.md` still treats material scan handling as an application or BFF validation step ahead of `record-material-consumption`, and `docs/mes/persistence-schema-slice-01.sql` currently omits a separate scan-attempt table.
+
+Relevant files and scope:
+`docs/mes/bff-payload-spec-slice-01.md`
+`docs/mes/logical-data-model-slice-01.md`
+`docs/mes/persistence-schema-slice-01.sql`
+
+Current status:
+Accepted material usage is persisted through `material_consumption` and `genealogy_link`, but rejected scans are not yet modeled as durable operational records.
+
+Known blockers or open questions:
+Whether the pilot line requires rejected-scan history for traceability, training, compliance, or investigation.
+
+Natural next step:
+Validate the plant audit expectation for rejected scans, then either keep scan attempts ephemeral in the BFF or add a dedicated persistence model and outbox event for them.
+
 ## Completed
 
 - 2026-04-14: Created the initial MES project architecture baseline in `docs/mes/architecture-blueprint.md`.
@@ -190,3 +217,15 @@ Review the implemented status and event names against the release-1 workflow doc
 - 2026-04-14: Added the first `Mes.Domain` implementation baseline and `Mes.Domain.Tests` coverage for core MES execution aggregates.
 - 2026-04-14: Added the repository rule that new or modified C# classes and functions must carry Korean XML documentation comments, and applied it to the current domain/test code.
 - 2026-04-14: Strengthened the root and `wpf-dev-pack` AGENT entry points so the Korean XML documentation requirement is stated explicitly as mandatory for introduced or changed C# classes and functions.
+- 2026-04-16: Selected the first implementation-ready pilot slice as operator execution with material consumption and a quality hold gate, and aligned the existing architecture and command/event docs to the current code vocabulary.
+- 2026-04-16: Added `docs/mes/pilot-slice-01-operator-execution.md`, `docs/mes/logical-data-model-slice-01.md`, and `docs/mes/bff-payload-spec-slice-01.md` as the first slice-specific design artifacts.
+- 2026-04-16: Added end-to-end happy-path and hold-gate tests for the selected operator execution slice in `tests/Mes.Domain.Tests/OperatorExecutionWorkflowTests.cs`.
+- 2026-04-16: Added `src/Mes.Application.Contracts` with concrete operator-execution command, response, query, notification, and endpoint-signature types for the first slice.
+- 2026-04-16: Added `docs/mes/persistence-schema-slice-01.sql` as the first persistence-oriented SQL draft for the operator execution slice.
+- 2026-04-16: Added a repository-wide guidance rule to prefer authored methods, constructors, and public APIs with five or fewer input parameters, using parameter objects when larger inputs are unavoidable.
+- 2026-04-16: Added `docs/mes/pilot-slice-01-application-design.md` and tightened the next work order so hold coordination, work-queue read-model sourcing, idempotency, and compact contract shapes are resolved before handler scaffolding.
+- 2026-04-16: Hardened the slice-01 design so blocking quality outcomes materialize into persisted hold provenance, operator queue requirements come from MES-side snapshots, and command receipts carry canonical idempotency fingerprints.
+- 2026-04-16: Implemented Work Unit 1 with release-1 hold provenance in `Mes.Domain`, added `Mes.Application` plus `QualityHoldGateCoordinator`, and validated the coordinator rules in `Mes.Application.Tests`.
+- 2026-04-16: Implemented Work Unit 2 with operation-attachment requirement projection, a MES-side station work-queue read service, and application tests that lock queue source ownership and quality gate derivation.
+- 2026-04-16: Implemented Work Unit 3 with command receipt scope, canonical fingerprinting, replay/conflict policy, and application tests that lock transport-metadata-independent replay semantics.
+- 2026-04-16: Implemented Work Unit 4 by compacting operator-execution command contracts to `Context + Payload`, introducing grouped command metadata contracts, and preserving replay semantics under the new request shape.

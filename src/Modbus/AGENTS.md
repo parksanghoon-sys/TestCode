@@ -17,6 +17,8 @@ This repository provides reusable Codex-first guidance for .NET, WPF, and Avalon
 - Keep repository guidance short and push detailed process into skill docs or focused rules.
 - When writing or modifying C# code, you must follow `rules/dotnet/csharp/xml-doc-comments.md`.
 - Every introduced or changed C# class and function must include Korean XML documentation comments. Treat this as mandatory, not optional.
+- Prefer authored methods, constructors, and public APIs with five or fewer input parameters.
+- If more than five inputs are genuinely needed, strongly prefer grouping them into a parameter object, request record, or value object unless an external framework or library signature forces the shape.
 
 ## Shared skill areas
 
