@@ -223,3 +223,16 @@ Implications:
 - `OperatorExecutionCommandHandler` now owns command-level validation, idempotency replay, coordinator invocation, and production-actuals preparation once the relevant aggregates have already been loaded.
 - `GetStationWorkQueueQueryHandler` now owns contract mapping over an already assembled MES-side source snapshot instead of reaching outward to live upstream systems.
 - The next work unit should add explicit application ports that load handler state bundles, persist receipts, and save post-command changes, while keeping the existing command and query policies unchanged.
+
+## 2026-04-16 ADR-018: Use one application service to orchestrate load, handler invocation, and save through ports
+
+Decision:
+Introduce `OperatorExecutionApplicationService` as the adapter-facing orchestration boundary for the current slice, and expose persistence needs through `IOperatorExecutionCommandPort` and `IStationWorkQueueSourcePort` instead of letting endpoint adapters or repositories call handlers directly.
+
+Why:
+Once Work Unit 5 made command handlers executable, the next risk was that transport or infrastructure code would start recreating the same load-receipt-handle-save sequence in multiple places. A dedicated application service keeps that sequence explicit, replay-aware, and testable while still deferring concrete persistence technology.
+
+Implications:
+- Endpoint adapters should call `OperatorExecutionApplicationService` rather than interacting with `OperatorExecutionCommandHandler` or `GetStationWorkQueueQueryHandler` directly.
+- Concrete persistence adapters now have one narrow contract to satisfy: load the typed state bundle or work-queue source, return any existing receipt, and persist the accepted result through one `SaveAsync` call.
+- The remaining open design choice is the atomic write boundary inside that `SaveAsync` call, especially once `domain_outbox` publication is wired in.

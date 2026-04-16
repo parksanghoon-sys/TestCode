@@ -47,3 +47,6 @@
 - Added `src/Mes.Application/OperatorExecution/WorkQueue/GetStationWorkQueueQueryHandler.cs` so the existing MES-side work-queue read service now has a transport-facing query composition boundary.
 - Added `tests/Mes.Application.Tests/OperatorExecutionCommandHandlerTests.cs` and `GetStationWorkQueueQueryHandlerTests.cs` to validate handler acceptance, safe replay, production-actuals skeleton preparation, and work-queue contract mapping.
 - Revalidated the repository with `dotnet build Mes.slnx -v minimal` and `dotnet test Mes.slnx -v minimal`, now with Work Unit 5 coverage raising `Mes.Application.Tests` to 17 passing tests.
+- Added `src/Mes.Application/OperatorExecution/OperatorExecutionApplicationPorts.cs`, `OperatorExecutionApplicationRequests.cs`, and `OperatorExecutionApplicationService.cs` so the new handlers and query path can be orchestrated through adapter-facing load/save ports instead of direct repository assumptions.
+- Added `tests/Mes.Application.Tests/OperatorExecutionApplicationServiceTests.cs` to validate state loading, replay-aware save skipping, prepared-actuals persistence, and work-queue source loading through the application service boundary.
+- Revalidated the repository with `dotnet build Mes.slnx -v minimal` and `dotnet test Mes.slnx -v minimal`, now with orchestration coverage raising `Mes.Application.Tests` to 21 passing tests.

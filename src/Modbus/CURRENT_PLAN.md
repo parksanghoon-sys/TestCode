@@ -29,13 +29,15 @@ Turn the MES baseline into an implementation-ready pilot slice by stabilizing th
 - `Mes.Application` now contains command handling models, stored-response serialization, and production-actuals preparation primitives for the operator-execution slice.
 - `Mes.Application` now contains `OperatorExecutionCommandHandler` and `GetStationWorkQueueQueryHandler`, both operating on preloaded state bundles so command policy, replay behavior, and query composition stay inside the application layer instead of leaking into BFF-specific code.
 - `Mes.Application.Tests` now cover handler acceptance, safe replay, production-actuals skeleton preparation, and work-queue contract mapping in addition to the earlier coordinator, projection, and idempotency tests.
+- `Mes.Application` now also contains `IOperatorExecutionCommandPort`, `IStationWorkQueueSourcePort`, and `OperatorExecutionApplicationService`, so handler/query orchestration can load state bundles, invoke application policies, and persist results without binding the current slice to a specific repository or endpoint technology.
+- `Mes.Application.Tests` now validate that the new application service loads state through ports, skips persistence on replay, persists prepared actuals on accepted completion, and composes work-queue queries through the source port.
 - The repository now carries an explicit rule that new or modified C# classes and functions must include Korean XML documentation comments, and that requirement is now stated directly in both the root and `wpf-dev-pack` AGENT entry points.
 - The repository guidance now also prefers authored methods, constructors, and public APIs with five or fewer input parameters, using parameter objects when larger inputs are unavoidable.
 - Project-specific manufacturing assumptions are still provisional and must be validated against one pilot line.
 
 ## Next Meaningful Work Unit
 
-Bridge the new application handlers to persistence-facing load/save ports and endpoint adapters so command state bundles, receipts, and work-queue source snapshots can be loaded and persisted without moving business logic into BFF or infrastructure code.
+Implement concrete persistence and endpoint adapters for `IOperatorExecutionCommandPort` and `IStationWorkQueueSourcePort`, including one explicit atomic save boundary for aggregate state, `command_receipt`, `production_actuals_batch`, and eventual outbox writes.
 
 ## Validation Path
 
@@ -52,5 +54,6 @@ Bridge the new application handlers to persistence-facing load/save ports and en
 - Re-run `Mes.Application.Tests` whenever compact command-contract shapes change so canonical fingerprint semantics and scope extraction stay stable.
 - Re-run `Mes.Application.Tests` whenever handler-side state validation, stored-response replay restoration, or production-actuals preparation rules change.
 - Re-run `Mes.Application.Tests` whenever the work-queue query handler mapping or contract field ownership changes.
+- Re-run `Mes.Application.Tests` whenever application-service orchestration, load/save port contracts, or replay persistence conditions change.
 - Preserve the rule that BFF payload semantics stay identical across WPF and Web even if channel UX diverges.
 - Prefer request or parameter objects over long authored signatures as the application layer grows past simple domain calls.

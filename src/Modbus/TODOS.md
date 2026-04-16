@@ -2,7 +2,7 @@
 
 ## Current TODOs
 
-- Bridge `OperatorExecutionCommandHandler` and `GetStationWorkQueueQueryHandler` to persistence-facing load/save ports so the application layer can load state bundles, persist receipts, and save post-command changes without leaking business logic into BFF or infrastructure adapters.
+- Implement concrete persistence and endpoint adapters for `IOperatorExecutionCommandPort` and `IStationWorkQueueSourcePort`, including one explicit atomic save boundary for aggregate state, `command_receipt`, `production_actuals_batch`, and eventual outbox writes.
 - Confirm the pilot manufacturing mode and required genealogy depth for the first rollout.
 - Confirm authoritative ownership for item, BOM, routing, resource, and quality master data.
 - Select one pilot line and one representative product family for release 1 scope validation.
@@ -206,6 +206,35 @@ Will the eventual handler load sibling `OperationExecution` states, a summarized
 Natural next step:
 Choose the minimal authoritative source for sibling-operation completion visibility, then extend the completion handler and tests to update `ProductionOrder` status from that source.
 
+### [P1_SOON] Define the transactional persistence boundary for application-service saves
+
+What remains:
+Define exactly which records must commit atomically when `OperatorExecutionApplicationService` saves an accepted command result.
+
+Why deferred:
+The new application service now centralizes load and save orchestration through `IOperatorExecutionCommandPort`, but the project still has no concrete persistence adapter. Before implementing one, the save boundary must be explicit so handlers do not accidentally persist aggregate state, receipts, `production_actuals_batch`, and future outbox entries in inconsistent steps.
+
+Objective:
+Keep idempotency replay, aggregate mutation, and integration publication consistent under retries and partial failures.
+
+Relevant context:
+`src/Mes.Application/OperatorExecution/OperatorExecutionApplicationService.cs` now issues one `SaveAsync` call per accepted command, while `docs/mes/persistence-schema-slice-01.sql` already models `command_receipt`, `production_actuals_batch`, and `domain_outbox` as separate records.
+
+Relevant files and scope:
+`src/Mes.Application/OperatorExecution/OperatorExecutionApplicationService.cs`
+`src/Mes.Application/OperatorExecution/OperatorExecutionApplicationPorts.cs`
+`docs/mes/persistence-schema-slice-01.sql`
+`docs/mes/logical-data-model-slice-01.md`
+
+Current status:
+The orchestration boundary is executable and tested, but atomic commit semantics are still implicit.
+
+Known blockers or open questions:
+Should `command_receipt`, aggregate state, `production_actuals_batch`, and `domain_outbox` always share one transaction, and if so which adapter layer owns that transaction boundary.
+
+Natural next step:
+Choose the minimum atomic write set for each accepted command type, then let the first concrete port adapter implement exactly that boundary.
+
 ### [P2_LATER] Decide whether rejected material scans need durable storage
 
 What remains:
@@ -259,3 +288,4 @@ Validate the plant audit expectation for rejected scans, then either keep scan a
 - 2026-04-16: Implemented Work Unit 3 with command receipt scope, canonical fingerprinting, replay/conflict policy, and application tests that lock transport-metadata-independent replay semantics.
 - 2026-04-16: Implemented Work Unit 4 by compacting operator-execution command contracts to `Context + Payload`, introducing grouped command metadata contracts, and preserving replay semantics under the new request shape.
 - 2026-04-16: Implemented Work Unit 5 by adding application command handlers, a station work-queue query handler, stored-response serialization, production-actuals skeleton preparation, and application tests that validate acceptance, replay, and contract mapping.
+- 2026-04-16: Added operator-execution application ports and `OperatorExecutionApplicationService` so state loading, replay-aware handler invocation, and result persistence are now orchestrated through adapter-facing boundaries.
