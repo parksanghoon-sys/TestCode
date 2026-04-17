@@ -437,6 +437,7 @@ public sealed record RequiredMaterialContract(
 /// <param name="OperationSequence">라우팅 상 공정 순번입니다.</param>
 /// <param name="StationId">바인딩된 스테이션 식별자입니다.</param>
 /// <param name="Status">현재 공정 실행 상태입니다.</param>
+/// <param name="OperationQuantityUnit">현재 공정 실행의 authoritative 수량 단위입니다.</param>
 /// <param name="RequiredMaterials">요구 자재 요약 목록입니다.</param>
 /// <param name="QualityGateState">현재 품질 gate 상태입니다.</param>
 public sealed record WorkQueueItemContract(
@@ -445,6 +446,7 @@ public sealed record WorkQueueItemContract(
     int OperationSequence,
     string StationId,
     string Status,
+    string OperationQuantityUnit,
     IReadOnlyList<RequiredMaterialContract> RequiredMaterials,
     string QualityGateState);
 

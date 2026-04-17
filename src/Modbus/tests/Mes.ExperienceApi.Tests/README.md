@@ -16,6 +16,7 @@ The project currently verifies:
 - that legacy file-store path settings do not override the SQLite default
 - route exposure for all documented endpoint signatures
 - stable host-level problem-details mapping for `400`, `404`, `409`, `422`, and fallback `500`
+- the example-folder mock station scenario can seed SQLite and exercise the current HTTP happy path
 
 The project does not cover:
 
@@ -26,6 +27,7 @@ The project does not cover:
 ## File Structure
 
 ```text
+MockOperatorExecutionExampleSmokeTests.cs
 OperatorExecutionExperienceApiEndpointRouteBuilderTests.cs
 OperatorExecutionProblemDetailsTests.cs
 ```
@@ -41,6 +43,11 @@ without leaking that choice into route handlers or the application layer.
 
 Locks the thin-host error contract so deterministic operator-execution failures
 normalize to stable problem-details payloads instead of leaking raw exception behavior.
+
+### `MockOperatorExecutionExampleSmokeTests.cs`
+
+Locks the `example/Mes.MockStation.Example/` scenario so the queued and running
+mock station sample still works against the real thin-host HTTP path.
 
 ## Current Limitations
 

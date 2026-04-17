@@ -51,6 +51,7 @@ public sealed class GetStationWorkQueueQueryHandlerTests
         Assert.Single(response.Items);
         Assert.Equal(operation.Id.ToString(), response.Items[0].OperationExecutionId);
         Assert.Equal(QualityGateStateValues.Hold, response.Items[0].QualityGateState);
+        Assert.Equal("KG", response.Items[0].OperationQuantityUnit);
         Assert.Equal(["MAT-81-A", "MAT-81-B"], response.Items[0].RequiredMaterials.Select(material => material.MaterialCode).ToArray());
         Assert.Equal(1m, response.Items[0].RequiredMaterials[0].RequiredQuantity.Value);
         Assert.Equal(2m, response.Items[0].RequiredMaterials[1].RequiredQuantity.Value);
@@ -73,7 +74,8 @@ public sealed class GetStationWorkQueueQueryHandlerTests
         var operation = OperationExecution.Create(
             new OperationExecutionId(operationExecutionId),
             new ProductionOrderId(productionOrderId),
-            10);
+            10,
+            "KG");
 
         operation.QueueForExecution();
         operation.Start(stationId, startedAt);

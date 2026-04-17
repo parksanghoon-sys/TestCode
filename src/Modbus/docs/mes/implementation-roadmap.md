@@ -17,6 +17,7 @@
 - current-state process map
 - ownership matrix
 - pilot line scope
+- pilot profile assumption sheet
 - canonical object shortlist
 - interface inventory
 - role-by-workflow channel matrix
@@ -145,10 +146,11 @@
 ## 첫 3주 권장 액션
 
 1. pilot line value stream을 event 기준으로 그린다.
-2. 생산오더, 작업, WIP, material lot, quality hold에 대한 canonical ID 규칙을 정한다.
-3. `BFF` command path와 `Edge` device path를 나눠 command ownership을 문서화한다.
-4. operator station의 최소 화면 흐름을 정의하고 WPF 우선 화면과 web 우선 화면을 나눈다.
-5. offline 시나리오, duplicate event 시나리오, line-side reconciliation 시나리오를 테스트 케이스로 먼저 만든다.
+2. `docs/mes/pilot-profile-working-assumptions.md`의 manufacturing mode, genealogy depth, and device-handshake assumptions를 실제 파일럿 라인 기준으로 검증한다.
+3. 생산오더, 작업, WIP, material lot, quality hold에 대한 canonical ID 규칙을 정한다.
+4. `BFF` command path와 `Edge` device path를 나눠 command ownership을 문서화한다.
+5. operator station의 최소 화면 흐름을 정의하고 WPF 우선 화면과 web 우선 화면을 나눈다.
+6. offline 시나리오, duplicate event 시나리오, line-side reconciliation 시나리오를 테스트 케이스로 먼저 만든다.
 
 ## 참조 상세 문서
 

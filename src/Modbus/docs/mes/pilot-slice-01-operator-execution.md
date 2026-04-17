@@ -1,4 +1,4 @@
-# Pilot Slice 01: Operator Execution With Material Consumption And Quality Gate
+﻿# Pilot Slice 01: Operator Execution With Material Consumption And Quality Gate
 
 ## 1. Scope
 
@@ -51,10 +51,14 @@ The first implementation-ready pilot slice is the operator-critical execution fl
 | Concept | Canonical name for this slice | Current executable representation | Note |
 |---|---|---|---|
 | Order working state | `InProgress` | `ProductionOrderStatus.InProgress` | use code spelling as canonical from here |
+| Order partial completion state | `PartiallyCompleted` | `ProductionOrderStatus.PartiallyCompleted` | keep exact enum spelling in payload and architecture docs |
 | Operation temporary stop | `Paused` | `OperationExecutionStatus.Paused` | add to docs wherever operation states are listed |
+| Operation terminal completion state | `Done` | `OperationExecutionStatus.Done` | distinguish operation execution completion from order `Completed` |
 | WIP active state | `InProcess` | `WipUnitStatus.InProcess` | prefer exact enum spelling for payload and persistence drafts |
+| Quality active inspection state | `InInspection` | `QualityRecordStatus.InInspection` | prefer exact enum spelling instead of prose `In Inspection` |
 | Quality decision event | `quality-result-recorded` | `QualityResultRecordedDomainEvent` | domain event exists and should be listed in docs |
 | Exception approval | `override-requested/approved/rejected` | `OverrideRequest` aggregate and related events | treat `OverrideRequest` as canonical object name |
+| Material usage command | `record-material-consumption` | shared BFF command name | do not shorten to `record-consumption` in client or architecture docs |
 | Material scan validation | application workflow event | not a `Mes.Domain` event yet | keep in BFF or application layer for the first slice |
 | Production actuals preparation | integration workflow event | not a `Mes.Domain` event yet | derive after command handling and outbox projection |
 

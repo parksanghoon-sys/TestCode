@@ -371,3 +371,120 @@ Implications:
 - `Mes.Application` and `Mes.Infrastructure` should surface deterministic not-found, conflict, and validation outcomes through the typed operator-execution exception taxonomy instead of leaking provider-specific exceptions upward.
 - `Mes.ExperienceApi` route handlers stay thin and delegate to the existing endpoint adapter, while one host-level mapper turns those exceptions into stable problem-details payloads with slice-specific error codes and context extensions.
 - Broader cross-slice transport standardization can widen this mapper later without changing the current application or persistence seams.
+
+## 2026-04-17 ADR-029: Treat the first pilot profile as a documented working assumption, not an implicit guess
+
+Decision:
+Until a real pilot line and representative product family are selected, treat the current executable target as a `station-based discrete-dominant hybrid` pilot with `lot-first genealogy plus serial-capable WIP identity`, and do not assume that direct Modbus or PLC handshake is mandatory for the first operator-execution rollout.
+
+Why:
+The current codebase already carries strong implicit signals about the intended pilot shape: station queue execution, WPF-first operator flow, lot-to-WIP genealogy, MES-owned in-process hold/release, and no equipment-specific completion handshake in the command contracts. Leaving those signals undocumented would make the next WPF, edge, and slice decisions drift around unstated assumptions.
+
+Implications:
+- `docs/mes/pilot-profile-working-assumptions.md` becomes the canonical place to state these assumptions until external pilot validation replaces them with plant-confirmed facts.
+- Current slice work should stay optimized for station-based operator execution and lot-first genealogy unless the selected pilot line proves that serial-per-piece traceability or batch/process control is mandatory on day one.
+- Modbus or PLC handshake work should remain a bounded follow-up behind pilot equipment validation rather than widening the current operator-execution baseline by default.
+
+## 2026-04-17 ADR-030: Start the WPF station client as a thin queue-first shell over the shared BFF
+
+Decision:
+Introduce the first executable `Mes.Client.Wpf` implementation as a thin Generic Host based station shell that binds a station, reads the operator work queue through the shared operator-execution BFF, and normalizes problem-details into operator-facing messages before adding command-heavy or device-specific features.
+
+Why:
+The current backend seams are now stable enough to support a real WPF client, but the lowest-risk way to prove that client boundary is to start with one read-only queue flow. That keeps the architecture honest by exercising the same `Experience API / BFF` path the future WPF command screens must use, without prematurely widening into direct application, database, or PLC integration.
+
+Implications:
+- `Mes.Client.Wpf` should consume `Mes.Application.Contracts` plus `Mes.ExperienceApi` semantics through typed HTTP access rather than referencing domain or infrastructure behavior directly.
+- Future WPF command screens must reuse the same BFF seam and add shared command-context generation instead of inventing alternate command paths.
+- Peripheral, Modbus, and offline concerns remain follow-up extensions around the station shell, not reasons to bypass the shared server-side command boundary.
+
+## 2026-04-17 ADR-031: Reset the displayed queue on station rebind and normalize client-local failures in the WPF shell
+
+Decision:
+When the WPF station shell binds a different station, clear the currently displayed queue snapshot immediately, keep the source station visible for any loaded snapshot, and convert client-local failures such as connectivity loss, empty success bodies, malformed success bodies, and unexpected async-command exceptions into explicit operator-visible error states.
+
+Why:
+The queue-first shell proved the shared BFF seam, but it still carried two pilot-grade safety risks: a newly bound station could inherit another station's displayed queue until the next refresh, and malformed or locally thrown client errors could escape as crashes or as misleading generic connection failures. A station-facing MES client should fail loudly and specifically without hiding stale work context.
+
+Implications:
+- `ShellViewModel` now treats station rebind as a context reset for the displayed queue snapshot.
+- The shell panel now reflects message severity so warnings and errors are no longer visually flattened.
+- `OperatorExecutionStationClient` now classifies client-local failures separately from server problem-details responses, and the WPF tests lock that behavior through fake-HTTP coverage plus shell-state tests.
+
+## 2026-04-17 ADR-032: Centralize WPF command context around one per-operation station policy
+
+Decision:
+Generate WPF-side command metadata through one `StationCommandContextFactory`, using a configured default actor id, one per-operation correlation id of `wpf:{stationId}:{operationExecutionId}`, and one command-type-specific idempotency key of `wpf:{commandType}:{stationId}:{operationExecutionId}` for the current station mutation flows.
+
+Why:
+Once `Mes.Client.Wpf` widened from queue reads into `start-operation` and `complete-operation`, the next risk was that each screen or command path would invent its own `commandId`, `correlationId`, and `idempotencyKey` policy. The pilot already depends on stable replay semantics and audit-friendly transport metadata, so the client needed one shared rule before more command screens land.
+
+Implications:
+- Future WPF mutations should request `CommandContextContract` from the shared factory instead of constructing transport metadata ad hoc inside screens or HTTP callers.
+- Retries of the same command type against the same station-bound operation now reuse the same idempotency scope while still getting a fresh `commandId` per send attempt.
+- The current WPF shell still leaves `revision_refs` null and uses a configured default actor id until authentication and richer revision-aware workflows become active requirements.
+
+## 2026-04-17 ADR-033: Manage repository NuGet package versions through one root Directory.Packages.props
+
+Decision:
+Manage NuGet versions through the root `Directory.Packages.props`, remove duplicated version numbers from child `PackageReference` items, and keep package-version differences that still matter for repo-local skill templates expressed as conditioned `PackageVersion` entries in that one central file.
+
+Why:
+The repository had started to repeat the same test and infrastructure package versions across multiple solution projects, while the repo-local skill templates carried their own package references with only a few intentional version differences. Leaving versions scattered would increase drift risk and make later upgrades noisier than necessary.
+
+Implications:
+- Solution-facing project files now keep `PackageReference` items versionless, with the authoritative version list living in `Directory.Packages.props`.
+- Repo-local skill templates can remain on intentionally different package versions without reintroducing version literals into every child project file, because the central package file now carries conditioned entries for those template project names.
+- Future package upgrades should start in `Directory.Packages.props`, and validation should include at least `dotnet build Mes.slnx -v minimal` plus `dotnet test Mes.slnx -v minimal`.
+
+## 2026-04-17 ADR-034: Give WPF material-consumption retries a per-action idempotency token
+
+Decision:
+Keep `StationCommandContextFactory` as the single WPF command-context policy, but let `record-material-consumption` append one per-action token to the shared per-operation idempotency base of `wpf:{commandType}:{stationId}:{operationExecutionId}` while leaving correlation fixed at `wpf:{stationId}:{operationExecutionId}`.
+
+Why:
+The first WPF command flows used one deterministic per-operation idempotency key, which fits `start-operation` and `complete-operation` because those actions are effectively single-shot for a given operation state. `record-material-consumption` is different: the same running operation can legitimately receive multiple accepted material-consumption commands. Reusing the old per-operation idempotency key unchanged would collapse distinct operator actions into one replay scope and make a valid second material shot look like a duplicate.
+
+Implications:
+- `ShellViewModel` now keeps one material-consumption action token stable only while the operator retries the same filled form; changing the selected queue item or any material-consumption input resets that token.
+- WPF retries of the same material-consumption attempt now stay replay-safe, while distinct material shots on the same station-bound operation get different idempotency keys without inventing a second command-context factory.
+- The shared queue contract remains unchanged in this work unit; until a richer scan or selection flow exists, the WPF shell derives default material code and unit hints from the first required-material entry and still asks the operator for WIP, lot, and quantity input explicitly.
+
+## 2026-04-17 ADR-035: Project completion unit from operation_execution into the shared station queue
+
+Decision:
+Treat `operation_execution.quantity_unit` as the authoritative completion unit for the operator queue, project that value into each `WorkQueueItemContract`, and let `Mes.Client.Wpf` display it as a read-only `complete-operation` unit instead of asking the operator to type the unit manually.
+
+Why:
+The current slice already made `OperationExecution` the authoritative execution unit and already validated completion quantities against that aggregate's unit. Leaving the WPF shell on a manually typed completion unit added avoidable operator friction and reopened a mismatch path that the backend would only reject after the operator had already entered a command. Projecting the unit through the existing queue read-model keeps one MES-side owner for the field and removes that avoidable UX failure from the first station shell.
+
+Implications:
+- `GetStationWorkQueue` now carries one new queue field for the operation quantity unit, sourced directly from `operation_execution.quantity_unit` in the application query layer.
+- `Mes.Client.Wpf` still keeps `DefaultCompletionQuantityUnit` only as a shell fallback when no queue item is selected, but the normal `complete-operation` flow now uses the queue-projected unit and exposes it as read-only.
+- Future channels such as Web should consume the same queue field rather than re-deriving or locally configuring a completion unit, so BFF payload semantics stay aligned across shells.
+
+## 2026-04-17 ADR-036: Keep no-equipment validation as an example-layer mock station over the existing BFF seam
+
+Decision:
+Provide no-equipment validation through `example/Mes.MockStation.Example`, which seeds the current SQLite-backed operator-execution scenario and drives the existing `Mes.ExperienceApi` plus `Mes.Client.Wpf` seam, rather than adding a special fake-device execution path inside `Mes.Domain`, `Mes.Application`, or the station client itself.
+
+Why:
+The project needed one runnable path for local validation without real equipment, but embedding simulator-specific branches into the core MES layers would blur the current responsibility boundaries and create behavior that production code would never use. An example-layer mock keeps the validation executable while preserving the same thin BFF path that the real station client must use later.
+
+Implications:
+- `example/Mes.MockStation.Example` now owns the seeded manifest, SQLite scenario generation, and the PowerShell launch/smoke scripts for local validation.
+- Headless no-equipment regression checks should prefer `powershell -File example/Mes.MockStation.Example/Test-MockStationDemo.ps1` and the paired `Mes.ExperienceApi.Tests` smoke coverage instead of introducing alternate mock-only command routes.
+- Future equipment simulators should stay at the example or edge boundary unless a real domain capability requires a first-class simulator concept.
+
+## 2026-04-17 ADR-037: Treat executable code spellings as the canonical machine-facing MES vocabulary
+
+Decision:
+Use the exact command names and enum spellings already executed in `src/Mes.Domain` and the shared contracts as the canonical machine-facing MES vocabulary for current architecture, slice, and implementation documents.
+
+Why:
+The current plan review showed one concrete terminology drift that would keep repeating if left unresolved: architecture and implementation notes still mixed shorthand names like `record-consumption` with the executable command `record-material-consumption`, and prose state labels such as `In Progress` or `In Inspection` with the code-level names that payload specs and persistence drafts already depend on. Leaving both forms active would make future API, read-model, and persistence work noisier and more error-prone.
+
+Implications:
+- Machine-facing docs should now prefer `record-material-consumption`, `InProgress`, `PartiallyCompleted`, `InProcess`, `InInspection`, and `Done` when they describe executable contracts or persisted state.
+- Prose explanations may still use natural-language wording, but any payload, workflow, persistence, or state table should align to the executable code spelling.
+- The next priority still remains pilot-line selection and external workflow validation; this ADR only removes internal vocabulary drift so later validation can focus on real plant questions instead of document/code mismatch.

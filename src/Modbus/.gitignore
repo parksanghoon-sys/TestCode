@@ -419,3 +419,6 @@ FodyWeavers.xsd
 
 # Serena MCP workspace
 .serena/
+
+# Example runtime artifacts
+example/**/.runtime/

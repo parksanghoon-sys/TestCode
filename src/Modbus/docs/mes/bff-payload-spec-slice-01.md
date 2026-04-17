@@ -167,6 +167,7 @@ For Work Unit 3 idempotency, receipt scope uses `channel + command_type + idempo
 | `operation_sequence` | integer | routed sequence |
 | `station_id` | string | bound station |
 | `status` | string | current execution state |
+| `operation_quantity_unit` | string | authoritative completion unit projected from `operation_execution.quantity_unit` |
 | `required_materials` | array | material summary projected from the MES-side `operation_material_requirement` snapshot |
 | `quality_gate_state` | string | `open` or `hold` for the release-1 operator queue; `review-required` is reserved for a later supervisory slice |
 
@@ -177,6 +178,7 @@ Authoritative field sources for the release-1 operator queue:
 - `operation_sequence` comes from `operation_execution.operation_sequence`.
 - `station_id` comes from `operation_execution.station_id`.
 - `status` comes from `operation_execution.status`.
+- `operation_quantity_unit` comes from `operation_execution.quantity_unit`.
 - `required_materials` comes from `operation_material_requirement`, ordered by `sequence_no`, with the current executable projection anchored at operation attachment.
 - `quality_gate_state` is derived in the application query layer from `operation_execution.status` plus any held `quality_record` linked through `wip_unit.current_operation_execution_id`.
 

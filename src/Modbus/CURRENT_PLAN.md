@@ -49,6 +49,21 @@ Turn the MES baseline into an executable pilot slice by carrying the current ope
 - Work Unit 6 is now executable in code: `complete-operation` loads an authoritative sibling-operation summary, advances `ProductionOrder` to `PartiallyCompleted` or `Completed`, and the new behavior is locked by handler, application-service, and durable adapter tests.
 - Work Unit 7 is now executable as the explicit pilot save contract: `InMemory`, `FileStore`, and `Sqlite` adapter tests all lock the same accepted-command write-set, including touched aggregate state, `command_receipt`, `production_actuals_batch`, and the full outbox set for accepted completion.
 - Work Unit 8 is now executable in code: deterministic operator-execution failures are promoted into typed application exceptions, `Mes.ExperienceApi` normalizes them into stable problem-details responses for `400`, `404`, `409`, `422`, and fallback `500`, and dedicated host tests lock the route-thin transport behavior.
+- `docs/mes/MES_WPF_Modbus_IMPLEMENTATION_PLAN.md` is now realigned as a subordinate station-client and Modbus/edge implementation plan, so it no longer competes with the canonical MES boundary, BFF ownership, or channel-policy documents.
+- A new `docs/mes/pilot-profile-working-assumptions.md` now captures the current working pilot profile explicitly: station-based discrete-dominant hybrid execution, lot-first genealogy with serial-capable `WipUnit`, and no mandatory direct Modbus/PLC handshake until a selected pilot line proves otherwise.
+- A new `Mes.Client.Wpf` project now provides the first executable WPF station shell over the shared operator-execution BFF, including Generic Host composition, typed HTTP access to `GetStationWorkQueue`, station-session binding, queue projection, stable problem-details display policy, and dedicated `Mes.Client.Wpf.Tests` coverage for shell-side normalization rules.
+- The WPF station shell now clears stale queue snapshots on station rebind, keeps the snapshot source station visible, surfaces message severity into the shell panel, and normalizes connectivity, empty-body, and invalid-body client failures into operator-visible messages instead of leaking them as crashes.
+- `Mes.Client.Wpf.Tests` now also includes fake-HTTP coverage for `OperatorExecutionStationClient` plus shell-state tests for rebind clearing, severity propagation, and async-command exception guarding.
+- The WPF station shell is now command-capable for `start-operation` and `complete-operation`, using one shared `StationCommandContextFactory` policy for actor, command identity, correlation, and idempotency while keeping mutation refresh on the existing shared BFF seam.
+- `Mes.Client.Wpf.Tests` now also locks the new command-capable shell behavior with shared command-context policy tests, POST client tests, and shell-state coverage for selected-row command execution.
+- The WPF station shell now also supports `record-material-consumption`, reusing the same shared BFF seam plus queue refresh path while widening WPF-only idempotency with one per-action token for that multi-shot command.
+- `Mes.Client.Wpf` now derives default material code and unit hints from the queue item's required-material list instead of widening the shared queue contract in the same work unit.
+- The shared station queue contract now also projects the authoritative operation quantity unit from `operation_execution.quantity_unit`, and `Mes.Client.Wpf` now treats that value as the read-only completion unit instead of asking the operator to type it manually.
+- `Mes.Application.Tests` and `Mes.Client.Wpf.Tests` now lock the new queue-projected completion-unit behavior across the query mapping seam and the WPF completion flow.
+- A new `example/Mes.MockStation.Example` project now seeds a deterministic SQLite-backed station scenario, writes a runnable manifest under `example/Mes.MockStation.Example/.runtime/`, and provides `Run-MockStationDemo.ps1` plus `Test-MockStationDemo.ps1` so the current operator-execution path can be exercised without real equipment.
+- `Mes.ExperienceApi.Tests` now also includes a mock-station smoke path that reuses the example seeder, hosts the real thin `Mes.ExperienceApi`, and verifies `start-operation`, `material-consumption`, and `complete-operation` over HTTP.
+- The MES architecture, command/event catalog, pilot slice doc, and WPF/Modbus implementation plan now align on the canonical executable vocabulary for the current code seed, including `record-material-consumption`, `ProductionOrderStatus.PartiallyCompleted`, `OperationExecutionStatus.Done`, and `QualityRecordStatus.InInspection`.
+- Repository NuGet versions are now centrally managed through the root `Directory.Packages.props`, while the existing solution projects and repo-local skill templates keep their package references versionless.
 - Each current source and test project now carries a local `README.md` that explains its purpose, responsibility boundary, key classes, folder structure, dependency direction, and current limitations.
 - The repository now carries an explicit rule that new or modified C# classes and functions must include Korean XML documentation comments, and that requirement is now stated directly in both the root and `wpf-dev-pack` AGENT entry points.
 - The repository guidance now also prefers authored methods, constructors, and public APIs with five or fewer input parameters, using parameter objects when larger inputs are unavoidable.
@@ -57,7 +72,7 @@ Turn the MES baseline into an executable pilot slice by carrying the current ope
 
 ## Next Meaningful Work Unit
 
-Confirm the pilot manufacturing mode and required genealogy depth for the first rollout.
+Select one pilot line and one representative product family for release-1 scope validation so the remaining MES assumptions, channel split, and offline/device boundaries can be checked against one real execution target.
 
 ## Validation Path
 
@@ -89,3 +104,12 @@ Confirm the pilot manufacturing mode and required genealogy depth for the first 
 - Re-run `Mes.ExperienceApi.Tests` whenever route signatures, host DI wiring, or the default durable host composition changes.
 - Preserve the rule that BFF payload semantics stay identical across WPF and Web even if channel UX diverges.
 - Prefer request or parameter objects over long authored signatures as the application layer grows past simple domain calls.
+- Keep `docs/mes/MES_WPF_Modbus_IMPLEMENTATION_PLAN.md` aligned as a subordinate station-client and Modbus/edge plan, not as a competing top-level MES architecture document.
+- Keep `docs/mes/pilot-profile-working-assumptions.md` aligned whenever pilot manufacturing mode, genealogy depth, or station-side device-handshake assumptions change.
+- Re-run `dotnet test tests/Mes.Client.Wpf.Tests/Mes.Client.Wpf.Tests.csproj -v minimal` whenever station-shell session rules, queue projection formatting, station-client HTTP response normalization, async-command guards, or problem-display mapping changes.
+- Re-run `dotnet test tests/Mes.Client.Wpf.Tests/Mes.Client.Wpf.Tests.csproj -v minimal` whenever WPF-side command-context policy, `record-material-consumption` action-token behavior, queue-derived material defaults, or queue-projected completion units change.
+- Re-run `powershell -File example/Mes.MockStation.Example/Test-MockStationDemo.ps1` whenever the example seed data, example launch/smoke scripts, or the shared operator-execution HTTP route behavior changes.
+- Re-run `dotnet build Mes.slnx -v minimal` and `dotnet test Mes.slnx -v minimal` whenever `Mes.Client.Wpf`, solution composition, or shared operator-execution contracts change.
+- Re-run `dotnet build Mes.slnx -v minimal` and `dotnet test Mes.slnx -v minimal` whenever `Directory.Packages.props` or any solution-facing `PackageReference` set changes.
+- Keep `Mes.Client.Wpf` thin over `Mes.ExperienceApi` and the shared BFF contracts; do not introduce direct DB, domain, or PLC command paths into the station client.
+- Centralize future station-side command-context generation so every WPF command shares one policy for `commandId`, `correlationId`, and `idempotencyKey`.

@@ -56,9 +56,11 @@ public sealed record StationWorkQueueIdentity(
 /// </summary>
 /// <param name="OperationStatus">현재 공정 실행 상태입니다.</param>
 /// <param name="QualityGateState">현재 품질 게이트 상태입니다.</param>
+/// <param name="OperationQuantityUnit">현재 공정 실행의 authoritative 수량 단위입니다.</param>
 public sealed record StationWorkQueueState(
     OperationExecutionStatus OperationStatus,
-    StationWorkQueueQualityGateState QualityGateState);
+    StationWorkQueueQualityGateState QualityGateState,
+    string OperationQuantityUnit);
 
 /// <summary>
 /// 작업 큐에서 표시할 자재 요구량 항목입니다.

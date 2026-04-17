@@ -1,0 +1,367 @@
+<Window x:Class="Mes.Client.Wpf.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d"
+        Title="MES Station Shell"
+        Height="860"
+        Width="1220"
+        MinHeight="760"
+        MinWidth="980">
+    <DockPanel Background="#FFF4F7FB">
+        <StatusBar DockPanel.Dock="Bottom">
+            <StatusBarItem Content="{Binding BusyCaption}" />
+            <Separator />
+            <StatusBarItem Content="{Binding QueueCountCaption}" />
+        </StatusBar>
+
+        <ScrollViewer VerticalScrollBarVisibility="Auto">
+            <Grid Margin="20">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+
+                <Border Grid.Row="0"
+                        Margin="0,0,0,16"
+                        Padding="18"
+                        Background="White"
+                        BorderBrush="#FFD7DFEA"
+                        BorderThickness="1"
+                        CornerRadius="12">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+
+                        <StackPanel>
+                            <TextBlock FontSize="24"
+                                       FontWeight="Bold"
+                                       Foreground="#FF142033"
+                                       Text="MES Station Shell" />
+                            <TextBlock Margin="0,8,0,0"
+                                       Foreground="#FF4E627C"
+                                       Text="{Binding ApiBaseAddress}" />
+                        </StackPanel>
+
+                        <TextBlock Grid.Column="1"
+                                   VerticalAlignment="Center"
+                                   Foreground="#FF6B7E97"
+                                   Text="{Binding SessionCaption}" />
+                    </Grid>
+                </Border>
+
+                <Border Grid.Row="1"
+                        Margin="0,0,0,16"
+                        Padding="18"
+                        Background="White"
+                        BorderBrush="#FFD7DFEA"
+                        BorderThickness="1"
+                        CornerRadius="12">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="220" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+
+                        <TextBox Grid.Column="0"
+                                 Height="34"
+                                 VerticalContentAlignment="Center"
+                                 Text="{Binding StationId, UpdateSourceTrigger=PropertyChanged}" />
+
+                        <Button Grid.Column="1"
+                                Margin="12,0,0,0"
+                                Padding="18,8"
+                                Command="{Binding BindStationCommand}"
+                                Content="스테이션 바인딩" />
+
+                        <Button Grid.Column="2"
+                                Margin="12,0,0,0"
+                                Padding="18,8"
+                                Command="{Binding RefreshQueueCommand}"
+                                Content="작업 큐 새로고침" />
+
+                        <StackPanel Grid.Column="3"
+                                    Margin="18,0,0,0"
+                                    VerticalAlignment="Center">
+                            <TextBlock Foreground="#FF314761"
+                                       Text="{Binding SessionCaption}" />
+                            <TextBlock Margin="0,4,0,0"
+                                       Foreground="#FF6B7E97"
+                                       Text="{Binding QueueSnapshotCaption}" />
+                        </StackPanel>
+                    </Grid>
+                </Border>
+
+                <Border Grid.Row="2"
+                        Margin="0,0,0,16"
+                        Padding="18"
+                        Background="{Binding MessagePanelBackground}"
+                        BorderBrush="{Binding MessagePanelBorderBrush}"
+                        BorderThickness="1"
+                        CornerRadius="12">
+                    <StackPanel>
+                        <TextBlock FontSize="18"
+                                   FontWeight="SemiBold"
+                                   Foreground="{Binding MessageTitleBrush}"
+                                   Text="{Binding MessageTitle}" />
+                        <TextBlock Margin="0,6,0,0"
+                                   Foreground="{Binding MessageDetailBrush}"
+                                   TextWrapping="Wrap"
+                                   Text="{Binding MessageDetail}" />
+                    </StackPanel>
+                </Border>
+
+                <Border Grid.Row="3"
+                        Margin="0,0,0,16"
+                        Padding="18"
+                        Background="White"
+                        BorderBrush="#FFD7DFEA"
+                        BorderThickness="1"
+                        CornerRadius="12">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="1.05*" />
+                            <ColumnDefinition Width="28" />
+                            <ColumnDefinition Width="1.75*" />
+                        </Grid.ColumnDefinitions>
+
+                        <StackPanel Grid.Column="0">
+                            <TextBlock FontSize="18"
+                                       FontWeight="SemiBold"
+                                       Foreground="#FF142033"
+                                       Text="명령 패널" />
+                            <TextBlock Margin="0,12,0,0"
+                                       FontSize="16"
+                                       FontWeight="SemiBold"
+                                       Foreground="#FF24374F"
+                                       Text="{Binding SelectedOperationCaption}" />
+                            <TextBlock Margin="0,6,0,0"
+                                       Foreground="#FF4E627C"
+                                       TextWrapping="Wrap"
+                                       Text="{Binding SelectedOperationDetail}" />
+                            <TextBlock Margin="0,10,0,0"
+                                       Foreground="#FF6B7E97"
+                                       TextWrapping="Wrap"
+                                       Text="{Binding SelectedRequiredMaterialsCaption}" />
+                            <TextBlock Margin="0,10,0,0"
+                                       Foreground="#FF6B7E97"
+                                       TextWrapping="Wrap"
+                                       Text="{Binding CommandPanelHint}" />
+                            <Button Width="160"
+                                    Margin="0,16,0,0"
+                                    Padding="18,8"
+                                    HorizontalAlignment="Left"
+                                    Command="{Binding StartOperationCommand}"
+                                    Content="선택 작업 시작" />
+                        </StackPanel>
+
+                        <Border Grid.Column="1"
+                                Width="1"
+                                Background="#FFF4F7FB" />
+
+                        <StackPanel Grid.Column="2">
+                            <Border Padding="16"
+                                    Background="#FFF9FBFE"
+                                    BorderBrush="#FFE0E8F2"
+                                    BorderThickness="1"
+                                    CornerRadius="10">
+                                <StackPanel>
+                                    <TextBlock FontSize="18"
+                                               FontWeight="SemiBold"
+                                               Foreground="#FF142033"
+                                               Text="자재 투입 입력" />
+                                    <TextBlock Margin="0,10,0,0"
+                                               Foreground="#FF4E627C"
+                                               TextWrapping="Wrap"
+                                               Text="{Binding MaterialConsumptionHint}" />
+
+                                    <Grid Margin="0,14,0,0">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="1*" />
+                                            <ColumnDefinition Width="1*" />
+                                            <ColumnDefinition Width="1*" />
+                                        </Grid.ColumnDefinitions>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                        </Grid.RowDefinitions>
+
+                                        <TextBlock Grid.Row="0"
+                                                   Grid.Column="0"
+                                                   Foreground="#FF314761"
+                                                   Text="WIP ID" />
+                                        <TextBlock Grid.Row="0"
+                                                   Grid.Column="1"
+                                                   Margin="12,0,0,0"
+                                                   Foreground="#FF314761"
+                                                   Text="Material Lot ID" />
+                                        <TextBlock Grid.Row="0"
+                                                   Grid.Column="2"
+                                                   Margin="12,0,0,0"
+                                                   Foreground="#FF314761"
+                                                   Text="Material Code" />
+
+                                        <TextBox Grid.Row="1"
+                                                 Grid.Column="0"
+                                                 Height="34"
+                                                 Margin="0,6,0,0"
+                                                 VerticalContentAlignment="Center"
+                                                 Text="{Binding MaterialConsumptionWipUnitId, UpdateSourceTrigger=PropertyChanged}" />
+                                        <TextBox Grid.Row="1"
+                                                 Grid.Column="1"
+                                                 Height="34"
+                                                 Margin="12,6,0,0"
+                                                 VerticalContentAlignment="Center"
+                                                 Text="{Binding MaterialConsumptionMaterialLotId, UpdateSourceTrigger=PropertyChanged}" />
+                                        <TextBox Grid.Row="1"
+                                                 Grid.Column="2"
+                                                 Height="34"
+                                                 Margin="12,6,0,0"
+                                                 VerticalContentAlignment="Center"
+                                                 Text="{Binding MaterialConsumptionMaterialCode, UpdateSourceTrigger=PropertyChanged}" />
+
+                                        <TextBlock Grid.Row="2"
+                                                   Grid.Column="0"
+                                                   Margin="0,12,0,0"
+                                                   Foreground="#FF314761"
+                                                   Text="투입 수량" />
+                                        <TextBlock Grid.Row="2"
+                                                   Grid.Column="1"
+                                                   Margin="12,12,0,0"
+                                                   Foreground="#FF314761"
+                                                   Text="단위" />
+
+                                        <TextBox Grid.Row="3"
+                                                 Grid.Column="0"
+                                                 Height="34"
+                                                 Margin="0,6,0,0"
+                                                 VerticalContentAlignment="Center"
+                                                 Text="{Binding MaterialConsumptionQuantityText, UpdateSourceTrigger=PropertyChanged}" />
+                                        <TextBox Grid.Row="3"
+                                                 Grid.Column="1"
+                                                 Height="34"
+                                                 Margin="12,6,0,0"
+                                                 VerticalContentAlignment="Center"
+                                                 Text="{Binding MaterialConsumptionQuantityUnit, UpdateSourceTrigger=PropertyChanged}" />
+                                    </Grid>
+
+                                    <Button Width="180"
+                                            Margin="0,16,0,0"
+                                            Padding="18,8"
+                                            HorizontalAlignment="Left"
+                                            Command="{Binding RecordMaterialConsumptionCommand}"
+                                            Content="자재 투입 기록" />
+                                </StackPanel>
+                            </Border>
+
+                            <Border Margin="0,16,0,0"
+                                    Padding="16"
+                                    Background="#FFF9FBFE"
+                                    BorderBrush="#FFE0E8F2"
+                                    BorderThickness="1"
+                                    CornerRadius="10">
+                                <StackPanel>
+                                    <TextBlock FontSize="18"
+                                               FontWeight="SemiBold"
+                                               Foreground="#FF142033"
+                                               Text="완료 입력" />
+                                    <TextBlock Margin="0,10,0,0"
+                                               Foreground="#FF4E627C"
+                                               Text="완료 수량 단위는 선택된 공정의 authoritative unit으로 자동 표시됩니다." />
+
+                                    <Grid Margin="0,14,0,0">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="1.1*" />
+                                            <ColumnDefinition Width="1.1*" />
+                                            <ColumnDefinition Width="0.8*" />
+                                        </Grid.ColumnDefinitions>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                        </Grid.RowDefinitions>
+
+                                        <TextBlock Grid.Row="0"
+                                                   Grid.Column="0"
+                                                   Foreground="#FF314761"
+                                                   Text="양품 수량" />
+                                        <TextBlock Grid.Row="0"
+                                                   Grid.Column="1"
+                                                   Margin="12,0,0,0"
+                                                   Foreground="#FF314761"
+                                                   Text="불량 수량" />
+                                        <TextBlock Grid.Row="0"
+                                                   Grid.Column="2"
+                                                   Margin="12,0,0,0"
+                                                   Foreground="#FF314761"
+                                                   Text="단위" />
+
+                                        <TextBox Grid.Row="1"
+                                                 Grid.Column="0"
+                                                 Height="34"
+                                                 Margin="0,6,0,0"
+                                                 VerticalContentAlignment="Center"
+                                                 Text="{Binding CompletionGoodQuantityText, UpdateSourceTrigger=PropertyChanged}" />
+                                        <TextBox Grid.Row="1"
+                                                 Grid.Column="1"
+                                                 Height="34"
+                                                 Margin="12,6,0,0"
+                                                 VerticalContentAlignment="Center"
+                                                 Text="{Binding CompletionScrapQuantityText, UpdateSourceTrigger=PropertyChanged}" />
+                                        <TextBox Grid.Row="1"
+                                                 Grid.Column="2"
+                                                 Height="34"
+                                                 Margin="12,6,0,0"
+                                                 IsReadOnly="True"
+                                                 Background="#FFF3F6FA"
+                                                 VerticalContentAlignment="Center"
+                                                 Text="{Binding CompletionQuantityUnit}" />
+                                    </Grid>
+
+                                    <Button Width="160"
+                                            Margin="0,16,0,0"
+                                            Padding="18,8"
+                                            HorizontalAlignment="Left"
+                                            Command="{Binding CompleteOperationCommand}"
+                                            Content="선택 작업 완료" />
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+                    </Grid>
+                </Border>
+
+                <Border Grid.Row="4"
+                        Padding="12"
+                        Background="White"
+                        BorderBrush="#FFD7DFEA"
+                        BorderThickness="1"
+                        CornerRadius="12">
+                    <DataGrid AutoGenerateColumns="False"
+                              CanUserAddRows="False"
+                              HeadersVisibility="Column"
+                              IsReadOnly="True"
+                              SelectedItem="{Binding SelectedQueueItem}"
+                              ItemsSource="{Binding QueueItems}">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Binding="{Binding ProductionOrderId}" Header="Production Order" Width="*" />
+                            <DataGridTextColumn Binding="{Binding OperationExecutionId}" Header="Operation Execution" Width="*" />
+                            <DataGridTextColumn Binding="{Binding OperationSequence}" Header="Seq" Width="90" />
+                            <DataGridTextColumn Binding="{Binding Status}" Header="Status" Width="130" />
+                            <DataGridTextColumn Binding="{Binding QualityGateState}" Header="Quality Gate" Width="130" />
+                            <DataGridTextColumn Binding="{Binding RequiredMaterialsSummary}" Header="Required Materials" Width="2*" />
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </Border>
+            </Grid>
+        </ScrollViewer>
+    </DockPanel>
+</Window>

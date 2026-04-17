@@ -2,9 +2,9 @@
 
 ## Current TODOs
 
-- Confirm the pilot manufacturing mode and required genealogy depth for the first rollout.
-- Confirm authoritative ownership for item, BOM, routing, resource, and quality master data.
 - Select one pilot line and one representative product family for release 1 scope validation.
+- Validate the documented pilot profile assumptions for manufacturing mode, genealogy depth, and station-side device-handshake needs against that selected pilot target.
+- Confirm authoritative ownership for item, BOM, routing, resource, and quality master data.
 - Validate the documented WPF/Web responsibility split against actual user roles and workflow criticality.
 - Validate the initial command/event catalog against pilot workflows and stakeholder terminology.
 - Validate the offline authority matrix with OT, production, and quality stakeholders.
@@ -146,35 +146,6 @@ Actual shop-floor devices, kiosk constraints, browser policies, Windows deployme
 
 Natural next step:
 Validate the draft matrix against pilot user roles, then turn the validated flows into screen-level WPF/Web UX definitions and payload specs.
-
-### [P1_SOON] Reconcile domain code and architecture terminology
-
-What remains:
-Confirm that the status names and event vocabulary used in `src/Mes.Domain` match the terminology intended in the MES architecture and command/event catalog.
-
-Why deferred:
-The current cycle prioritized creating the first code foundation and establishing the XML documentation rule, but document-code drift will create confusion once API contracts are derived.
-
-Objective:
-Keep domain code, architecture documents, and future payload specs on one canonical set of workflow terms.
-
-Relevant context:
-`OperationExecutionStatus` in code currently includes `Paused`, and other aggregate/event names now act as the first executable source of truth for release-1 workflow modeling.
-
-Relevant files and scope:
-`src/Mes.Domain/Statuses/DomainStatuses.cs`
-`src/Mes.Domain/Events/DomainEvents.cs`
-`docs/mes/architecture-blueprint.md`
-`docs/mes/command-event-catalog.md`
-
-Current status:
-The core domain seed exists and tests pass, but terminology alignment against the architecture docs has not yet been formalized.
-
-Known blockers or open questions:
-Should the code vocabulary drive the docs from here, or should the docs remain canonical and force code renames where they differ.
-
-Natural next step:
-Review the implemented status and event names against the release-1 workflow documents, then either update the docs or rename the code before defining API payload contracts.
 
 ### [P2_LATER] Decide when future side effects should widen the canonical save boundary
 
@@ -334,3 +305,13 @@ Validate the plant audit expectation for rejected scans, then either keep scan a
 - 2026-04-17: Implemented Work Unit 6 so `complete-operation` now advances `ProductionOrder` from an authoritative sibling-operation summary, with handler, application-service, and durable adapter tests covering both `PartiallyCompleted` and `Completed` progression.
 - 2026-04-17: Implemented Work Unit 7 so the current accepted-command write-set is now locked across `InMemory`, `FileStore`, and `Sqlite` adapter tests, and the adapter READMEs explicitly document the canonical pilot save boundary.
 - 2026-04-17: Implemented Work Unit 8 so deterministic operator-execution failures now normalize to stable `400`, `404`, `409`, `422`, and fallback `500` problem-details responses through one thin-host mapping seam, with dedicated `Mes.ExperienceApi.Tests` coverage.
+- 2026-04-17: Reworked `docs/mes/MES_WPF_Modbus_IMPLEMENTATION_PLAN.md` into a subordinate WPF station client plus Modbus/edge implementation plan that aligns with the canonical BFF command path, channel policy, and current SQLite-backed backend seams.
+- 2026-04-17: Added `docs/mes/pilot-profile-working-assumptions.md` so the current executable pilot profile is explicit as a working assumption set rather than an untracked guess, covering station-based discrete/hybrid execution, lot-first genealogy, and optional Modbus/PLC handshake scope.
+- 2026-04-17: Added `src/Mes.Client.Wpf` and `tests/Mes.Client.Wpf.Tests` as the first executable WPF station shell, wired it through Generic Host plus a typed operator-execution BFF client, documented both projects locally, and validated the repository with `dotnet test tests/Mes.Client.Wpf.Tests/Mes.Client.Wpf.Tests.csproj -v minimal`, `dotnet build Mes.slnx -v minimal`, and `dotnet test Mes.slnx -v minimal`.
+- 2026-04-17: Hardened the WPF station shell so station rebind clears stale queue snapshots, message severity now reaches the shell panel, client-side malformed success responses are normalized into operator-visible failures, and fake-HTTP plus shell-state tests now cover the WPF seam.
+- 2026-04-17: Extended `Mes.Client.Wpf` into the first command-capable WPF shell with shared station-side command-context generation plus `start-operation` and `complete-operation`, refreshed the WPF project READMEs, and validated the repository with `dotnet test tests/Mes.Client.Wpf.Tests/Mes.Client.Wpf.Tests.csproj -v minimal`, `dotnet build Mes.slnx -v minimal`, and `dotnet test Mes.slnx -v minimal`.
+- 2026-04-17: Added root-level NuGet central package management through `Directory.Packages.props`, removed per-project solution package versions into that shared file, and revalidated the repository with `dotnet build Mes.slnx -v minimal` and `dotnet test Mes.slnx -v minimal`.
+- 2026-04-17: Extended `Mes.Client.Wpf` to support `record-material-consumption` over the shared BFF seam, added multi-shot-safe WPF action-token idempotency, refreshed the WPF READMEs, and validated the repository with `dotnet test tests/Mes.Client.Wpf.Tests/Mes.Client.Wpf.Tests.csproj -v minimal`, `dotnet build Mes.slnx -v minimal`, and `dotnet test Mes.slnx -v minimal`.
+- 2026-04-17: Projected the authoritative operation quantity unit into the shared station queue contract, made `Mes.Client.Wpf` consume that queue-projected unit as the read-only `complete-operation` unit, refreshed the affected docs, and validated the repository with `dotnet test tests/Mes.Application.Tests/Mes.Application.Tests.csproj -v minimal`, `dotnet test tests/Mes.Client.Wpf.Tests/Mes.Client.Wpf.Tests.csproj -v minimal`, `dotnet build Mes.slnx -v minimal`, and `dotnet test Mes.slnx -v minimal`.
+- 2026-04-17: Added `example/Mes.MockStation.Example` as a deterministic SQLite-backed mock station demo with seeded manifest output, runnable PowerShell launch/smoke scripts, and `Mes.ExperienceApi.Tests` smoke coverage so the current operator-execution path can be exercised without real equipment; validated with `powershell -File example/Mes.MockStation.Example/Test-MockStationDemo.ps1`, `dotnet test tests/Mes.ExperienceApi.Tests/Mes.ExperienceApi.Tests.csproj -v minimal`, `dotnet build Mes.slnx -v minimal`, and `dotnet test Mes.slnx -v minimal`.
+- 2026-04-17: Revalidated the current plan against the repository state, recognized that pilot-line selection remains the highest-priority but externally blocked step, and closed the nearest safe internal follow-up by aligning `docs/mes/architecture-blueprint.md`, `docs/mes/command-event-catalog.md`, `docs/mes/pilot-slice-01-operator-execution.md`, and `docs/mes/MES_WPF_Modbus_IMPLEMENTATION_PLAN.md` to the executable code vocabulary; validated with `dotnet test Mes.slnx -v minimal`.

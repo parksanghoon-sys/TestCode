@@ -105,7 +105,8 @@ public sealed class StationWorkQueueReadService
                 stationId),
             new StationWorkQueueState(
                 operation.Status,
-                qualityGateState),
+                qualityGateState,
+                operation.QuantityUnit),
             requiredMaterials);
     }
 

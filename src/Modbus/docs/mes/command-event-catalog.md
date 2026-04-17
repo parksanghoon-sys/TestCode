@@ -1,38 +1,38 @@
-# MES Command and Event Catalog
+﻿# MES Command and Event Catalog
 
-## 1. 목적
+## 1. 紐⑹쟻
 
-이 문서는 파일럿 Release 1 기준으로 `BFF -> MES Core` command contract와 주요 domain or integration event를 정리한다.
+??臾몄꽌???뚯씪??Release 1 湲곗??쇰줈 `BFF -> MES Core` command contract? 二쇱슂 domain or integration event瑜??뺣━?쒕떎.
 
-이 문서의 목적은 다음과 같다.
+??臾몄꽌??紐⑹쟻? ?ㅼ쓬怨?媛숇떎.
 
-- WPF와 Web이 같은 업무 명령 semantics를 사용하도록 기준선을 고정한다.
-- command와 event를 분리해 idempotency와 audit 기준을 명확히 한다.
-- BFF, MES core, Edge, ERP/WMS/QMS 간 상호작용을 같은 언어로 정리한다.
-- 현재 `Mes.Domain` 코드에 이미 구현된 이벤트와, 아직 application or integration layer에 남겨둔 워크플로우 이벤트를 구분한다.
+- WPF? Web??媛숈? ?낅Т 紐낅졊 semantics瑜??ъ슜?섎룄濡?湲곗??좎쓣 怨좎젙?쒕떎.
+- command? event瑜?遺꾨━??idempotency? audit 湲곗???紐낇솗???쒕떎.
+- BFF, MES core, Edge, ERP/WMS/QMS 媛??곹샇?묒슜??媛숈? ?몄뼱濡??뺣━?쒕떎.
+- ?꾩옱 `Mes.Domain` 肄붾뱶???대? 援ы쁽???대깽?몄?, ?꾩쭅 application or integration layer???④꺼???뚰겕?뚮줈???대깽?몃? 援щ텇?쒕떎.
 
-## 2. 범위와 기본 원칙
+## 2. 踰붿쐞? 湲곕낯 ?먯튃
 
-- 범위는 Release 1 pilot workflow 중심이다.
-- 모든 business command는 `Experience API / BFF`를 통해 진입한다.
-- 모든 command는 `command_id`, `command_type`, `actor_id`, `channel`, `idempotency_key`, `correlation_id`를 가진다.
-- 모든 server-accepted command는 최소 1개 이상의 authoritative state change 또는 workflow output을 남긴다.
-- equipment or edge에서 들어오는 입력은 raw device event일 수 있지만 authoritative state change는 MES core 검증 이후에만 확정된다.
+- 踰붿쐞??Release 1 pilot workflow 以묒떖?대떎.
+- 紐⑤뱺 business command??`Experience API / BFF`瑜??듯빐 吏꾩엯?쒕떎.
+- 紐⑤뱺 command??`command_id`, `command_type`, `actor_id`, `channel`, `idempotency_key`, `correlation_id`瑜?媛吏꾨떎.
+- 紐⑤뱺 server-accepted command??理쒖냼 1媛??댁긽??authoritative state change ?먮뒗 workflow output???④릿??
+- equipment or edge?먯꽌 ?ㅼ뼱?ㅻ뒗 ?낅젰? raw device event?????덉?留?authoritative state change??MES core 寃利??댄썑?먮쭔 ?뺤젙?쒕떎.
 
 ## 3. Command Envelope
 
-| Field | 설명 |
+| Field | ?ㅻ챸 |
 |---|---|
-| `command_id` | 클라이언트가 생성하거나 서버가 수락 후 부여하는 고유 명령 식별자 |
-| `command_type` | 예: `start-operation`, `record-material-consumption` |
-| `actor_id` | 사용자 또는 system actor 식별자 |
-| `channel` | `wpf`, `web`, `integration`, `edge` 중 하나 |
-| `station_id` | 현장 station context가 필요한 경우 포함 |
-| `correlation_id` | 하나의 작업 흐름을 묶는 상관관계 ID |
-| `idempotency_key` | 중복 제출 방지를 위한 키 |
-| `revision_refs` | item, routing, BOM, spec revision 참조 |
-| `client_timestamp` | 클라이언트 발생 시각 |
-| `server_received_at` | 서버 수신 시각 |
+| `command_id` | ?대씪?댁뼵?멸? ?앹꽦?섍굅???쒕쾭媛 ?섎씫 ??遺?ы븯??怨좎쑀 紐낅졊 ?앸퀎??|
+| `command_type` | ?? `start-operation`, `record-material-consumption` |
+| `actor_id` | ?ъ슜???먮뒗 system actor ?앸퀎??|
+| `channel` | `wpf`, `web`, `integration`, `edge` 以??섎굹 |
+| `station_id` | ?꾩옣 station context媛 ?꾩슂??寃쎌슦 ?ы븿 |
+| `correlation_id` | ?섎굹???묒뾽 ?먮쫫??臾띕뒗 ?곴?愿怨?ID |
+| `idempotency_key` | 以묐났 ?쒖텧 諛⑹?瑜??꾪븳 ??|
+| `revision_refs` | item, routing, BOM, spec revision 李몄“ |
+| `client_timestamp` | ?대씪?댁뼵??諛쒖깮 ?쒓컖 |
+| `server_received_at` | ?쒕쾭 ?섏떊 ?쒓컖 |
 
 ## 4. Business Command Catalog
 
@@ -59,63 +59,64 @@
 
 | Command | Initiator | Owner | Notes |
 |---|---|---|---|
-| `ingest-order-release` | ERP integration | MES core | 생산오더 release 수신 |
-| `sync-master-data-revision` | Integration API | MES core | item/BOM/routing/spec revision 동기화 |
-| `ingest-equipment-completion` | Edge | MES core | raw device event를 validated completion candidate로 입력 |
-| `post-production-actuals` | MES core or system | Integration API | good, scrap, consumption, completion 회신 |
+| `ingest-order-release` | ERP integration | MES core | ?앹궛?ㅻ뜑 release ?섏떊 |
+| `sync-master-data-revision` | Integration API | MES core | item/BOM/routing/spec revision ?숆린??|
+| `ingest-equipment-completion` | Edge | MES core | raw device event瑜?validated completion candidate濡??낅젰 |
+| `post-production-actuals` | MES core or system | Integration API | good, scrap, consumption, completion ?뚯떊 |
 | `sync-line-side-material-movement` | MES core or system | Integration API | Release 1 WMS-lite event or batch sync |
 
 ## 6. Domain Event Catalog
 
 | Event | Triggered by | Meaning | Primary consumers |
 |---|---|---|---|
-| `order-released-ingested` | `ingest-order-release` | ERP release order가 MES에서 executable state로 수락됨 | orchestration, dispatch |
-| `operation-started` | `start-operation` | 작업 시작이 authoritative하게 기록됨 | dispatch, audit, reporting |
-| `operation-paused` | `pause-operation` | 작업 일시정지가 authoritative하게 기록됨 | dispatch, audit |
-| `operation-resumed` | `resume-operation` | 일시정지된 작업이 다시 진행됨 | dispatch, audit |
-| `operation-completed` | `complete-operation` | 작업 완료가 authoritative하게 확정됨 | ERP sync, reporting, next step |
-| `material-scanned` | `record-material-scan` | 자재 식별자가 station에서 캡처됨 | validation, audit |
-| `material-validation-passed` | `record-material-scan` | 스캔 자재가 현재 workflow validation을 통과함 | station UX, consumption flow |
-| `material-validation-failed` | `record-material-scan` | 스캔 자재가 현재 workflow validation을 통과하지 못함 | station UX, exception monitoring |
-| `material-consumption-recorded` | `record-material-consumption` | 자재 소모가 authoritative하게 기록됨 | genealogy, ERP/WMS sync |
-| `material-return-recorded` | `record-material-return` | 자재 반납이 authoritative하게 기록됨 | WMS-lite sync |
-| `genealogy-link-created` | `record-material-consumption` | parent-child genealogy link가 생성됨 | genealogy search, audit |
-| `scrap-recorded` | `record-scrap` | scrap이 authoritative하게 기록됨 | ERP sync, reporting |
-| `hold-placed` | `place-hold` | WIP, operation, or quality gate가 hold 상태로 전환됨 | execution gate, quality, monitoring |
-| `hold-released` | `release-hold` | hold가 release되어 다음 진행 가능 상태가 됨 | execution gate, quality |
-| `quality-result-recorded` | `record-quality-result` | inspection decision이 authoritative하게 기록됨 | quality workflow, audit, hold decision |
-| `override-requested` | `request-override` | 예외 승인 요청이 생성됨 | supervisor web workflow |
-| `override-approved` | `approve-override` | 예외 승인이 확정됨 | execution flow, audit |
-| `override-rejected` | `reject-override` | 예외 승인 요청이 반려됨 | execution flow, audit |
-| `line-side-discrepancy-detected` | reconciliation or validation logic | line-side inventory discrepancy가 감지됨 | warehouse, supervisor |
-| `line-side-discrepancy-acknowledged` | `acknowledge-discrepancy` | discrepancy 대응이 시작됨 | warehouse workflow |
-| `line-side-discrepancy-resolved` | `resolve-discrepancy` | discrepancy가 종료됨 | warehouse, audit |
-| `production-actuals-ready` | completion, scrap, or consumption consolidation | 외부 posting 가능한 actuals 세트가 준비됨 | Integration API |
+| `order-released-ingested` | `ingest-order-release` | ERP release order媛 MES?먯꽌 executable state濡??섎씫??| orchestration, dispatch |
+| `operation-started` | `start-operation` | ?묒뾽 ?쒖옉??authoritative?섍쾶 湲곕줉??| dispatch, audit, reporting |
+| `operation-paused` | `pause-operation` | ?묒뾽 ?쇱떆?뺤?媛 authoritative?섍쾶 湲곕줉??| dispatch, audit |
+| `operation-resumed` | `resume-operation` | ?쇱떆?뺤????묒뾽???ㅼ떆 吏꾪뻾??| dispatch, audit |
+| `operation-completed` | `complete-operation` | ?묒뾽 ?꾨즺媛 authoritative?섍쾶 ?뺤젙??| ERP sync, reporting, next step |
+| `material-scanned` | `record-material-scan` | ?먯옱 ?앸퀎?먭? station?먯꽌 罹≪쿂??| validation, audit |
+| `material-validation-passed` | `record-material-scan` | ?ㅼ틪 ?먯옱媛 ?꾩옱 workflow validation???듦낵??| station UX, consumption flow |
+| `material-validation-failed` | `record-material-scan` | ?ㅼ틪 ?먯옱媛 ?꾩옱 workflow validation???듦낵?섏? 紐삵븿 | station UX, exception monitoring |
+| `material-consumption-recorded` | `record-material-consumption` | ?먯옱 ?뚮え媛 authoritative?섍쾶 湲곕줉??| genealogy, ERP/WMS sync |
+| `material-return-recorded` | `record-material-return` | ?먯옱 諛섎궔??authoritative?섍쾶 湲곕줉??| WMS-lite sync |
+| `genealogy-link-created` | `record-material-consumption` | parent-child genealogy link媛 ?앹꽦??| genealogy search, audit |
+| `scrap-recorded` | `record-scrap` | scrap??authoritative?섍쾶 湲곕줉??| ERP sync, reporting |
+| `hold-placed` | `place-hold` | WIP, operation, or quality gate媛 hold ?곹깭濡??꾪솚??| execution gate, quality, monitoring |
+| `hold-released` | `release-hold` | hold媛 release?섏뼱 ?ㅼ쓬 吏꾪뻾 媛???곹깭媛 ??| execution gate, quality |
+| `quality-result-recorded` | `record-quality-result` | inspection decision??authoritative?섍쾶 湲곕줉??| quality workflow, audit, hold decision |
+| `override-requested` | `request-override` | ?덉쇅 ?뱀씤 ?붿껌???앹꽦??| supervisor web workflow |
+| `override-approved` | `approve-override` | ?덉쇅 ?뱀씤???뺤젙??| execution flow, audit |
+| `override-rejected` | `reject-override` | ?덉쇅 ?뱀씤 ?붿껌??諛섎젮??| execution flow, audit |
+| `line-side-discrepancy-detected` | reconciliation or validation logic | line-side inventory discrepancy媛 媛먯???| warehouse, supervisor |
+| `line-side-discrepancy-acknowledged` | `acknowledge-discrepancy` | discrepancy ??묒씠 ?쒖옉??| warehouse workflow |
+| `line-side-discrepancy-resolved` | `resolve-discrepancy` | discrepancy媛 醫낅즺??| warehouse, audit |
+| `production-actuals-ready` | completion, scrap, or consumption consolidation | ?몃? posting 媛?ν븳 actuals ?명듃媛 以鍮꾨맖 | Integration API |
 
 ### 6.1 Current code alignment notes
 
 - The current `Mes.Domain` seed directly models these domain events: `order-released-ingested`, `operation-started`, `operation-paused`, `operation-resumed`, `operation-completed`, `scrap-recorded`, `material-consumption-recorded`, `material-return-recorded`, `genealogy-link-created`, `hold-placed`, `hold-released`, `quality-result-recorded`, `override-requested`, `override-approved`, and `override-rejected`.
 - `material-scanned`, `material-validation-passed`, `material-validation-failed`, `production-actuals-ready`, and discrepancy events remain application or integration workflow outputs for the first pilot slice. They are intentionally not `Mes.Domain` aggregate events yet.
-- The canonical executable state names for the current code seed are `ProductionOrderStatus.InProgress`, `OperationExecutionStatus.Paused`, `WipUnitStatus.InProcess`, and `OverrideRequestStatus.Requested`, `Approved`, `Rejected`.
+- The canonical command name for material usage is `record-material-consumption`; shorthand such as `record-consumption` should not appear in machine-facing specs.
+- The canonical executable state names for the current code seed are `ProductionOrderStatus.InProgress`, `ProductionOrderStatus.PartiallyCompleted`, `OperationExecutionStatus.Paused`, `OperationExecutionStatus.Done`, `WipUnitStatus.InProcess`, `QualityRecordStatus.InInspection`, and `OverrideRequestStatus.Requested`, `Approved`, `Rejected`.
 
 ## 7. Integration Event Catalog
 
 | Event | Direction | Meaning |
 |---|---|---|
-| `production-actuals-posted-to-erp` | MES -> ERP | good, scrap, completion, consumption이 ERP에 반영됨 |
-| `production-actuals-post-failed` | MES -> ERP result | ERP posting 실패 또는 재시도 필요 |
-| `material-movement-sent-to-wms-lite` | MES -> WMS | line-side issue, return, discrepancy 관련 최소 정산 이벤트 전송 |
-| `material-movement-sync-failed` | MES -> WMS result | WMS-lite 정산 실패 또는 보류 |
-| `quality-notification-sent` | MES -> QMS/LIMS | hold, NCR, lab gate 관련 알림 전달 |
+| `production-actuals-posted-to-erp` | MES -> ERP | good, scrap, completion, consumption??ERP??諛섏쁺??|
+| `production-actuals-post-failed` | MES -> ERP result | ERP posting ?ㅽ뙣 ?먮뒗 ?ъ떆???꾩슂 |
+| `material-movement-sent-to-wms-lite` | MES -> WMS | line-side issue, return, discrepancy 愿??理쒖냼 ?뺤궛 ?대깽???꾩넚 |
+| `material-movement-sync-failed` | MES -> WMS result | WMS-lite ?뺤궛 ?ㅽ뙣 ?먮뒗 蹂대쪟 |
+| `quality-notification-sent` | MES -> QMS/LIMS | hold, NCR, lab gate 愿???뚮┝ ?꾨떖 |
 
 ## 8. Channel-Specific Rules
 
-- `WPF`와 `Web`가 같은 command type을 사용할 때 payload 의미와 validation rule은 동일해야 한다.
-- `WPF`가 offline mode에서 적재한 command는 `pending replay` 상태이며 서버 수락 전까지 authoritative state change가 아니다.
-- `Web`은 offline business command를 지원하지 않는 것을 기본으로 둔다.
-- `Edge`는 device event를 올릴 수 있지만 `approve-override`, `release-hold`, `post-production-actuals` 같은 business command를 직접 수행하지 않는다.
+- `WPF`? `Web`媛 媛숈? command type???ъ슜????payload ?섎?? validation rule? ?숈씪?댁빞 ?쒕떎.
+- `WPF`媛 offline mode?먯꽌 ?곸옱??command??`pending replay` ?곹깭?대ŉ ?쒕쾭 ?섎씫 ?꾧퉴吏 authoritative state change媛 ?꾨땲??
+- `Web`? offline business command瑜?吏?먰븯吏 ?딅뒗 寃껋쓣 湲곕낯?쇰줈 ?붾떎.
+- `Edge`??device event瑜??щ┫ ???덉?留?`approve-override`, `release-hold`, `post-production-actuals` 媛숈? business command瑜?吏곸젒 ?섑뻾?섏? ?딅뒗??
 
-## 9. 최소 Happy Path 맵핑
+## 9. 理쒖냼 Happy Path 留듯븨
 
 1. `ingest-order-release`
 2. `start-operation`
@@ -126,7 +127,7 @@
 7. `production-actuals-ready`
 8. `post-production-actuals`
 
-## 10. 최소 Exception Path 맵핑
+## 10. 理쒖냼 Exception Path 留듯븨
 
 ### 10.1 Material mismatch
 
@@ -151,9 +152,10 @@
 3. `acknowledge-discrepancy`
 4. `resolve-discrepancy`
 
-## 11. 다음 단계
+## 11. ?ㅼ쓬 ?④퀎
 
-- 이 카탈로그를 기준으로 BFF payload spec을 concrete application contract로 내린다.
-- command별 validation rule과 idempotency receipt 저장 방식을 구체화한다.
-- domain event와 application workflow event의 subscriber, retry, projection 책임을 나눈다.
-- ERP/WMS/QMS integration contract를 파일럿 범위에 맞게 더 구체화한다.
+- ??移댄깉濡쒓렇瑜?湲곗??쇰줈 BFF payload spec??concrete application contract濡??대┛??
+- command蹂?validation rule怨?idempotency receipt ???諛⑹떇??援ъ껜?뷀븳??
+- domain event? application workflow event??subscriber, retry, projection 梨낆엫???섎늿??
+- ERP/WMS/QMS integration contract瑜??뚯씪??踰붿쐞??留욊쾶 ??援ъ껜?뷀븳??
+

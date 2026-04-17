@@ -56,6 +56,7 @@ public sealed class GetStationWorkQueueQueryHandler
             item.Identity.OperationSequence,
             item.Identity.StationId.ToString(),
             item.State.OperationStatus.ToString(),
+            item.State.OperationQuantityUnit,
             item.RequiredMaterials.Select(MapRequiredMaterial).ToList(),
             item.State.QualityGateState == StationWorkQueueQualityGateState.Hold
                 ? QualityGateStateValues.Hold
