@@ -269,6 +269,9 @@ Validate the plant audit expectation for rejected scans, then either keep scan a
 
 ## Completed
 
+- 2026-04-17: Added `docs/mes/quick-start.md` as the canonical local usage and test guide for the current no-equipment operator-execution path, linked it from the WPF project README and the station/edge implementation plan, and re-saved the guide as UTF-8 BOM so PowerShell opens it without mojibake.
+- 2026-04-17: Completed a byte-level audit of `docs/mes/*.md`, confirmed `docs/mes/command-event-catalog.md` was the only remaining mojibake file, restored it as readable UTF-8 Korean, and re-aligned the WPF station-plan docs plus `src/Mes.Client.Wpf/README.md` to the current scan-capable shell.
+- 2026-04-17: Restored `docs/mes/architecture-blueprint.md` and `docs/mes/MES_WPF_Modbus_IMPLEMENTATION_PLAN.md` as readable UTF-8 Korean documents, re-synced both to the current executable seams, and recorded the remaining docs-directory mojibake scan as deferred follow-up work.
 - 2026-04-14: Created the initial MES project architecture baseline in `docs/mes/architecture-blueprint.md`.
 - 2026-04-14: Created the initial phased rollout plan in `docs/mes/implementation-roadmap.md`.
 - 2026-04-14: Updated the MES baseline to keep the client layer channel-neutral with both WPF and Web as valid shells.

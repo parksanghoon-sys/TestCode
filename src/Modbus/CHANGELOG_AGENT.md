@@ -67,6 +67,11 @@
 
 ## 2026-04-17
 
+- Added `docs/mes/quick-start.md` as the canonical local usage and test guide for the current operator-execution pilot path, covering the fastest no-equipment demo, manual API plus WPF launch, and focused versus full test commands.
+- Linked the new quick guide from `src/Mes.Client.Wpf/README.md` and `docs/mes/MES_WPF_Modbus_IMPLEMENTATION_PLAN.md`, and tightened the current plan so future demo-script or test-command changes must keep those docs aligned.
+- Audited every `docs/mes/*.md` file at the byte-content level, confirmed that `docs/mes/command-event-catalog.md` was the only remaining mojibake document, and rewrote it as readable UTF-8 Korean while explicitly separating executable-now commands from planned catalog commands.
+- Updated `docs/mes/MES_WPF_Modbus_IMPLEMENTATION_PLAN.md` and `src/Mes.Client.Wpf/README.md` so the WPF documentation now reflects the current scan-capable shell instead of describing `record-material-scan` as purely future work.
+- Reviewed the current MES design docs against the executable code seam and confirmed that the remaining implementation work is now concentrated in pilot-line validation, WPF hold/quality surface choices, peripheral integration, offline hardening, and future provider or edge work rather than in the already-executable operator command baseline.
 - Reconciled the project memory files with the actual worktree and confirmed that a first SQLite relational adapter candidate already exists under `src/Mes.Infrastructure/OperatorExecution/Sqlite/`.
 - Narrowed the next execution point from "start a relational adapter" to "promote the existing SQLite path through parity tests, host composition, and explicit SQL-draft gap tracking."
 - Revalidated the current worktree with `dotnet test Mes.slnx -v minimal` before updating the plan, so the revised next-step design is anchored to a passing baseline.
@@ -118,3 +123,6 @@
 - Revalidated the current repository plan against the actual worktree, confirmed that pilot-line selection is still the highest-priority next step but is blocked on external information, and promoted the nearest safe internal task from the backlog instead of forcing a speculative implementation.
 - Updated `docs/mes/architecture-blueprint.md`, `docs/mes/command-event-catalog.md`, `docs/mes/pilot-slice-01-operator-execution.md`, and `docs/mes/MES_WPF_Modbus_IMPLEMENTATION_PLAN.md` so machine-facing MES vocabulary now matches the executable code seed, especially `record-material-consumption`, `ProductionOrderStatus.PartiallyCompleted`, `OperationExecutionStatus.Done`, and `QualityRecordStatus.InInspection`.
 - Revalidated the repository after the terminology-alignment pass with `dotnet test Mes.slnx -v minimal`.
+- Restored `docs/mes/architecture-blueprint.md` and `docs/mes/MES_WPF_Modbus_IMPLEMENTATION_PLAN.md` as readable UTF-8 Korean documents after confirming the files were not suffering from a simple save-encoding mismatch but from already-corrupted mojibake content.
+- Re-synced both repaired documents to the current executable seams, current WPF station-shell status, and the existing pilot-profile assumptions so the encoding repair does not reintroduce stale design text.
+- Verified the repaired files at the byte level by checking for expected UTF-8 Korean term sequences without a BOM, and recorded a deferred backlog item to audit the rest of `docs/mes/*.md` for the same corruption pattern.

@@ -7,6 +7,11 @@ It now proves a queue-plus-command operator shell over the shared
 operator-execution BFF without introducing direct domain, database, or PLC
 access paths.
 
+## Quick Start
+
+For local API plus WPF launch steps, the no-equipment smoke path, and focused
+or full test commands, see `docs/mes/quick-start.md`.
+
 ## Responsibility Boundary
 
 This project owns:
@@ -14,7 +19,7 @@ This project owns:
 - station binding and session display
 - operator work-queue reads through `Mes.ExperienceApi`
 - shared WPF-side command-context generation for operator mutations
-- `start-operation`, `record-material-consumption`, and `complete-operation` command submission over the shared BFF
+- `start-operation`, `record-material-scan`, `record-material-consumption`, and `complete-operation` command submission over the shared BFF
 - operator-facing normalization of server and client-side failures
 - severity-aware shell messaging for info, warning, and error states
 - WPF shell startup through Generic Host and DI
@@ -42,7 +47,7 @@ This project does not own:
 - [OperatorExecutionStationClient.cs](/D:/01_MyStudy/03.TEST/src/Modbus/src/Mes.Client.Wpf/OperatorExecution/OperatorExecutionStationClient.cs): shared BFF GET and POST calls plus client-side normalization for connectivity, empty-body, and invalid-body failures.
 - [StationCommandContextFactory.cs](/D:/01_MyStudy/03.TEST/src/Modbus/src/Mes.Client.Wpf/OperatorExecution/StationCommandContextFactory.cs): central WPF policy for `commandId`, `correlationId`, `idempotencyKey`, actor, and client timestamp generation.
 - [OperatorExecutionProblemDisplayPolicy.cs](/D:/01_MyStudy/03.TEST/src/Modbus/src/Mes.Client.Wpf/OperatorExecution/OperatorExecutionProblemDisplayPolicy.cs): maps server and client failures into operator-facing messages and severity.
-- [ShellViewModel.cs](/D:/01_MyStudy/03.TEST/src/Modbus/src/Mes.Client.Wpf/Shell/ShellViewModel.cs): manages station binding, queue refresh, selected-operation state, `start-operation`, `record-material-consumption`, `complete-operation`, and severity-aware shell messaging.
+- [ShellViewModel.cs](/D:/01_MyStudy/03.TEST/src/Modbus/src/Mes.Client.Wpf/Shell/ShellViewModel.cs): manages station binding, queue refresh, selected-operation state, `start-operation`, `record-material-scan`, `record-material-consumption`, `complete-operation`, and severity-aware shell messaging.
 - [WorkQueueItemViewModel.cs](/D:/01_MyStudy/03.TEST/src/Modbus/src/Mes.Client.Wpf/Shell/WorkQueueItemViewModel.cs): adapts shared queue contracts into UI-facing row models and derives default material code, material unit, and completion unit hints from MES-owned queue data.
 
 ## Dependencies
@@ -59,15 +64,17 @@ This project does not own:
 4. The shell clears any previously displayed snapshot on rebind so one station cannot inherit another station's queue view.
 5. Queue refresh calls `GetStationWorkQueue` through the shared BFF contract.
 6. The shell selects one queue row and generates a shared WPF command context through `StationCommandContextFactory`.
-7. `start-operation`, `record-material-consumption`, and `complete-operation` post the shared command contracts to `Mes.ExperienceApi`.
-8. `record-material-consumption` uses the same shared WPF command-context factory, but adds one per-action token so repeated material shots on the same operation do not collapse into one idempotency scope.
-9. `complete-operation` now reads the authoritative quantity unit from the selected queue item instead of asking the operator to type the unit manually.
-10. Accepted commands clear the stale queue snapshot, refresh the current station queue again, and surface the result as operator-facing shell messages.
-11. Failures are normalized into severity-aware operator messages.
+7. `start-operation`, `record-material-scan`, `record-material-consumption`, and `complete-operation` post the shared command contracts to `Mes.ExperienceApi`.
+8. `record-material-scan` can accept operator-entered WIP and lot data, then applies authoritative material code and quantity-unit feedback back into the shell fields.
+9. `record-material-consumption` uses the same shared WPF command-context factory, but adds one per-action token so repeated material shots on the same operation do not collapse into one idempotency scope.
+10. `complete-operation` now reads the authoritative quantity unit from the selected queue item instead of asking the operator to type the unit manually.
+11. Accepted commands clear the stale queue snapshot, refresh the current station queue again, and surface the result as operator-facing shell messages.
+12. Failures are normalized into severity-aware operator messages.
 
 ## Current Limitations
 
 - Device integration still stops at HTTP communication with the shared BFF.
 - Severity is now reflected in the shell panel, but there is still no broader alarm center, toast system, or acknowledgement workflow.
+- `place-hold`, `record-quality-result`, and `release-hold` are available in backend contracts, but they are not yet surfaced in the current WPF shell.
 - `record-material-consumption` still depends on operator-entered `WIP`, material lot, and quantity input because the current queue contract does not project a scan-first material selection flow.
 - `OperatorExecutionStationClientOptions.DefaultCompletionQuantityUnit` now acts only as a fallback shell default when no queue item is selected; the normal completion flow uses the queue-projected unit.

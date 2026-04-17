@@ -488,3 +488,29 @@ Implications:
 - Machine-facing docs should now prefer `record-material-consumption`, `InProgress`, `PartiallyCompleted`, `InProcess`, `InInspection`, and `Done` when they describe executable contracts or persisted state.
 - Prose explanations may still use natural-language wording, but any payload, workflow, persistence, or state table should align to the executable code spelling.
 - The next priority still remains pilot-line selection and external workflow validation; this ADR only removes internal vocabulary drift so later validation can focus on real plant questions instead of document/code mismatch.
+
+## 2026-04-17 ADR-038: Repair mojibake MES docs by rewriting them as readable UTF-8, not by blind transcoding
+
+Decision:
+When a MES design document is already carrying corrupted Korean text instead of merely using the wrong save encoding, repair it by restoring readable content and saving the file as UTF-8 rather than by applying a blind encoding conversion step.
+
+Why:
+The inspection for `docs/mes/architecture-blueprint.md` and `docs/mes/MES_WPF_Modbus_IMPLEMENTATION_PLAN.md` showed that the problem was not just a different file encoding setting. The stored content itself had already drifted into mojibake, so a no-op re-save or a cp949-to-utf8 style transcode would only preserve unreadable text.
+
+Implications:
+- Encoding repair for affected MES docs now includes content verification against current architecture and plan intent instead of treating the problem as a purely mechanical file-format conversion.
+- Restored files should be saved as UTF-8 and checked for expected Korean byte sequences so future tool output issues are not confused with actual source corruption.
+- The remaining `docs/mes/*.md` files should be audited with the same rule, and documents that still show mojibake should be queued as explicit follow-up work rather than silently left in place.
+
+## 2026-04-17 ADR-039: Separate executable command vocabulary from planned expansion commands in MES docs
+
+Decision:
+When a MES command or event catalog spans both current slice behavior and future rollout ideas, the document must explicitly distinguish executable-now commands from planned expansion commands instead of presenting them as one undifferentiated active catalog.
+
+Why:
+The design review showed that the previous command catalog mixed currently routable operator-execution commands with future pause, scrap, override, and discrepancy commands. That made it harder to tell what is already proven in `Mes.Application.Contracts`, `Mes.ExperienceApi`, and the WPF shell versus what still depends on later release decisions.
+
+Implications:
+- `docs/mes/command-event-catalog.md` should now name the executable command set separately from planned next-slice commands.
+- WPF, Web, and rollout planning should treat the executable-now set as the real delivery baseline and the planned set as deferred work until shared contracts and routes exist.
+- Future command promotion work should update both the code contracts and the command catalog distinction in the same work unit.
