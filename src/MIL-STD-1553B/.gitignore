@@ -1,0 +1,9 @@
+artifacts/
+tests/native/artifacts/
+!MIL-STD-1553B.sln
+*.obj
+*.lib
+*.exp
+*.exe
+**/bin/
+**/obj/

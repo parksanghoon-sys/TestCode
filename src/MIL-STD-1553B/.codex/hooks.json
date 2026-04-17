@@ -1,0 +1,16 @@
+{
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$(git rev-parse --show-toplevel)/.codex/hooks/stop_validate_flow.py\"",
+            "statusMessage": "설계 문서 및 테스트 변경 여부를 점검하는 중입니다.",
+            "timeout": 20
+          }
+        ]
+      }
+    ]
+  }
+}
