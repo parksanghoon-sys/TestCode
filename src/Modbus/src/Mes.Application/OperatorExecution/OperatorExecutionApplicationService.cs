@@ -56,6 +56,29 @@ public sealed class OperatorExecutionApplicationService
     }
 
     /// <summary>
+    /// `record-material-scan` command를 오케스트레이션합니다.
+    /// </summary>
+    /// <param name="request">실행 요청입니다.</param>
+    /// <param name="cancellationToken">비동기 취소 토큰입니다.</param>
+    /// <returns>처리 결과입니다.</returns>
+    public async Task<HandledCommandResult<RecordMaterialScanResponseContract>> HandleAsync(
+        ExecuteOperatorExecutionCommandRequest<RecordMaterialScanCommandContract> request,
+        CancellationToken cancellationToken = default)
+    {
+        var state = await _commandPort.LoadStateAsync(request.Command, cancellationToken);
+        var receipt = await _commandPort.LoadReceiptAsync(request.Command, cancellationToken);
+        var result = _commandHandler.Handle(
+            new OperatorExecutionCommandHandlingRequest<RecordMaterialScanCommandContract, RecordMaterialScanCommandState>(
+                request.Command,
+                state,
+                receipt,
+                request.ServerReceivedAt));
+
+        await PersistIfNeededAsync(state, result.ReceiptToStore, null, request.ServerReceivedAt, cancellationToken);
+        return result;
+    }
+
+    /// <summary>
     /// `record-material-consumption` command를 오케스트레이션합니다.
     /// </summary>
     /// <param name="request">실행 요청입니다.</param>

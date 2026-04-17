@@ -119,6 +119,75 @@ public sealed class ShellViewModelTests
     }
 
     /// <summary>
+    /// 자재 스캔 검증 명령이 WIP와 lot 기준으로 전송되고 authoritative lot 정보를 입력 필드에 반영하는지 검증합니다.
+    /// </summary>
+    [Fact]
+    public async Task RecordMaterialScan_WhenSelectedRunningItemExists_ValidatesAndAppliesAuthoritativeMaterialFields()
+    {
+        var stationId = "ST-1001";
+        var requiredMaterials = new[]
+        {
+            new RequiredMaterialContract("MAT-RED", new MeasuredQuantityContract(5m, "KG"))
+        };
+        var runningItem = CreateQueueItem(stationId, "Running", requiredMaterials);
+        RecordMaterialScanCommandContract? capturedCommand = null;
+        var stationClient = new StubStationClient
+        {
+            GetStationWorkQueueAsyncHandler = (_, _) =>
+                Task.FromResult(
+                    OperatorExecutionStationClientResult<GetStationWorkQueueResponseContract>.Success(
+                        new GetStationWorkQueueResponseContract(
+                            stationId,
+                            new DateTimeOffset(2026, 4, 17, 9, 33, 0, TimeSpan.Zero),
+                            [runningItem]))),
+            RecordMaterialScanAsyncHandler = (command, _) =>
+            {
+                capturedCommand = command;
+                return Task.FromResult(
+                    OperatorExecutionStationClientResult<RecordMaterialScanResponseContract>.Success(
+                        new RecordMaterialScanResponseContract(
+                            true,
+                            command.CommandId,
+                            new DateTimeOffset(2026, 4, 17, 9, 33, 20, TimeSpan.Zero),
+                            command.Payload.OperationExecutionId,
+                            command.Payload.WipUnitId,
+                            command.Payload.MaterialLotId,
+                            "MAT-RED",
+                            new MeasuredQuantityContract(18m, "KG"))));
+            }
+        };
+        var viewModel = CreateViewModel(stationClient);
+
+        viewModel.StationId = stationId;
+        viewModel.BindStationCommand.Execute(null);
+        await ExecuteAsyncCommandAndWaitAsync(viewModel.RefreshQueueCommand, viewModel);
+        viewModel.SelectedQueueItem = viewModel.QueueItems.Single();
+
+        Assert.False(viewModel.RecordMaterialScanCommand.CanExecute(null));
+
+        viewModel.MaterialConsumptionWipUnitId = "WIP-1001";
+        viewModel.MaterialConsumptionMaterialLotId = "LOT-1001";
+
+        Assert.True(viewModel.RecordMaterialScanCommand.CanExecute(null));
+
+        await ExecuteAsyncCommandAndWaitAsync(viewModel.RecordMaterialScanCommand, viewModel);
+
+        Assert.NotNull(capturedCommand);
+        Assert.Equal(runningItem.OperationExecutionId, capturedCommand!.Payload.OperationExecutionId);
+        Assert.Equal("WIP-1001", capturedCommand.Payload.WipUnitId);
+        Assert.Equal("LOT-1001", capturedCommand.Payload.MaterialLotId);
+        Assert.Equal("MAT-RED", capturedCommand.Payload.MaterialCode);
+        Assert.Equal($"wpf:{stationId}:{runningItem.OperationExecutionId}", capturedCommand.CorrelationId);
+        Assert.StartsWith(
+            $"wpf:{OperatorExecutionCommandTypes.RecordMaterialScan}:{stationId}:{runningItem.OperationExecutionId}:",
+            capturedCommand.IdempotencyKey,
+            StringComparison.Ordinal);
+        Assert.Equal("자재 스캔 검증 완료", viewModel.MessageTitle);
+        Assert.Equal("MAT-RED", viewModel.MaterialConsumptionMaterialCode);
+        Assert.Equal("KG", viewModel.MaterialConsumptionQuantityUnit);
+    }
+
+    /// <summary>
     /// 자재 투입 명령이 기본 자재 값을 프리필하고 멀티샷 idempotency 범위로 전송되는지 검증합니다.
     /// </summary>
     [Fact]
@@ -489,6 +558,12 @@ public sealed class ShellViewModelTests
         /// <summary>
         /// 자재 투입 명령 핸들러를 가져오거나 설정합니다.
         /// </summary>
+        public Func<RecordMaterialScanCommandContract, CancellationToken, Task<OperatorExecutionStationClientResult<RecordMaterialScanResponseContract>>> RecordMaterialScanAsyncHandler { get; init; } =
+            (_, _) => throw new InvalidOperationException("RecordMaterialScanAsyncHandler가 설정되지 않았습니다.");
+
+        /// <summary>
+        /// ?먯옱 ?ъ엯 紐낅졊 ?몃뱾?щ? 媛?몄삤嫄곕굹 ?ㅼ젙?⑸땲??
+        /// </summary>
         public Func<RecordMaterialConsumptionCommandContract, CancellationToken, Task<OperatorExecutionStationClientResult<RecordMaterialConsumptionResponseContract>>> RecordMaterialConsumptionAsyncHandler { get; init; } =
             (_, _) => throw new InvalidOperationException("RecordMaterialConsumptionAsyncHandler가 설정되지 않았습니다.");
 
@@ -530,6 +605,19 @@ public sealed class ShellViewModelTests
         /// <param name="command">자재 투입 명령입니다.</param>
         /// <param name="cancellationToken">취소 토큰입니다.</param>
         /// <returns>자재 투입 명령 결과입니다.</returns>
+        public Task<OperatorExecutionStationClientResult<RecordMaterialScanResponseContract>> RecordMaterialScanAsync(
+            RecordMaterialScanCommandContract command,
+            CancellationToken cancellationToken = default)
+        {
+            return RecordMaterialScanAsyncHandler(command, cancellationToken);
+        }
+
+        /// <summary>
+        /// ?먯옱 ?ъ엯 紐낅졊???꾩넚?⑸땲??
+        /// </summary>
+        /// <param name="command">?먯옱 ?ъ엯 紐낅졊?낅땲??</param>
+        /// <param name="cancellationToken">痍⑥냼 ?좏겙?낅땲??</param>
+        /// <returns>?먯옱 ?ъ엯 紐낅졊 寃곌낵?낅땲??</returns>
         public Task<OperatorExecutionStationClientResult<RecordMaterialConsumptionResponseContract>> RecordMaterialConsumptionAsync(
             RecordMaterialConsumptionCommandContract command,
             CancellationToken cancellationToken = default)

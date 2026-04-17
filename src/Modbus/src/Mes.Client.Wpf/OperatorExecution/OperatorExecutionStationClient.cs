@@ -65,6 +65,24 @@ public sealed class OperatorExecutionStationClient : IOperatorExecutionStationCl
     }
 
     /// <summary>
+    /// 지정한 공정 실행에 대한 자재 스캔 검증 명령을 전송합니다.
+    /// </summary>
+    /// <param name="command">자재 스캔 검증 명령 계약입니다.</param>
+    /// <param name="cancellationToken">요청 취소 토큰입니다.</param>
+    /// <returns>성공 시 자재 스캔 검증 응답, 실패 시 오류 정보를 포함한 결과입니다.</returns>
+    public Task<OperatorExecutionStationClientResult<RecordMaterialScanResponseContract>> RecordMaterialScanAsync(
+        RecordMaterialScanCommandContract command,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(command);
+
+        return SendPostAsync<RecordMaterialScanCommandContract, RecordMaterialScanResponseContract>(
+            OperatorExecutionEndpointSignatures.RecordMaterialScan.Route,
+            command,
+            cancellationToken);
+    }
+
+    /// <summary>
     /// 지정한 공정 실행에 대한 자재 투입 명령을 전송합니다.
     /// </summary>
     /// <param name="command">자재 투입 명령 계약입니다.</param>

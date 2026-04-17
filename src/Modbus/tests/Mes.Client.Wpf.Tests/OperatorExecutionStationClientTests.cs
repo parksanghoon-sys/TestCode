@@ -95,6 +95,48 @@ public sealed class OperatorExecutionStationClientTests
     }
 
     /// <summary>
+    /// 자재 스캔 검증 명령이 올바른 POST route와 payload로 전송되는지 검증합니다.
+    /// </summary>
+    [Fact]
+    public async Task RecordMaterialScanAsync_WhenSuccessfulResponse_PostsCommandToScanRoute()
+    {
+        Uri? requestedUri = null;
+        JsonDocument? requestDocument = null;
+        var handler = new StubHttpMessageHandler(async (request, cancellationToken) =>
+        {
+            requestedUri = request.RequestUri;
+            requestDocument = JsonDocument.Parse(await request.Content!.ReadAsStringAsync(cancellationToken));
+
+            return new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = new StringContent(
+                    """
+                    {"accepted":true,"commandId":"cmd-002-scan","serverReceivedAt":"2026-04-17T09:02:01+00:00","operationExecutionId":"OP-1001","wipUnitId":"WIP-1001","materialLotId":"LOT-1001","materialCode":"MAT-RED","availableQuantity":{"value":20.0,"unit":"KG"}}
+                    """,
+                    Encoding.UTF8,
+                    "application/json")
+            };
+        });
+
+        var client = CreateClient(handler);
+        var command = new RecordMaterialScanCommandContract(
+            CreateCommandContext("cmd-002-scan", "corr-002-scan", "idem-002-scan"),
+            new RecordMaterialScanPayloadContract("OP-1001", "WIP-1001", "LOT-1001", "MAT-RED"));
+
+        var result = await client.RecordMaterialScanAsync(command);
+
+        Assert.True(result.IsSuccess);
+        Assert.NotNull(result.Value);
+        Assert.Equal(HttpMethod.Post, handler.LastRequestMethod);
+        Assert.Equal(
+            "/api/bff/operator-execution/commands/material-scan",
+            requestedUri?.GetComponents(UriComponents.PathAndQuery, UriFormat.UriEscaped));
+        Assert.NotNull(requestDocument);
+        Assert.Equal("LOT-1001", requestDocument!.RootElement.GetProperty("payload").GetProperty("materialLotId").GetString());
+        Assert.Equal("MAT-RED", requestDocument.RootElement.GetProperty("payload").GetProperty("materialCode").GetString());
+    }
+
+    /// <summary>
     /// 자재 투입 명령이 올바른 POST route와 payload로 전송되는지 검증합니다.
     /// </summary>
     [Fact]

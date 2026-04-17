@@ -142,6 +142,57 @@ public sealed record StartOperationResponseContract(
         ServerReceivedAt);
 
 /// <summary>
+/// 자재 스캔 검증 명령의 본문 payload입니다.
+/// </summary>
+/// <param name="OperationExecutionId">대상 공정 실행 식별자입니다.</param>
+/// <param name="WipUnitId">검증할 WIP 식별자입니다.</param>
+/// <param name="MaterialLotId">검증할 자재 lot 식별자입니다.</param>
+/// <param name="MaterialCode">작업자가 입력한 자재 코드입니다.</param>
+public sealed record RecordMaterialScanPayloadContract(
+    string OperationExecutionId,
+    string WipUnitId,
+    string MaterialLotId,
+    string? MaterialCode);
+
+/// <summary>
+/// 자재 스캔 검증 명령 계약입니다.
+/// </summary>
+/// <param name="Context">명령 공통 context입니다.</param>
+/// <param name="Payload">자재 스캔 검증 본문입니다.</param>
+public sealed record RecordMaterialScanCommandContract(
+    CommandContextContract Context,
+    RecordMaterialScanPayloadContract Payload)
+    : BffCommandEnvelope<RecordMaterialScanPayloadContract>(
+        Context,
+        OperatorExecutionCommandTypes.RecordMaterialScan,
+        Payload);
+
+/// <summary>
+/// 자재 스캔 검증 명령의 수락 응답입니다.
+/// </summary>
+/// <param name="Accepted">명령 수락 여부입니다.</param>
+/// <param name="CommandId">서버가 인식한 명령 식별자입니다.</param>
+/// <param name="ServerReceivedAt">서버 수신 시각입니다.</param>
+/// <param name="OperationExecutionId">검증한 공정 실행 식별자입니다.</param>
+/// <param name="WipUnitId">검증한 WIP 식별자입니다.</param>
+/// <param name="MaterialLotId">검증한 자재 lot 식별자입니다.</param>
+/// <param name="MaterialCode">권위 있는 자재 코드입니다.</param>
+/// <param name="AvailableQuantity">현재 잔량입니다.</param>
+public sealed record RecordMaterialScanResponseContract(
+    bool Accepted,
+    string CommandId,
+    DateTimeOffset ServerReceivedAt,
+    string OperationExecutionId,
+    string WipUnitId,
+    string MaterialLotId,
+    string MaterialCode,
+    MeasuredQuantityContract AvailableQuantity)
+    : BffCommandResponse(
+        Accepted,
+        CommandId,
+        ServerReceivedAt);
+
+/// <summary>
 /// 자재 소모 확정 명령의 본문 payload 입니다.
 /// </summary>
 /// <param name="OperationExecutionId">활성 공정 실행 식별자입니다.</param>

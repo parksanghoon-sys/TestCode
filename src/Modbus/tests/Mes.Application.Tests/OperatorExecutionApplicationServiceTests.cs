@@ -47,6 +47,48 @@ public sealed class OperatorExecutionApplicationServiceTests
     }
 
     /// <summary>
+    /// 자재 스캔 검증 요청이 상태를 로드하고 receipt 저장까지 수행하는지 검증합니다.
+    /// </summary>
+    [Fact]
+    public async Task HandleAsync_material_scan_should_load_state_and_persist_result()
+    {
+        var serverReceivedAt = new DateTimeOffset(2026, 4, 16, 17, 25, 0, TimeSpan.Zero);
+        var commandPort = new FakeOperatorExecutionCommandPort();
+        var sourcePort = new FakeStationWorkQueueSourcePort();
+        var service = CreateService(commandPort, sourcePort);
+        var operation = CreateRunningOperation("PO-9001-SCAN", "OP-9001-SCAN", "ST-91", 10, serverReceivedAt.AddMinutes(-10));
+        var wipUnit = new WipUnit(new WipUnitId("WIP-9001-SCAN"), "ITEM-9001");
+        wipUnit.StartProcessing(operation.Id);
+        var materialLot = MaterialLot.Create(new MaterialLotId("LOT-9001-SCAN"), "MAT-9001", new MeasuredQuantity(4m, "EA"));
+        commandPort.RecordMaterialScanState = new RecordMaterialScanCommandState(
+            operation,
+            wipUnit,
+            materialLot,
+            ["MAT-9001"]);
+
+        var command = new RecordMaterialScanCommandContract(
+            CreateContext("CMD-9001-SCAN", "CORR-9001-SCAN", "KEY-9001-SCAN", "operator-91", "ST-91"),
+            new RecordMaterialScanPayloadContract(
+                operation.Id.ToString(),
+                wipUnit.Id.ToString(),
+                materialLot.Id.ToString(),
+                "MAT-9001"));
+
+        var result = await service.HandleAsync(
+            new ExecuteOperatorExecutionCommandRequest<RecordMaterialScanCommandContract>(
+                command,
+                serverReceivedAt));
+
+        Assert.Equal(CommandReceiptDecisionKind.AcceptNew, result.Decision);
+        Assert.Equal(1, commandPort.SaveCount);
+        Assert.NotNull(commandPort.LastSavedRequest);
+        var savedRequest = Assert.IsType<PersistOperatorExecutionCommandRequest<RecordMaterialScanCommandState>>(commandPort.LastSavedRequest);
+        Assert.Equal(materialLot.Id.ToString(), savedRequest.State.MaterialLot.Id.ToString());
+        Assert.NotNull(savedRequest.ReceiptToStore);
+        Assert.Null(savedRequest.PreparedBatch);
+    }
+
+    /// <summary>
     /// replay 가능한 품질 결과 요청은 저장 없이 기존 응답만 재생하는지 검증합니다.
     /// </summary>
     [Fact]
@@ -321,6 +363,11 @@ public sealed class OperatorExecutionApplicationServiceTests
         /// <summary>
         /// 자재 소모용 상태입니다.
         /// </summary>
+        public RecordMaterialScanCommandState? RecordMaterialScanState { get; set; }
+
+        /// <summary>
+        /// ?먯옱 ?뚮어???곹깭?낅땲??
+        /// </summary>
         public RecordMaterialConsumptionCommandState? RecordMaterialConsumptionState { get; set; }
 
         /// <summary>
@@ -382,6 +429,17 @@ public sealed class OperatorExecutionApplicationServiceTests
         /// <param name="command">자재 소모 command입니다.</param>
         /// <param name="cancellationToken">취소 토큰입니다.</param>
         /// <returns>설정된 상태입니다.</returns>
+        public Task<RecordMaterialScanCommandState> LoadStateAsync(RecordMaterialScanCommandContract command, CancellationToken cancellationToken = default)
+        {
+            return Task.FromResult(RecordMaterialScanState ?? throw new InvalidOperationException("RecordMaterialScanState is not configured."));
+        }
+
+        /// <summary>
+        /// ?먯옱 ?뚮어 ?곹깭瑜?諛섑솚?⑸땲??
+        /// </summary>
+        /// <param name="command">?먯옱 ?뚮어 command?낅땲??</param>
+        /// <param name="cancellationToken">痍⑥냼 ?좏겙?낅땲??</param>
+        /// <returns>?ㅼ젙???곹깭?낅땲??</returns>
         public Task<RecordMaterialConsumptionCommandState> LoadStateAsync(RecordMaterialConsumptionCommandContract command, CancellationToken cancellationToken = default)
         {
             return Task.FromResult(RecordMaterialConsumptionState ?? throw new InvalidOperationException("RecordMaterialConsumptionState is not configured."));

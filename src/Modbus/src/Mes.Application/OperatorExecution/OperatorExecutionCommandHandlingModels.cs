@@ -56,6 +56,19 @@ public sealed record StartOperationCommandState(
     OperationExecution OperationExecution);
 
 /// <summary>
+/// 자재 스캔 검증에 필요한 aggregate 상태 묶음입니다.
+/// </summary>
+/// <param name="OperationExecution">검증 대상 공정 실행입니다.</param>
+/// <param name="WipUnit">검증 대상 WIP입니다.</param>
+/// <param name="MaterialLot">검증 대상 자재 lot입니다.</param>
+/// <param name="RequiredMaterialCodes">현재 공정의 요구 자재 코드 목록입니다.</param>
+public sealed record RecordMaterialScanCommandState(
+    OperationExecution OperationExecution,
+    WipUnit WipUnit,
+    MaterialLot MaterialLot,
+    IReadOnlyList<string> RequiredMaterialCodes);
+
+/// <summary>
 /// 자재 투입 확정에 필요한 aggregate 상태 묶음입니다.
 /// </summary>
 /// <param name="OperationExecution">투입 중인 공정 실행입니다.</param>

@@ -48,6 +48,84 @@ public sealed class OperatorExecutionCommandHandlerTests
     }
 
     /// <summary>
+    /// 자재 스캔 검증 명령이 authoritative lot 정보를 응답하고 receipt를 남기는지 검증합니다.
+    /// </summary>
+    [Fact]
+    public void Handle_material_scan_should_validate_without_mutating_material_lot()
+    {
+        var serverReceivedAt = new DateTimeOffset(2026, 4, 16, 16, 25, 0, TimeSpan.Zero);
+        var handler = CreateHandler();
+        var operation = CreateRunningOperation("PO-7001-SCAN", "OP-7001-SCAN", "ST-71", 10, serverReceivedAt.AddMinutes(-5));
+        var wipUnit = new WipUnit(new WipUnitId("WIP-7001-SCAN"), "ITEM-7001");
+        wipUnit.StartProcessing(operation.Id);
+        var materialLot = MaterialLot.Create(new MaterialLotId("LOT-7001-SCAN"), "MAT-7001", new MeasuredQuantity(5m, "EA"));
+
+        var command = new RecordMaterialScanCommandContract(
+            CreateContext("CMD-7001-SCAN", "CORR-7001-SCAN", "KEY-7001-SCAN", "operator-71", "ST-71"),
+            new RecordMaterialScanPayloadContract(
+                operation.Id.ToString(),
+                wipUnit.Id.ToString(),
+                materialLot.Id.ToString(),
+                "MAT-7001"));
+
+        var result = handler.Handle(
+            new OperatorExecutionCommandHandlingRequest<RecordMaterialScanCommandContract, RecordMaterialScanCommandState>(
+                command,
+                new RecordMaterialScanCommandState(
+                    operation,
+                    wipUnit,
+                    materialLot,
+                    ["MAT-7001"]),
+                null,
+                serverReceivedAt));
+
+        Assert.Equal(CommandReceiptDecisionKind.AcceptNew, result.Decision);
+        Assert.True(result.Response.Accepted);
+        Assert.Equal(materialLot.Id.ToString(), result.Response.MaterialLotId);
+        Assert.Equal(materialLot.MaterialCode, result.Response.MaterialCode);
+        Assert.Equal(5m, result.Response.AvailableQuantity.Value);
+        Assert.Empty(materialLot.GenealogyLinks);
+        Assert.Equal(MaterialLotStatus.Available, materialLot.Status);
+        Assert.NotNull(result.ReceiptToStore);
+        Assert.Equal(materialLot.Id.ToString(), result.ReceiptToStore!.AggregateId);
+    }
+
+    /// <summary>
+    /// 요구 자재와 lot 자재 코드가 다르면 자재 스캔 검증이 거절되는지 검증합니다.
+    /// </summary>
+    [Fact]
+    public void Handle_material_scan_should_reject_requirement_mismatch()
+    {
+        var serverReceivedAt = new DateTimeOffset(2026, 4, 16, 16, 27, 0, TimeSpan.Zero);
+        var handler = CreateHandler();
+        var operation = CreateRunningOperation("PO-7001-SCAN-BAD", "OP-7001-SCAN-BAD", "ST-71", 10, serverReceivedAt.AddMinutes(-5));
+        var wipUnit = new WipUnit(new WipUnitId("WIP-7001-SCAN-BAD"), "ITEM-7001");
+        wipUnit.StartProcessing(operation.Id);
+        var materialLot = MaterialLot.Create(new MaterialLotId("LOT-7001-SCAN-BAD"), "MAT-WRONG", new MeasuredQuantity(5m, "EA"));
+        var command = new RecordMaterialScanCommandContract(
+            CreateContext("CMD-7001-SCAN-BAD", "CORR-7001-SCAN-BAD", "KEY-7001-SCAN-BAD", "operator-71", "ST-71"),
+            new RecordMaterialScanPayloadContract(
+                operation.Id.ToString(),
+                wipUnit.Id.ToString(),
+                materialLot.Id.ToString(),
+                "MAT-WRONG"));
+
+        var exception = Assert.Throws<OperatorExecutionValidationException>(() =>
+            handler.Handle(
+                new OperatorExecutionCommandHandlingRequest<RecordMaterialScanCommandContract, RecordMaterialScanCommandState>(
+                    command,
+                    new RecordMaterialScanCommandState(
+                        operation,
+                        wipUnit,
+                        materialLot,
+                        ["MAT-EXPECTED"]),
+                    null,
+                    serverReceivedAt)));
+
+        Assert.Equal("operator_execution.validation_failed", exception.ErrorCode);
+    }
+
+    /// <summary>
     /// 자재 소모 명령이 line issue와 genealogy 생성까지 함께 수행하는지 검증합니다.
     /// </summary>
     [Fact]

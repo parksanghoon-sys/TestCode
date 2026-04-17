@@ -16,6 +16,11 @@ public static class OperatorExecutionCommandTypes
     public const string RecordMaterialConsumption = "record-material-consumption";
 
     /// <summary>
+    /// 자재 스캔 검증 명령입니다.
+    /// </summary>
+    public const string RecordMaterialScan = "record-material-scan";
+
+    /// <summary>
     /// hold 설정 명령입니다.
     /// </summary>
     public const string PlaceHold = "place-hold";

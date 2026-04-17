@@ -195,6 +195,22 @@ public sealed class InMemoryOperatorExecutionStore
     }
 
     /// <summary>
+    /// 지정한 공정 실행에 연결된 요구 자재 snapshot을 조회합니다.
+    /// </summary>
+    /// <param name="operationExecutionId">대상 공정 실행 식별자입니다.</param>
+    /// <returns>공정 실행 기준 요구 자재 snapshot 목록입니다.</returns>
+    public IReadOnlyCollection<OperationMaterialRequirementSnapshot> GetMaterialRequirements(string operationExecutionId)
+    {
+        lock (_gate)
+        {
+            return _materialRequirements.Values
+                .Where(requirement => string.Equals(requirement.OperationExecutionId.ToString(), operationExecutionId, StringComparison.Ordinal))
+                .OrderBy(requirement => requirement.Metadata.SequenceNo)
+                .ToList();
+        }
+    }
+
+    /// <summary>
     /// 품질 기록을 조회합니다.
     /// </summary>
     /// <param name="qualityRecordId">품질 기록 식별자입니다.</param>

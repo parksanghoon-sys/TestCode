@@ -54,6 +54,25 @@ public sealed class OperatorExecutionBffEndpointAdapter
     }
 
     /// <summary>
+    /// `record-material-scan` endpoint를 실행합니다.
+    /// </summary>
+    /// <param name="command">자재 스캔 검증 command 계약입니다.</param>
+    /// <param name="cancellationToken">비동기 취소 토큰입니다.</param>
+    /// <returns>자재 스캔 검증 응답 계약입니다.</returns>
+    public async Task<RecordMaterialScanResponseContract> RecordMaterialScanAsync(
+        RecordMaterialScanCommandContract command,
+        CancellationToken cancellationToken = default)
+    {
+        var result = await _applicationService.HandleAsync(
+            new ExecuteOperatorExecutionCommandRequest<RecordMaterialScanCommandContract>(
+                command,
+                GetCurrentTimestamp()),
+            cancellationToken);
+
+        return result.Response;
+    }
+
+    /// <summary>
     /// `record-material-consumption` endpoint를 실행합니다.
     /// </summary>
     /// <param name="command">자재 소모 command 계약입니다.</param>

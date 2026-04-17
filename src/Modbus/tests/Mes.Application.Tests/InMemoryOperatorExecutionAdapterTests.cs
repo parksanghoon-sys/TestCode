@@ -48,6 +48,50 @@ public sealed class InMemoryOperatorExecutionAdapterTests
     }
 
     /// <summary>
+    /// 자재 스캔 검증 endpoint가 receipt만 저장하고 outbox는 만들지 않는지 검증합니다.
+    /// </summary>
+    [Fact]
+    public async Task RecordMaterialScanAsync_should_commit_receipt_without_domain_mutation()
+    {
+        var now = new DateTimeOffset(2026, 4, 16, 18, 5, 0, TimeSpan.Zero);
+        var endpoint = CreateEndpoint(now, out var store);
+        var operation = CreateRunningOperation("PO-10001-SCAN", "OP-10001-SCAN", "ST-101", 10, now.AddMinutes(-5));
+        var wipUnit = new WipUnit(new WipUnitId("WIP-10001-SCAN"), "ITEM-10001");
+        wipUnit.StartProcessing(operation.Id);
+        var materialLot = MaterialLot.Create(new MaterialLotId("LOT-10001-SCAN"), "MAT-10001", new MeasuredQuantity(6m, "EA"));
+        var projector = new OperationMaterialRequirementProjector();
+
+        store.Seed(new InMemoryOperatorExecutionSeed
+        {
+            ProductionOrders = [CreateProductionOrder("PO-10001-SCAN")],
+            OperationExecutions = [operation],
+            WipUnits = [wipUnit],
+            MaterialLots = [materialLot],
+            MaterialRequirements = projector.ProjectFromOperationAttachment(
+                new ProjectOperationMaterialRequirementsRequest(
+                    operation.Id,
+                    now.AddMinutes(-10),
+                    [new OperationMaterialRequirementInput(1, "MAT-10001", new MeasuredQuantity(2m, "EA"), "BOM-10001")]))
+        });
+
+        var response = await endpoint.RecordMaterialScanAsync(
+            new RecordMaterialScanCommandContract(
+                CreateContext("CMD-10001-SCAN", "CORR-10001-SCAN", "KEY-10001-SCAN", "operator-101", "ST-101"),
+                new RecordMaterialScanPayloadContract(
+                    operation.Id.ToString(),
+                    wipUnit.Id.ToString(),
+                    materialLot.Id.ToString(),
+                    "MAT-10001")));
+
+        Assert.True(response.Accepted);
+        Assert.Equal("MAT-10001", response.MaterialCode);
+        Assert.Equal(6m, response.AvailableQuantity.Value);
+        Assert.Single(store.Receipts);
+        Assert.Empty(store.OutboxEntries);
+        Assert.Equal(MaterialLotStatus.Available, store.GetMaterialLot(materialLot.Id.ToString()).Status);
+    }
+
+    /// <summary>
     /// 동일 품질 결과 재시도는 receipt와 outbox를 중복 생성하지 않는지 검증합니다.
     /// </summary>
     [Fact]

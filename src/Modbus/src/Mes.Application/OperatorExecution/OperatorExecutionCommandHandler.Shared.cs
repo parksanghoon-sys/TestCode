@@ -471,7 +471,60 @@ public sealed partial class OperatorExecutionCommandHandler
                     nameof(MaterialLot),
                     request.State.MaterialLot.Id.ToString(),
                     request.Command.CommandId,
-                    request.Command.IdempotencyKey));
+                request.Command.IdempotencyKey));
+        }
+    }
+
+    /// <summary>
+    /// 자재 스캔 검증 입력이 현재 aggregate 상태와 일치하는지 검증합니다.
+    /// </summary>
+    /// <param name="request">검증할 처리 입력입니다.</param>
+    private static void ValidateMaterialScanRequest(
+        OperatorExecutionCommandHandlingRequest<RecordMaterialScanCommandContract, RecordMaterialScanCommandState> request)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+        ArgumentNullException.ThrowIfNull(request.Command);
+        ArgumentNullException.ThrowIfNull(request.State);
+
+        EnsureMatchingId(request.State.OperationExecution.Id.ToString(), request.Command.Payload.OperationExecutionId, nameof(request.Command.Payload.OperationExecutionId));
+        EnsureMatchingId(request.State.WipUnit.Id.ToString(), request.Command.Payload.WipUnitId, nameof(request.Command.Payload.WipUnitId));
+        EnsureMatchingId(request.State.MaterialLot.Id.ToString(), request.Command.Payload.MaterialLotId, nameof(request.Command.Payload.MaterialLotId));
+
+        if (request.State.OperationExecution.Status != OperationExecutionStatus.Running)
+        {
+            throw new OperatorExecutionValidationException(
+                "Material scan requires the operation execution to be running.",
+                CreateErrorContext(nameof(OperationExecution), request.State.OperationExecution.Id.ToString(), request.Command));
+        }
+
+        if (request.State.WipUnit.CurrentOperationExecutionId != request.State.OperationExecution.Id)
+        {
+            throw new OperatorExecutionValidationException(
+                "Material scan requires the WIP unit to be linked to the active operation execution.",
+                CreateErrorContext(nameof(WipUnit), request.State.WipUnit.Id.ToString(), request.Command));
+        }
+
+        if (request.State.MaterialLot.Status is MaterialLotStatus.Blocked or MaterialLotStatus.Consumed or MaterialLotStatus.Returned)
+        {
+            throw new OperatorExecutionValidationException(
+                "Material scan requires an available material lot.",
+                CreateErrorContext(nameof(MaterialLot), request.State.MaterialLot.Id.ToString(), request.Command));
+        }
+
+        if (!string.IsNullOrWhiteSpace(request.Command.Payload.MaterialCode)
+            && !string.Equals(request.State.MaterialLot.MaterialCode, request.Command.Payload.MaterialCode, StringComparison.OrdinalIgnoreCase))
+        {
+            throw new OperatorExecutionValidationException(
+                "Material scan requires a matching material code.",
+                CreateErrorContext(nameof(MaterialLot), request.State.MaterialLot.Id.ToString(), request.Command));
+        }
+
+        if (request.State.RequiredMaterialCodes.Count > 0
+            && !request.State.RequiredMaterialCodes.Any(code => string.Equals(code, request.State.MaterialLot.MaterialCode, StringComparison.OrdinalIgnoreCase)))
+        {
+            throw new OperatorExecutionValidationException(
+                "Material scan requires the lot material code to match the operation requirement.",
+                CreateErrorContext(nameof(OperationExecution), request.State.OperationExecution.Id.ToString(), request.Command));
         }
     }
 
@@ -646,6 +699,26 @@ public sealed partial class OperatorExecutionCommandHandler
         }
 
         return value.Trim();
+    }
+
+    /// <summary>
+    /// 검증 실패에 공통으로 넣는 오류 문맥을 생성합니다.
+    /// </summary>
+    /// <typeparam name="TPayload">명령 payload 형식입니다.</typeparam>
+    /// <param name="aggregateType">오류가 연결된 aggregate 형식입니다.</param>
+    /// <param name="aggregateId">오류가 연결된 aggregate 식별자입니다.</param>
+    /// <param name="command">오류가 발생한 명령입니다.</param>
+    /// <returns>problem details 확장에 실을 오류 문맥입니다.</returns>
+    private static OperatorExecutionErrorContext CreateErrorContext<TPayload>(
+        string aggregateType,
+        string aggregateId,
+        BffCommandEnvelope<TPayload> command)
+    {
+        return new OperatorExecutionErrorContext(
+            aggregateType,
+            aggregateId,
+            command.CommandId,
+            command.IdempotencyKey);
     }
 
     /// <summary>

@@ -32,6 +32,16 @@ public interface IOperatorExecutionCommandPort
         CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// 자재 스캔 검증 처리에 필요한 상태를 로드합니다.
+    /// </summary>
+    /// <param name="command">자재 스캔 검증 command입니다.</param>
+    /// <param name="cancellationToken">비동기 취소 토큰입니다.</param>
+    /// <returns>자재 스캔 검증 처리 상태 묶음입니다.</returns>
+    Task<RecordMaterialScanCommandState> LoadStateAsync(
+        RecordMaterialScanCommandContract command,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// 자재 소모 처리에 필요한 상태를 로드합니다.
     /// </summary>
     /// <param name="command">자재 소모 command입니다.</param>

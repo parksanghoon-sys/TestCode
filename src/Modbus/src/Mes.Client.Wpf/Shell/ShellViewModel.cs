@@ -32,6 +32,7 @@ public sealed class ShellViewModel : ObservableObject
     private string _materialConsumptionMaterialCode = string.Empty;
     private string _materialConsumptionQuantityText = string.Empty;
     private string _materialConsumptionQuantityUnit = string.Empty;
+    private string? _materialScanActionToken;
     private string? _materialConsumptionActionToken;
     private StationSessionState? _boundSession;
     private WorkQueueItemViewModel? _selectedQueueItem;
@@ -79,6 +80,10 @@ public sealed class ShellViewModel : ObservableObject
         StartOperationCommand = new AsyncDelegateCommand(
             StartOperationAsync,
             CanStartOperation,
+            HandleUnexpectedCommandFailure);
+        RecordMaterialScanCommand = new AsyncDelegateCommand(
+            RecordMaterialScanAsync,
+            CanRecordMaterialScan,
             HandleUnexpectedCommandFailure);
         RecordMaterialConsumptionCommand = new AsyncDelegateCommand(
             RecordMaterialConsumptionAsync,
@@ -148,6 +153,11 @@ public sealed class ShellViewModel : ObservableObject
 
     /// <summary>
     /// 선택된 작업에 자재 투입을 기록하는 명령을 가져옵니다.
+    /// </summary>
+    public AsyncDelegateCommand RecordMaterialScanCommand { get; }
+
+    /// <summary>
+    /// ?좏깮???묒뾽???먯옱 ?ъ엯??湲곕줉?섎뒗 紐낅졊??媛?몄샃?덈떎.
     /// </summary>
     public AsyncDelegateCommand RecordMaterialConsumptionCommand { get; }
 
@@ -244,6 +254,7 @@ public sealed class ShellViewModel : ObservableObject
         {
             if (SetProperty(ref _materialConsumptionWipUnitId, value))
             {
+                ResetMaterialScanActionToken();
                 ResetMaterialConsumptionActionToken();
                 RaiseDerivedStateChanged();
             }
@@ -260,6 +271,7 @@ public sealed class ShellViewModel : ObservableObject
         {
             if (SetProperty(ref _materialConsumptionMaterialLotId, value))
             {
+                ResetMaterialScanActionToken();
                 ResetMaterialConsumptionActionToken();
                 RaiseDerivedStateChanged();
             }
@@ -276,6 +288,7 @@ public sealed class ShellViewModel : ObservableObject
         {
             if (SetProperty(ref _materialConsumptionMaterialCode, value))
             {
+                ResetMaterialScanActionToken();
                 ResetMaterialConsumptionActionToken();
                 RaiseDerivedStateChanged();
             }
@@ -508,6 +521,18 @@ public sealed class ShellViewModel : ObservableObject
     }
 
     /// <summary>
+    /// 현재 상태에서 자재 스캔 검증 명령을 실행할 수 있는지 판단합니다.
+    /// </summary>
+    /// <returns>자재 스캔 검증 명령 실행이 가능하면 <see langword="true"/>를 반환합니다.</returns>
+    private bool CanRecordMaterialScan()
+    {
+        return !IsBusy
+            && _boundSession is not null
+            && SelectedQueueItem?.CanRecordMaterialConsumption == true
+            && TryCreateMaterialScanPayload(out _);
+    }
+
+    /// <summary>
     /// 현재 상태에서 완료 명령을 실행할 수 있는지 판단합니다.
     /// </summary>
     /// <returns>완료 명령 실행이 가능하면 <see langword="true"/>를 반환합니다.</returns>
@@ -642,6 +667,94 @@ public sealed class ShellViewModel : ObservableObject
     /// </summary>
     /// <param name="cancellationToken">요청 취소 토큰입니다.</param>
     /// <returns>명령 처리 작업입니다.</returns>
+    /// <summary>
+    /// 선택한 작업에 대해 자재 스캔 검증 명령을 전송합니다.
+    /// </summary>
+    /// <param name="cancellationToken">요청 취소 토큰입니다.</param>
+    /// <returns>명령 처리 작업입니다.</returns>
+    private async Task RecordMaterialScanAsync(CancellationToken cancellationToken)
+    {
+        if (_boundSession is null)
+        {
+            ApplyUserMessage(
+                new StationUserMessage(
+                    "스테이션 미바인딩",
+                    "먼저 스테이션을 바인딩한 뒤 자재 스캔 검증을 진행하세요.",
+                    "warning"));
+            return;
+        }
+
+        if (SelectedQueueItem is null)
+        {
+            ApplyUserMessage(
+                new StationUserMessage(
+                    "작업 미선택",
+                    "자재를 스캔하려면 작업 목록에서 먼저 작업을 선택하세요.",
+                    "warning"));
+            return;
+        }
+
+        if (!SelectedQueueItem.CanRecordMaterialConsumption)
+        {
+            ApplyUserMessage(
+                new StationUserMessage(
+                    "자재 스캔 불가 상태",
+                    "선택한 작업은 현재 상태에서 자재 스캔 검증을 받을 수 없습니다.",
+                    "warning"));
+            return;
+        }
+
+        if (!TryCreateMaterialScanPayload(out var payload))
+        {
+            ApplyUserMessage(
+                new StationUserMessage(
+                    "자재 스캔 입력 확인 필요",
+                    "WIP와 자재 lot을 먼저 입력하고, 필요하면 자재 코드를 확인하세요.",
+                    "warning"));
+            return;
+        }
+
+        IsBusy = true;
+
+        try
+        {
+            var command = new RecordMaterialScanCommandContract(
+                _commandContextFactory.CreateForOperation(
+                    OperatorExecutionCommandTypes.RecordMaterialScan,
+                    _boundSession.StationId,
+                    SelectedQueueItem.OperationExecutionId,
+                    GetMaterialScanActionToken()),
+                payload);
+
+            var response = await _stationClient.RecordMaterialScanAsync(command, cancellationToken);
+            if (!response.IsSuccess || response.Value is null)
+            {
+                ApplyUserMessage(_problemDisplayPolicy.Map(response.Failure ?? CreateUnknownClientFailure()));
+                return;
+            }
+
+            SetMaterialConsumptionField(
+                ref _materialConsumptionMaterialCode,
+                response.Value.MaterialCode,
+                nameof(MaterialConsumptionMaterialCode));
+            SetMaterialConsumptionField(
+                ref _materialConsumptionQuantityUnit,
+                response.Value.AvailableQuantity.Unit,
+                nameof(MaterialConsumptionQuantityUnit));
+            RaiseDerivedStateChanged();
+
+            ApplyUserMessage(
+                new StationUserMessage(
+                    "자재 스캔 검증 완료",
+                    $"{response.Value.MaterialLotId} lot이 {response.Value.MaterialCode} 자재로 검증되었습니다. 현재 잔량은 {response.Value.AvailableQuantity.Value:0.###} {response.Value.AvailableQuantity.Unit}입니다.",
+                    "info"));
+        }
+        finally
+        {
+            IsBusy = false;
+        }
+    }
+
     private async Task RecordMaterialConsumptionAsync(CancellationToken cancellationToken)
     {
         if (_boundSession is null)
@@ -919,6 +1032,7 @@ public sealed class ShellViewModel : ObservableObject
     /// <param name="selectedItem">새로 선택된 작업 항목입니다.</param>
     private void ApplySelectedQueueItemDefaults(WorkQueueItemViewModel? selectedItem)
     {
+        ResetMaterialScanActionToken();
         ResetMaterialConsumptionActionToken();
         CompletionQuantityUnit = selectedItem?.OperationQuantityUnit ?? _defaultCompletionQuantityUnit;
         SetMaterialConsumptionField(ref _materialConsumptionWipUnitId, string.Empty, nameof(MaterialConsumptionWipUnitId));
@@ -955,6 +1069,24 @@ public sealed class ShellViewModel : ObservableObject
     /// 자재 투입 명령에 사용할 action token을 반환합니다.
     /// </summary>
     /// <returns>현재 입력 조합에 대응하는 action token입니다.</returns>
+    /// <summary>
+    /// 자재 스캔 검증 명령에 사용하는 action token을 반환합니다.
+    /// </summary>
+    /// <returns>현재 입력 조합에 대응하는 action token입니다.</returns>
+    private string GetMaterialScanActionToken()
+    {
+        _materialScanActionToken ??= Guid.NewGuid().ToString("N");
+        return _materialScanActionToken;
+    }
+
+    /// <summary>
+    /// 자재 스캔 입력이 바뀌면 기존 action token을 폐기합니다.
+    /// </summary>
+    private void ResetMaterialScanActionToken()
+    {
+        _materialScanActionToken = null;
+    }
+
     private string GetMaterialConsumptionActionToken()
     {
         _materialConsumptionActionToken ??= Guid.NewGuid().ToString("N");
@@ -1025,6 +1157,7 @@ public sealed class ShellViewModel : ObservableObject
         BindStationCommand.RaiseCanExecuteChanged();
         RefreshQueueCommand.RaiseCanExecuteChanged();
         StartOperationCommand.RaiseCanExecuteChanged();
+        RecordMaterialScanCommand.RaiseCanExecuteChanged();
         RecordMaterialConsumptionCommand.RaiseCanExecuteChanged();
         CompleteOperationCommand.RaiseCanExecuteChanged();
     }
@@ -1034,6 +1167,40 @@ public sealed class ShellViewModel : ObservableObject
     /// </summary>
     /// <param name="payload">성공 시 생성된 자재 투입 payload입니다.</param>
     /// <returns>입력이 유효하면 <see langword="true"/>를 반환합니다.</returns>
+    /// <summary>
+    /// 자재 스캔 입력을 transport 계약으로 변환할 수 있는지 검증합니다.
+    /// </summary>
+    /// <param name="payload">성공 시 생성할 자재 스캔 payload입니다.</param>
+    /// <returns>입력이 유효하면 <see langword="true"/>를 반환합니다.</returns>
+    private bool TryCreateMaterialScanPayload(out RecordMaterialScanPayloadContract payload)
+    {
+        payload = default!;
+
+        if (SelectedQueueItem is null)
+        {
+            return false;
+        }
+
+        var wipUnitId = MaterialConsumptionWipUnitId?.Trim();
+        var materialLotId = MaterialConsumptionMaterialLotId?.Trim();
+        var materialCode = string.IsNullOrWhiteSpace(MaterialConsumptionMaterialCode)
+            ? null
+            : MaterialConsumptionMaterialCode.Trim();
+
+        if (string.IsNullOrWhiteSpace(wipUnitId)
+            || string.IsNullOrWhiteSpace(materialLotId))
+        {
+            return false;
+        }
+
+        payload = new RecordMaterialScanPayloadContract(
+            SelectedQueueItem.OperationExecutionId,
+            wipUnitId,
+            materialLotId,
+            materialCode);
+        return true;
+    }
+
     private bool TryCreateMaterialConsumptionPayload(out RecordMaterialConsumptionPayloadContract payload)
     {
         payload = default!;

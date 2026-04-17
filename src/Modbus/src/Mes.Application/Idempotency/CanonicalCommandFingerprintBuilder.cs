@@ -32,6 +32,26 @@ public sealed class CanonicalCommandFingerprintBuilder
     }
 
     /// <summary>
+    /// `record-material-scan` 명령의 fingerprint를 생성합니다.
+    /// </summary>
+    /// <param name="command">대상 명령 계약입니다.</param>
+    /// <returns>SHA-256 hex fingerprint입니다.</returns>
+    public string Build(RecordMaterialScanCommandContract command)
+    {
+        ArgumentNullException.ThrowIfNull(command);
+
+        return BuildFingerprint(
+            command,
+            writer =>
+            {
+                writer.Add("operation_execution_id", command.Payload.OperationExecutionId);
+                writer.Add("wip_unit_id", command.Payload.WipUnitId);
+                writer.Add("material_lot_id", command.Payload.MaterialLotId);
+                writer.Add("material_code", NormalizeOptional(command.Payload.MaterialCode));
+            });
+    }
+
+    /// <summary>
     /// `record-material-consumption` 명령의 fingerprint를 생성합니다.
     /// </summary>
     /// <param name="command">대상 명령 계약입니다.</param>

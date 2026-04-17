@@ -92,6 +92,45 @@ public sealed partial class OperatorExecutionCommandHandler
     }
 
     /// <summary>
+    /// `record-material-scan` 명령을 처리합니다.
+    /// </summary>
+    /// <param name="request">명령 계약과 aggregate 상태 묶음입니다.</param>
+    /// <returns>처리 결과와 replay용 receipt입니다.</returns>
+    public HandledCommandResult<RecordMaterialScanResponseContract> Handle(
+        OperatorExecutionCommandHandlingRequest<RecordMaterialScanCommandContract, RecordMaterialScanCommandState> request)
+    {
+        ValidateMaterialScanRequest(request);
+
+        var evaluation = Evaluate(request.Command, _fingerprintBuilder.Build(request.Command), request.ExistingReceipt);
+        var replayed = TryReplay<RecordMaterialScanResponseContract>(evaluation);
+        if (replayed is not null)
+        {
+            return replayed;
+        }
+
+        var response = new RecordMaterialScanResponseContract(
+            true,
+            request.Command.CommandId,
+            request.ServerReceivedAt,
+            request.State.OperationExecution.Id.ToString(),
+            request.State.WipUnit.Id.ToString(),
+            request.State.MaterialLot.Id.ToString(),
+            request.State.MaterialLot.MaterialCode,
+            ToContract(request.State.MaterialLot.AvailableQuantity));
+
+        return new HandledCommandResult<RecordMaterialScanResponseContract>(
+            evaluation.Decision,
+            response,
+            CreateAcceptedReceipt(
+                request.Command,
+                evaluation,
+                nameof(MaterialLot),
+                request.State.MaterialLot.Id.ToString(),
+                response,
+                request.ServerReceivedAt));
+    }
+
+    /// <summary>
     /// `record-material-consumption` 명령을 처리합니다.
     /// </summary>
     /// <param name="request">명령 계약과 aggregate 상태 묶음입니다.</param>

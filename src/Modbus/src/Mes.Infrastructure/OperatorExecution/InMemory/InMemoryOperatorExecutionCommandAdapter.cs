@@ -61,6 +61,26 @@ public sealed class InMemoryOperatorExecutionCommandAdapter : IOperatorExecution
     }
 
     /// <summary>
+    /// 자재 스캔 검증 상태를 로드합니다.
+    /// </summary>
+    /// <param name="command">자재 스캔 검증 command입니다.</param>
+    /// <param name="cancellationToken">비동기 취소 토큰입니다.</param>
+    /// <returns>자재 스캔 검증 상태 묶음입니다.</returns>
+    public Task<RecordMaterialScanCommandState> LoadStateAsync(
+        RecordMaterialScanCommandContract command,
+        CancellationToken cancellationToken = default)
+    {
+        var operation = _store.GetOperationExecution(command.Payload.OperationExecutionId);
+        return Task.FromResult(new RecordMaterialScanCommandState(
+            operation,
+            _store.GetWipUnit(command.Payload.WipUnitId),
+            _store.GetMaterialLot(command.Payload.MaterialLotId),
+            _store.GetMaterialRequirements(operation.Id.ToString())
+                .Select(requirement => requirement.MaterialCode)
+                .ToList()));
+    }
+
+    /// <summary>
     /// 자재 소모 상태를 로드합니다.
     /// </summary>
     /// <param name="command">자재 소모 command입니다.</param>
@@ -249,6 +269,7 @@ public sealed class InMemoryOperatorExecutionCommandAdapter : IOperatorExecution
         var aggregates = state switch
         {
             StartOperationCommandState start => [start.ProductionOrder, start.OperationExecution],
+            RecordMaterialScanCommandState materialScan => [materialScan.OperationExecution, materialScan.MaterialLot],
             RecordMaterialConsumptionCommandState material => [material.OperationExecution, material.MaterialLot],
             PlaceHoldCommandState placeHold => new object?[]
             {

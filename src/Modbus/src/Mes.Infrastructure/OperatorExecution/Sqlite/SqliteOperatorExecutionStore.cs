@@ -423,6 +423,20 @@ public sealed class SqliteOperatorExecutionStore
     }
 
     /// <summary>
+    /// 지정한 공정 실행에 연결된 요구 자재 snapshot을 조회합니다.
+    /// </summary>
+    /// <param name="operationExecutionId">대상 공정 실행 식별자입니다.</param>
+    /// <returns>공정 실행 기준 요구 자재 snapshot 목록입니다.</returns>
+    public IReadOnlyCollection<OperationMaterialRequirementSnapshot> GetMaterialRequirements(string operationExecutionId)
+    {
+        lock (_gate)
+        {
+            using var connection = OpenConnection();
+            return LoadMaterialRequirements(connection, operationExecutionId);
+        }
+    }
+
+    /// <summary>
     /// 품질 기록 aggregate를 복원해 조회합니다.
     /// </summary>
     /// <param name="qualityRecordId">품질 기록 식별자입니다.</param>
@@ -1039,6 +1053,52 @@ public sealed class SqliteOperatorExecutionStore
             from operation_material_requirement
             order by sequence_no, operation_material_requirement_id;
             """;
+
+        using var reader = command.ExecuteReader();
+        var requirements = new List<OperationMaterialRequirementSnapshot>();
+        while (reader.Read())
+        {
+            requirements.Add(new OperationMaterialRequirementSnapshot(
+                reader.GetString(0),
+                new OperationExecutionId(reader.GetString(1)),
+                reader.GetString(3),
+                ReadMeasuredQuantity(reader, 4, 5),
+                new OperationMaterialRequirementMetadata(
+                    reader.GetInt32(2),
+                    ReadOptionalString(reader, 6),
+                    ReadDateTimeOffset(reader, 7))));
+        }
+
+        return requirements;
+    }
+
+    /// <summary>
+    /// 지정한 공정 실행에 연결된 요구 자재 snapshot만 복원합니다.
+    /// </summary>
+    /// <param name="connection">열린 SQLite 연결입니다.</param>
+    /// <param name="operationExecutionId">대상 공정 실행 식별자입니다.</param>
+    /// <returns>공정 실행 기준 요구 자재 snapshot 목록입니다.</returns>
+    private static IReadOnlyCollection<OperationMaterialRequirementSnapshot> LoadMaterialRequirements(
+        SqliteConnection connection,
+        string operationExecutionId)
+    {
+        using var command = connection.CreateCommand();
+        command.CommandText =
+            """
+            select
+                operation_material_requirement_id,
+                operation_execution_id,
+                sequence_no,
+                material_code,
+                required_quantity_value,
+                required_quantity_unit,
+                source_revision_ref,
+                created_at
+            from operation_material_requirement
+            where operation_execution_id = $operationExecutionId
+            order by sequence_no, operation_material_requirement_id;
+            """;
+        command.Parameters.AddWithValue("$operationExecutionId", operationExecutionId);
 
         using var reader = command.ExecuteReader();
         var requirements = new List<OperationMaterialRequirementSnapshot>();

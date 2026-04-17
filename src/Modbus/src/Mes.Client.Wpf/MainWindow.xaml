@@ -259,6 +259,12 @@
                                             Margin="0,16,0,0"
                                             Padding="18,8"
                                             HorizontalAlignment="Left"
+                                            Command="{Binding RecordMaterialScanCommand}"
+                                            Content="자재 스캔 검증" />
+                                    <Button Width="180"
+                                            Margin="0,16,0,0"
+                                            Padding="18,8"
+                                            HorizontalAlignment="Left"
                                             Command="{Binding RecordMaterialConsumptionCommand}"
                                             Content="자재 투입 기록" />
                                 </StackPanel>

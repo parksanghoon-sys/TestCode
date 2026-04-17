@@ -28,6 +28,11 @@ public static class OperatorExecutionEndpointRouteBuilderExtensions
             OperatorExecutionEndpointSignatures.RecordMaterialConsumption,
             static (adapter, command, cancellationToken) => adapter.RecordMaterialConsumptionAsync(command, cancellationToken));
 
+        MapCommand<RecordMaterialScanCommandContract, RecordMaterialScanResponseContract>(
+            endpoints,
+            OperatorExecutionEndpointSignatures.RecordMaterialScan,
+            static (adapter, command, cancellationToken) => adapter.RecordMaterialScanAsync(command, cancellationToken));
+
         MapCommand<PlaceHoldCommandContract, PlaceHoldResponseContract>(
             endpoints,
             OperatorExecutionEndpointSignatures.PlaceHold,

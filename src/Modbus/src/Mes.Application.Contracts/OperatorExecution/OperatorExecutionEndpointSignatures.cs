@@ -46,6 +46,18 @@ public static class OperatorExecutionEndpointSignatures
             typeof(RecordMaterialConsumptionResponseContract));
 
     /// <summary>
+    /// 자재 스캔 검증 endpoint 서명입니다.
+    /// </summary>
+    public static BffEndpointSignature RecordMaterialScan { get; } =
+        new(
+            "RecordMaterialScan",
+            "POST",
+            $"{BaseRoute}/commands/material-scan",
+            OperatorExecutionCommandTypes.RecordMaterialScan,
+            typeof(RecordMaterialScanCommandContract),
+            typeof(RecordMaterialScanResponseContract));
+
+    /// <summary>
     /// hold 설정 endpoint 서명입니다.
     /// </summary>
     public static BffEndpointSignature PlaceHold { get; } =
@@ -103,6 +115,7 @@ public static class OperatorExecutionEndpointSignatures
         [
             GetStationWorkQueue,
             StartOperation,
+            RecordMaterialScan,
             RecordMaterialConsumption,
             PlaceHold,
             ReleaseHold,
