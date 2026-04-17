@@ -19,6 +19,9 @@ This repository provides reusable Codex-first guidance for .NET, WPF, and Avalon
 - Every introduced or changed C# class and function must include Korean XML documentation comments. Treat this as mandatory, not optional.
 - Prefer authored methods, constructors, and public APIs with five or fewer input parameters.
 - If more than five inputs are genuinely needed, strongly prefer grouping them into a parameter object, request record, or value object unless an external framework or library signature forces the shape.
+- When creating a new project under `src/` or `tests/`, add a local `README.md` in that project directory as part of the same change.
+- Each project-level `README.md` must explain the project's purpose, responsibility boundary, main classes or files, folder structure, dependencies, execution or test flow when relevant, and current limitations.
+- When a project's structure or role changes materially, update that project's `README.md` in the same work unit so the local documentation stays trustworthy.
 
 ## Shared skill areas
 

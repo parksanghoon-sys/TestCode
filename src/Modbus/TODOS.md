@@ -2,8 +2,6 @@
 
 ## Current TODOs
 
-- Decide the first durable persistence adapter shape for replacing the current in-memory reference adapter without changing the application boundary.
-- Implement the first durable persistence adapter for operator execution while preserving the current `Mes.Application` and `Mes.ExperienceApi` contracts.
 - Confirm the pilot manufacturing mode and required genealogy depth for the first rollout.
 - Confirm authoritative ownership for item, BOM, routing, resource, and quality master data.
 - Select one pilot line and one representative product family for release 1 scope validation.
@@ -178,93 +176,97 @@ Should the code vocabulary drive the docs from here, or should the docs remain c
 Natural next step:
 Review the implemented status and event names against the release-1 workflow documents, then either update the docs or rename the code before defining API payload contracts.
 
-### [P1_SOON] Decide production-order progression update rules for operation completion handlers
+### [P2_LATER] Decide when future side effects should widen the canonical save boundary
 
 What remains:
-Define when `complete-operation` should promote `ProductionOrder` to `PartiallyCompleted` versus `Completed`, and what additional loaded state is required to do that safely.
+Decide when new persisted side effects such as `material_consumption`, `override_request`, or later audit and publication records should join the current accepted-command atomic boundary.
 
 Why deferred:
-The new Work Unit 5 handler intentionally completes `OperationExecution` and prepares production-actuals skeletons without mutating order-level completion state, because the current handler boundary only receives the parent order and the current operation. That is not enough evidence to infer whether sibling operations remain open.
+Work Unit 7 now locks the current pilot contract in code and adapter documentation. The remaining question only matters when the slice starts persisting new executable side effects beyond today's accepted-command write-set.
 
 Objective:
-Avoid incorrect order-level lifecycle updates while still letting operation completion stay executable and replay-safe.
+Keep the current pilot contract stable while making future widening explicit, intentional, and testable.
 
 Relevant context:
-`src/Mes.Application/OperatorExecution/OperatorExecutionCommandHandler.cs` now handles `complete-operation` and prepares a pending production-actuals batch, but it deliberately leaves `ProductionOrder` status unchanged beyond earlier start-operation progression.
-
-Relevant files and scope:
-`src/Mes.Application/OperatorExecution/OperatorExecutionCommandHandler.cs`
-`src/Mes.Domain/Aggregates/ProductionOrder.cs`
-`docs/mes/pilot-slice-01-operator-execution.md`
-`docs/mes/pilot-slice-01-application-design.md`
-
-Current status:
-Operation completion is executable, tested, and replay-safe, but order completion semantics are still unresolved for multi-operation orders.
-
-Known blockers or open questions:
-Will the eventual handler load sibling `OperationExecution` states, a summarized order progression view, or a dedicated completion projection before deciding order-level status.
-
-Natural next step:
-Choose the minimal authoritative source for sibling-operation completion visibility, then extend the completion handler and tests to update `ProductionOrder` status from that source.
-
-### [P1_SOON] Define the transactional persistence boundary for application-service saves
-
-What remains:
-Define exactly which records must commit atomically when `OperatorExecutionApplicationService` saves an accepted command result.
-
-Why deferred:
-The new application service now centralizes load and save orchestration through `IOperatorExecutionCommandPort`, but the project still has no concrete persistence adapter. Before implementing one, the save boundary must be explicit so handlers do not accidentally persist aggregate state, receipts, `production_actuals_batch`, and future outbox entries in inconsistent steps.
-
-Objective:
-Keep idempotency replay, aggregate mutation, and integration publication consistent under retries and partial failures.
-
-Relevant context:
-`src/Mes.Application/OperatorExecution/OperatorExecutionApplicationService.cs` now issues one `SaveAsync` call per accepted command, while `docs/mes/persistence-schema-slice-01.sql` already models `command_receipt`, `production_actuals_batch`, and `domain_outbox` as separate records.
+`src/Mes.Application/OperatorExecution/OperatorExecutionApplicationService.cs` still issues one `SaveAsync` per accepted command, and Work Unit 7 now makes the current logical write-set explicit across `InMemory`, `FileStore`, and `Sqlite`.
 
 Relevant files and scope:
 `src/Mes.Application/OperatorExecution/OperatorExecutionApplicationService.cs`
 `src/Mes.Application/OperatorExecution/OperatorExecutionApplicationPorts.cs`
 `docs/mes/persistence-schema-slice-01.sql`
 `docs/mes/logical-data-model-slice-01.md`
+`docs/mes/pilot-slice-01-application-design.md`
+`src/Mes.Infrastructure/README.md`
 
 Current status:
-The orchestration boundary is executable and tested, but atomic commit semantics are still implicit.
+The current canonical write-set is now test-locked as touched aggregate state plus `command_receipt`, `production_actuals_batch`, and `domain_outbox`, with replay-safe parity proven across all current providers. What remains open is when later relational tables such as `material_consumption` or `override_request` should join that same atomic boundary.
 
 Known blockers or open questions:
-Should `command_receipt`, aggregate state, `production_actuals_batch`, and `domain_outbox` always share one transaction, and if so which adapter layer owns that transaction boundary.
+- Which new side effect should be promoted first when the slice expands beyond today's operator-execution path.
+- Whether a future widened contract should stay provider-neutral or expose provider-specific helper records at the documentation edge.
 
 Natural next step:
-Choose the minimum atomic write set for each accepted command type, then let the first concrete port adapter implement exactly that boundary.
+When a new durable side effect becomes executable, update the design docs first, then widen the provider-facing tests and adapter documentation in the same work unit before changing persistence code.
 
-### [P1_SOON] Replace the in-memory reference adapter with a durable operational store
+### [P1_SOON] Replace the file-backed durable bridge with a relational persistence adapter
 
 What remains:
-Design and implement the first durable persistence adapter that preserves the current `IOperatorExecutionCommandPort` and `IStationWorkQueueSourcePort` behavior while replacing the in-memory reference store.
+Design and implement the first relational persistence adapter that preserves the current `IOperatorExecutionCommandPort` and `IStationWorkQueueSourcePort` behavior while replacing the current file-backed durable bridge.
 
 Why deferred:
-The current cycle intentionally used an in-memory reference adapter first so the project could validate the save boundary, outbox capture, and endpoint composition without prematurely committing to SQL access technology or transaction plumbing.
+The current cycle intentionally landed a file-backed durable adapter first so the project could prove detached aggregate reconstruction, replay-safe persistence, and host composition without prematurely committing to raw SQL access strategy or transaction plumbing.
 
 Objective:
-Keep the now-proven application boundary stable while moving receipts, aggregate state, prepared actuals, and outbox records onto a durable operational store.
+Keep the now-proven application boundary stable while moving the same write-set onto a relational store aligned with the SQL draft.
 
 Relevant context:
-`src/Mes.Infrastructure/OperatorExecution/InMemory/` now proves the concrete load/save contract and one explicit write-set boundary, but it still relies on store-owned aggregate references instead of detached persistence snapshots.
+`src/Mes.Infrastructure/OperatorExecution/FileStore/` now proves detached snapshot reconstruction and durable replay behavior, but it is still a JSON file bridge rather than the target relational operational store.
 
 Relevant files and scope:
-`src/Mes.Infrastructure/OperatorExecution/InMemory/InMemoryOperatorExecutionStore.cs`
-`src/Mes.Infrastructure/OperatorExecution/InMemory/InMemoryOperatorExecutionCommandAdapter.cs`
+`src/Mes.Infrastructure/OperatorExecution/FileStore/FileOperatorExecutionStore.cs`
+`src/Mes.Infrastructure/OperatorExecution/FileStore/FileOperatorExecutionCommandAdapter.cs`
 `src/Mes.Application/OperatorExecution/OperatorExecutionApplicationPorts.cs`
 `docs/mes/persistence-schema-slice-01.sql`
 `docs/mes/logical-data-model-slice-01.md`
 
 Current status:
-The reference adapter is executable, replay-safe within the current process, and covered by end-to-end application tests, but it is not durable and does not yet model detached transaction snapshots.
+`src/Mes.Infrastructure/OperatorExecution/Sqlite/` now contains the active default durable runtime, `Mes.ExperienceApi` can still be pointed at `FileStore` only through explicit provider selection, `Mes.Application.Tests` plus `Mes.ExperienceApi.Tests` now cover provider selection and durable parity, and `docs/mes/pilot-slice-01-application-design.md` now carries the first concrete PostgreSQL handoff contract for the same seam.
 
 Known blockers or open questions:
-Whether the first durable adapter should use raw ADO.NET, Dapper, or another thin SQL mapping strategy, and how aggregate reconstruction versus projection-first loading should be split.
+- Whether slice 01 must execute `material_consumption` and `override_request` as relational tables now, or can keep them documented-but-deferred until those flows become executable in the application layer.
+- What minimum connection-string and transaction assumptions the future PostgreSQL provider should inherit from the current host seam.
 
 Natural next step:
-Lock the first durable adapter technology and transaction ownership, then implement the smallest SQL-backed write model for `command_receipt`, `production_actuals_batch`, `domain_outbox`, and the currently touched aggregate state.
+Keep the documented handoff contract aligned while implementing Work Units 6 through 8 first, and only start a PostgreSQL adapter when it becomes an active delivery requirement.
+
+### [P2_LATER] Add a PostgreSQL durable provider through the existing host seam
+
+What remains:
+Implement a concrete PostgreSQL-backed operator-execution durable adapter that plugs into the current provider-selectable `Mes.ExperienceApi` composition path.
+
+Why deferred:
+The user direction for this cycle was to run on SQLite now while keeping the database replaceable later. The host seam and reserved configuration slot now exist, but there is still no immediate execution need to widen the slice into a second relational adapter.
+
+Objective:
+Allow the team to switch from SQLite to PostgreSQL later without changing `Mes.Application`, route handlers, or the operator-execution contracts.
+
+Relevant context:
+`OperatorExecutionServiceCollectionExtensions` now defaults to `Sqlite`, still supports `FileStore`, and reserves `Postgres` as a provider value plus `Mes:OperatorExecutionConnectionString` as the future relational setting.
+
+Relevant files and scope:
+`src/Mes.ExperienceApi/OperatorExecution/OperatorExecutionServiceCollectionExtensions.cs`
+`src/Mes.Infrastructure/OperatorExecution/Sqlite/`
+`src/Mes.Application/OperatorExecution/OperatorExecutionApplicationPorts.cs`
+`tests/Mes.ExperienceApi.Tests/OperatorExecutionExperienceApiEndpointRouteBuilderTests.cs`
+
+Current status:
+The host seam is in place and tested, but the `Postgres` provider intentionally throws a reserved-provider exception because no adapter exists yet.
+
+Known blockers or open questions:
+Which PostgreSQL access strategy to use, how much of the SQLite schema should map 1:1, and whether provider-specific transaction or concurrency behavior needs to surface in infrastructure tests.
+
+Natural next step:
+When PostgreSQL becomes an active requirement, mirror the current SQLite acceptance coverage first, then implement provider registration plus adapter code behind the already reserved `Postgres` provider value.
 
 ### [P2_LATER] Decide whether rejected material scans need durable storage
 
@@ -294,35 +296,6 @@ Whether the pilot line requires rejected-scan history for traceability, training
 Natural next step:
 Validate the plant audit expectation for rejected scans, then either keep scan attempts ephemeral in the BFF or add a dedicated persistence model and outbox event for them.
 
-### [P2_LATER] Normalize Experience API error responses
-
-What remains:
-Introduce a stable HTTP error-mapping policy for the new `Mes.ExperienceApi` host so deterministic not-found, validation, and idempotency-conflict outcomes do not fall back to generic framework exceptions.
-
-Why deferred:
-The current host work unit intentionally focused on proving route mapping and thin composition over the existing endpoint adapter. Adding a full error contract now would have widened the scope into transport semantics that were not required to prove the host boundary itself.
-
-Objective:
-Keep the first HTTP-facing BFF host usable and diagnosable without leaking raw exception behavior as the default operator experience.
-
-Relevant context:
-`src/Mes.ExperienceApi` now maps documented operator-execution routes directly to `OperatorExecutionBffEndpointAdapter`, but missing aggregate IDs or other invalid inputs still surface through default exception handling instead of explicit problem responses.
-
-Relevant files and scope:
-`src/Mes.ExperienceApi/Program.cs`
-`src/Mes.ExperienceApi/OperatorExecution/OperatorExecutionEndpointRouteBuilderExtensions.cs`
-`src/Mes.Infrastructure/OperatorExecution/OperatorExecutionBffEndpointAdapter.cs`
-`src/Mes.Application/OperatorExecution/`
-
-Current status:
-The shared host is buildable and route-tested, but it currently prioritizes thin composition over explicit HTTP error semantics.
-
-Known blockers or open questions:
-Which application exceptions should map to `400`, `404`, `409`, or `422`, and whether problem details should be standardized once for all slices or incrementally per slice.
-
-Natural next step:
-List the currently expected deterministic failure cases for the operator-execution slice, then add a single host-level exception mapping policy and tests for the chosen status codes.
-
 ## Completed
 
 - 2026-04-14: Created the initial MES project architecture baseline in `docs/mes/architecture-blueprint.md`.
@@ -351,3 +324,13 @@ List the currently expected deterministic failure cases for the operator-executi
 - 2026-04-16: Added operator-execution application ports and `OperatorExecutionApplicationService` so state loading, replay-aware handler invocation, and result persistence are now orchestrated through adapter-facing boundaries.
 - 2026-04-16: Added `src/Mes.Infrastructure` with an in-memory operator-execution reference store, concrete command/query adapters, a thin BFF endpoint adapter, and end-to-end adapter tests for receipts, outbox capture, prepared actuals, and station work-queue projection.
 - 2026-04-16: Added `src/Mes.ExperienceApi` as the first thin shared BFF host for the operator-execution slice, with minimal API route mapping, DI composition over the in-memory reference adapter, and `Mes.ExperienceApi.Tests` route/DI smoke coverage.
+- 2026-04-16: Added project-level `README.md` files for all current source and test projects, and updated repository guidance so future project creation must include and maintain the same local project documentation.
+- 2026-04-16: Added explicit domain restore boundaries plus `Mes.Infrastructure/OperatorExecution/FileStore` as the first durable operational adapter, switched `Mes.ExperienceApi` to that durable adapter by default, and added reload-safe adapter tests.
+- 2026-04-17: Added `tests/Mes.Application.Tests/SqliteOperatorExecutionAdapterTests.cs` so the SQLite relational adapter candidate now proves receipt replay, outbox durability, prepared actuals persistence, and station work-queue projection across store reopen.
+- 2026-04-17: Made `Mes.ExperienceApi` durable provider selection configuration-driven, switched the default runtime to `Sqlite`, kept `FileStore` selectable through the same seam, and reserved `Postgres` as the future provider slot.
+- 2026-04-17: Updated the slice docs so SQLite is explicitly documented as the current executable runtime, `material_consumption` and `override_request` are marked as deferred relational targets, and `wip_unit.status_before_hold` is aligned across the logical and physical persistence drafts.
+- 2026-04-17: Locked `FileStore` down as an explicit comparison-only path, kept SQLite as the only active runtime, and added host smoke coverage so legacy file-store path settings cannot silently override the SQLite default.
+- 2026-04-17: Extended `docs/mes/pilot-slice-01-application-design.md` with pilot-hardening Work Units 6 through 9 for order completion progression, canonical save boundaries, Experience API error normalization, and the first PostgreSQL handoff contract.
+- 2026-04-17: Implemented Work Unit 6 so `complete-operation` now advances `ProductionOrder` from an authoritative sibling-operation summary, with handler, application-service, and durable adapter tests covering both `PartiallyCompleted` and `Completed` progression.
+- 2026-04-17: Implemented Work Unit 7 so the current accepted-command write-set is now locked across `InMemory`, `FileStore`, and `Sqlite` adapter tests, and the adapter READMEs explicitly document the canonical pilot save boundary.
+- 2026-04-17: Implemented Work Unit 8 so deterministic operator-execution failures now normalize to stable `400`, `404`, `409`, `422`, and fallback `500` problem-details responses through one thin-host mapping seam, with dedicated `Mes.ExperienceApi.Tests` coverage.

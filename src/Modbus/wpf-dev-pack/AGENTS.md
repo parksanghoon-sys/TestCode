@@ -25,6 +25,8 @@ These should survive context loss:
 6. Prefer the most specific matching skill.
 7. Every introduced or changed C# class and function must include Korean XML documentation comments in XML format. This is mandatory for authored code.
 8. Prefer authored methods, constructors, and public APIs with five or fewer input parameters. If more are needed, group them into a request or parameter object unless a framework signature forces the shape.
+9. When creating a new project under this workspace, add a local `README.md` in that project directory in the same change.
+10. Each project-level `README.md` must describe the project's purpose, key classes or files, folder structure, dependencies, relevant execution or test flow, and current limitations, and it must be updated when the project changes materially.
 
 ## .NET defaults
 

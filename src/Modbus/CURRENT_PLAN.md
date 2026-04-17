@@ -15,7 +15,7 @@ Turn the MES baseline into an executable pilot slice by carrying the current ope
 - Initial logical data model and BFF payload drafts now exist for that selected slice under `docs/mes/`.
 - A new `Mes.Application.Contracts` project now defines concrete command, response, query, notification, and endpoint-signature types for the selected operator-execution slice.
 - A first persistence-oriented SQL draft for the selected slice now exists in `docs/mes/persistence-schema-slice-01.sql`.
-- A dedicated application hardening design now exists in `docs/mes/pilot-slice-01-application-design.md`, and it sequences the next work into hold coordination, work-queue read-model sourcing, idempotency, compact contract shapes, and only then handler scaffolding.
+- A dedicated application hardening design now exists in `docs/mes/pilot-slice-01-application-design.md`, and it now sequences both the original slice build-out plus the next pilot-hardening work units for order completion, canonical save boundaries, HTTP error normalization, and future PostgreSQL handoff.
 - The application hardening docs now explicitly persist release-1 hold provenance, separate quality decision outcome from current hold state, anchor `required_materials` to an MES-side snapshot, and reserve `review-required` for a later supervisory slice.
 - The persistence draft now includes `status_before_hold`, `hold_source_type`, `hold_source_id`, `quality_record.decision_status`, `operation_material_requirement`, and a stronger `command_receipt` idempotency shape with request fingerprints.
 - `Mes.Domain` now exposes release-1 hold provenance and quality decision outcome directly in code through `OperationExecution` and `QualityRecord`.
@@ -34,15 +34,30 @@ Turn the MES baseline into an executable pilot slice by carrying the current ope
 - A new `Mes.Infrastructure` project now provides the first concrete port implementation as an in-memory reference adapter for operator execution, including `InMemoryOperatorExecutionStore`, command/query adapters, and a thin `OperatorExecutionBffEndpointAdapter`.
 - The first concrete adapter now commits `command_receipt`, prepared `production_actuals_batch`, and in-memory outbox entries through one explicit write-set boundary, while aggregate mutations remain owned by the already-loaded domain objects.
 - `Mes.Application.Tests` now include end-to-end reference-adapter coverage for accepted command persistence, replay-safe outbox behavior, prepared actuals persistence, and station work-queue projection through the infrastructure boundary.
-- A new `Mes.ExperienceApi` project now provides the first thin shared BFF host for the slice, wiring minimal API routes to `OperatorExecutionBffEndpointAdapter` through dependency-injected in-memory reference services.
-- `Mes.ExperienceApi.Tests` now verify that the documented operator-execution endpoint signatures are exposed as concrete routes and that the host resolves the endpoint adapter plus in-memory store through DI.
+- A new `Mes.ExperienceApi` project now provides the first thin shared BFF host for the slice, wiring minimal API routes to `OperatorExecutionBffEndpointAdapter` through dependency-injected infrastructure services.
+- `Mes.ExperienceApi.Tests` now verify that the documented operator-execution endpoint signatures are exposed as concrete routes and that the host resolves the endpoint adapter plus its configured store through DI.
+- `Mes.Domain` now exposes explicit restore boundaries for `ProductionOrder`, `OperationExecution`, `MaterialLot`, `QualityRecord`, and `WipUnit`, so detached persistence snapshots can reconstruct the current slice without replaying business commands.
+- `Mes.Infrastructure` now also provides `OperatorExecution/FileStore/` as the first durable operational adapter, persisting aggregate/entity snapshots, `command_receipt`, prepared `production_actuals_batch`, and outbox entries to a JSON snapshot file through the existing application ports.
+- `Mes.Application.Tests` now validate that the file-backed durable adapter preserves receipt replay, prepared actuals, and work-queue snapshots across store reload.
+- `Mes.Infrastructure` now also carries an `OperatorExecution/Sqlite/` relational adapter candidate built on `Microsoft.Data.Sqlite`, including a SQLite store, command port, and station work-queue source adapter that compile against the existing application ports.
+- `Mes.Application.Tests` now also validate the SQLite relational adapter candidate through the same durable acceptance path used for `FileStore/`: receipt replay, outbox durability, prepared actuals persistence, and station work-queue projection all survive store reopen.
+- `Mes.ExperienceApi` durable composition is now provider-selectable at the host layer, with `Sqlite` as the current default runtime, `FileStore` kept only as an explicit comparison path, and `Postgres` reserved as a future provider slot without changing the application boundary.
+- `Mes.ExperienceApi.Tests` now verify the default `Sqlite` runtime, explicit comparison-path `FileStore` selection, protection against legacy file-path drift, and the current reserved-provider guard for `Postgres`.
+- The current executable relational path covers the write-set the application actually mutates today, but the SQL draft still documents additional tables such as `material_consumption` and `override_request` that are not yet exercised by the slice implementation.
+- The slice docs now explicitly record the current SQLite coverage versus deferred relational targets, and the provider-neutral SQL draft now marks `material_consumption` plus `override_request` as deferred while keeping `wip_unit.status_before_hold` aligned with executable persistence.
+- The slice application design now also documents Work Units 6 through 9 for pilot hardening: cross-operation order completion progression, canonical save transaction boundaries, Experience API error normalization, and the first PostgreSQL provider handoff contract.
+- Work Unit 6 is now executable in code: `complete-operation` loads an authoritative sibling-operation summary, advances `ProductionOrder` to `PartiallyCompleted` or `Completed`, and the new behavior is locked by handler, application-service, and durable adapter tests.
+- Work Unit 7 is now executable as the explicit pilot save contract: `InMemory`, `FileStore`, and `Sqlite` adapter tests all lock the same accepted-command write-set, including touched aggregate state, `command_receipt`, `production_actuals_batch`, and the full outbox set for accepted completion.
+- Work Unit 8 is now executable in code: deterministic operator-execution failures are promoted into typed application exceptions, `Mes.ExperienceApi` normalizes them into stable problem-details responses for `400`, `404`, `409`, `422`, and fallback `500`, and dedicated host tests lock the route-thin transport behavior.
+- Each current source and test project now carries a local `README.md` that explains its purpose, responsibility boundary, key classes, folder structure, dependency direction, and current limitations.
 - The repository now carries an explicit rule that new or modified C# classes and functions must include Korean XML documentation comments, and that requirement is now stated directly in both the root and `wpf-dev-pack` AGENT entry points.
 - The repository guidance now also prefers authored methods, constructors, and public APIs with five or fewer input parameters, using parameter objects when larger inputs are unavoidable.
+- The repository guidance now also requires a project-level `README.md` whenever a new project is created, and that README must be updated when the project's structure or role changes materially.
 - Project-specific manufacturing assumptions are still provisional and must be validated against one pilot line.
 
 ## Next Meaningful Work Unit
 
-Replace the current in-memory reference adapter with the first durable operational persistence adapter while keeping the `Mes.Application` and `Mes.ExperienceApi` boundaries unchanged.
+Confirm the pilot manufacturing mode and required genealogy depth for the first rollout.
 
 ## Validation Path
 
@@ -60,8 +75,17 @@ Replace the current in-memory reference adapter with the first durable operation
 - Re-run `Mes.Application.Tests` whenever handler-side state validation, stored-response replay restoration, or production-actuals preparation rules change.
 - Re-run `Mes.Application.Tests` whenever the work-queue query handler mapping or contract field ownership changes.
 - Re-run `Mes.Application.Tests` whenever application-service orchestration, load/save port contracts, or replay persistence conditions change.
+- Re-run `Mes.Application.Tests` whenever `complete-operation` starts mutating `ProductionOrder` status or loading a new order progression summary source.
 - Re-run `Mes.Application.Tests` whenever the reference infrastructure adapter changes its write-set composition, outbox capture, or state-loading assumptions.
+- Re-run `Mes.Application.Tests` whenever detached restore state, file snapshot mapping, or file-store replay behavior changes.
+- Re-run `dotnet test Mes.slnx -v minimal` whenever `src/Mes.Infrastructure/OperatorExecution/Sqlite/`, durable host DI composition, or relational package references change.
+- Keep both `FileStore/` and `Sqlite/` durable tests alive while slice-01 relational coverage is still being clarified, so host composition changes can compare two proven persistence paths instead of replacing one verified path with another.
+- Keep `Mes.ExperienceApi.Tests` aligned whenever durable service registration changes, and assert which concrete store the default host resolves.
+- Re-run `Mes.ExperienceApi.Tests` whenever deterministic exception types or host-level problem-details mapping changes.
+- Compare `src/Mes.Infrastructure/OperatorExecution/Sqlite/SqliteOperatorExecutionStore.cs` against `docs/mes/persistence-schema-slice-01.sql` whenever relational persistence coverage expands, and explicitly record any intentionally deferred tables such as `material_consumption` or `override_request`.
+- Preserve the new rule that future relational providers, including PostgreSQL, must plug in through the same host composition seam instead of changing `Mes.Application` or route handlers.
+- Keep the PostgreSQL handoff section in `docs/mes/pilot-slice-01-application-design.md` aligned whenever provider configuration keys or durable port contracts change.
 - Keep any future HTTP host thin: route handlers should call `OperatorExecutionBffEndpointAdapter` or the application service boundary rather than re-implementing orchestration or validation.
-- Re-run `Mes.ExperienceApi.Tests` whenever route signatures, host DI wiring, or the reference host composition changes.
+- Re-run `Mes.ExperienceApi.Tests` whenever route signatures, host DI wiring, or the default durable host composition changes.
 - Preserve the rule that BFF payload semantics stay identical across WPF and Web even if channel UX diverges.
 - Prefer request or parameter objects over long authored signatures as the application layer grows past simple domain calls.

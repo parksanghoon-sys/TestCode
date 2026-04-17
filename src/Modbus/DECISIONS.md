@@ -262,3 +262,112 @@ Implications:
 - `Mes.ExperienceApi` should stay focused on DI composition, route mapping, and later transport-level concerns such as authentication or error normalization.
 - `OperatorExecutionBffEndpointAdapter` remains the immediate host-facing boundary, so route handlers do not duplicate application-service invocation or command/query branching.
 - The next major execution step is durable persistence under the existing adapter and host surfaces, followed later by explicit HTTP error mapping and cross-slice transport concerns.
+
+## 2026-04-16 ADR-021: Every project directory must carry and maintain a local README
+
+Decision:
+Require every project directory under `src/` and `tests/` to include a local `README.md`, and treat that README as part of the same work unit whenever the project is created or its role and structure change materially.
+
+Why:
+The repository has now grown into multiple layers with distinct responsibilities: domain, contracts, application, infrastructure, host, and several test projects. Without local project documentation, future work quickly depends on rediscovery. A per-project README keeps the closest explanation next to the code and lowers onboarding and context-recovery cost.
+
+Implications:
+- New project creation is incomplete unless the project-level `README.md` is added in the same change.
+- Project-level READMEs should explain at least purpose, responsibility boundary, key classes or files, folder structure, dependency direction, execution or test flow where relevant, and current limitations.
+- When a project's role or structure changes materially, its local README should be updated in the same work unit rather than left to drift.
+
+## 2026-04-16 ADR-022: Use a file-backed durable snapshot store as the first operational persistence bridge
+
+Decision:
+Keep the existing application ports and endpoint boundary unchanged, add explicit restore boundaries to the current domain types, and implement the first durable persistence adapter as a file-backed JSON snapshot store under `Mes.Infrastructure/OperatorExecution/FileStore`.
+
+Why:
+The slice had already proven its load/save contract and write-set boundary through the in-memory reference adapter, but it still lacked detached persistence and restart safety. Jumping directly to the final relational adapter would have coupled several decisions at once: SQL access strategy, transaction plumbing, aggregate reconstruction, and host composition. A file-backed bridge lets the project prove durable replay, snapshot reconstruction, and host-default persistence without widening the scope too early.
+
+Implications:
+- `Mes.Domain` now carries explicit `Restore(...)` boundaries for the aggregates and entities that the current slice persists.
+- `Mes.Infrastructure` now has two adapter modes: `InMemory/` for reference comparison and `FileStore/` for the default durable operational path.
+- `Mes.ExperienceApi` now composes the slice against the file-backed durable adapter by default, while the next persistence step becomes a relational adapter aligned with `docs/mes/persistence-schema-slice-01.sql`.
+
+## 2026-04-17 ADR-023: Keep durable provider selection at the host seam and default it to SQLite
+
+Decision:
+Keep durable provider selection inside `Mes.ExperienceApi` service registration, run the current slice on `Sqlite` by default, keep `FileStore` available beside it, and reserve `Postgres` as the next relational provider slot.
+
+Why:
+The current slice now has two proven durable implementations with the same application-facing behavior: `FileStore` and `Sqlite`. The user direction is to run on SQLite now while keeping database replacement cheap later. The least disruptive place to make that choice is the host composition seam, not the application layer or route handlers.
+
+Implications:
+- `Mes.Application` and its ports stay unchanged when the durable provider changes.
+- `Mes.ExperienceApi` now chooses the provider from configuration instead of hard-wiring one durable store.
+- `Sqlite` is the current default runtime for the slice, while `FileStore` remains available through the same seam.
+- `Postgres` and `Mes:OperatorExecutionConnectionString` are now explicit reserved extension points for a future provider, but they do not imply that a PostgreSQL adapter exists yet.
+
+Note:
+ADR-024 later narrows the operational stance further by treating `FileStore` as comparison-only while SQLite remains the active runtime.
+
+## 2026-04-17 ADR-024: Treat FileStore as comparison-only while SQLite is the active runtime
+
+Decision:
+Keep `Sqlite` as the only active durable runtime for slice 01, and treat `FileStore` as an explicitly selected comparison and recovery-inspection path rather than an operational fallback.
+
+Why:
+The user direction is to proceed on SQLite now, while still leaving room for a future PostgreSQL provider. Leaving `FileStore` described as a general fallback keeps the runtime stance ambiguous and increases the chance that old file-store settings or ad hoc host changes quietly drift the slice away from the intended relational path.
+
+Implications:
+- Host and project documentation should describe `FileStore` as comparison-only, not as the preferred rollback target.
+- Host smoke tests should prove that the default runtime stays on `Sqlite` even when legacy file-store path configuration is present.
+- Future provider work should target PostgreSQL on the existing seam; `FileStore` remains useful only while the team still wants a second durable parity path beside SQLite.
+
+## 2026-04-17 ADR-025: Pilot hardening stays inside the current slice seams
+
+Decision:
+Treat the next pilot-hardening cycle as four bounded work units on top of the existing operator-execution slice: cross-operation order completion progression, canonical save transaction definition, Experience API error normalization, and a future PostgreSQL handoff contract.
+
+Why:
+The current slice already proves the main operator-execution loop, replay safety, and SQLite durability. The highest remaining risk is not missing architecture, but missing pilot-grade rules around completion truth, commit boundaries, operable HTTP failures, and future provider replacement. Those gaps should be closed without changing the current separation of responsibilities.
+
+Implications:
+- `Mes.Application` remains the owner of cross-aggregate order progression and the logical save contract.
+- `Mes.Infrastructure` remains the owner of provider-specific transaction and schema behavior under that same logical contract.
+- `Mes.ExperienceApi` remains the owner of HTTP problem-details mapping and transport semantics, without reintroducing workflow logic into routes.
+- Future PostgreSQL work must plug into the existing provider seam only after Work Units 6 through 8 raise the slice to a pilot-safe baseline.
+
+## 2026-04-17 ADR-026: Derive order completion progression from MES-owned sibling-operation summary
+
+Decision:
+For `complete-operation`, keep `OperationExecution.Complete(...)` aggregate-local, but derive `ProductionOrder` progression in `Mes.Application` from a command-port-loaded `OrderCompletionProgressSnapshot` built from MES-owned `operation_execution` state.
+
+Why:
+The handler previously knew only the parent order and the current operation, which was not enough evidence to decide whether sibling operations still remained open. Loading one authoritative summary keeps the application rule explicit without widening the seam into full sibling aggregate hydration or pushing completion truth back into ERP or BFF code.
+
+Implications:
+- `CompleteOperationCommandState` now carries an `OrderCompletionProgressSnapshot`, and every concrete command port must load that summary before calling the handler.
+- Release 1 currently treats only `OperationExecutionStatus.Done` as completed for order progression; all other statuses still keep the order open.
+- `ProductionOrder` now moves to `PartiallyCompleted` or `Completed` inside the same accepted command path that already persists the operation completion, receipt, prepared actuals, and outbox side effects.
+
+## 2026-04-17 ADR-027: Treat the accepted-command write-set as the provider-neutral pilot save contract
+
+Decision:
+Define the current pilot save contract as one accepted-command write-set that keeps touched aggregate state, `command_receipt`, `production_actuals_batch`, and the full `domain_outbox` set aligned across `InMemory`, `FileStore`, and `Sqlite`.
+
+Why:
+Work Unit 7 showed that the code already shared one logical save boundary, but the project still described it partly as an implementation detail. Locking that boundary in provider-facing tests and adapter documentation turns it into an explicit contract instead of a coincidence of today's adapters.
+
+Implications:
+- Provider-specific helper rows or metadata may exist, but they must not widen or replace the application-visible write-set.
+- Replay of an existing receipt must not open a new logical save boundary or create new persisted side effects.
+- Future slice growth, such as `material_consumption` or `override_request`, should widen this contract only through a deliberate design-and-test update rather than by adapter drift.
+
+## 2026-04-17 ADR-028: Keep Experience API failure semantics in one host-level problem-details mapper
+
+Decision:
+Promote deterministic operator-execution failures into typed application exceptions, and let `Mes.ExperienceApi` own the stable HTTP mapping for `400`, `404`, `409`, `422`, and fallback `500` through one host-level problem-details seam.
+
+Why:
+The operator-execution slice now has enough durable and replay-safe behavior that transport failures must also become diagnosable and stable. Letting route handlers or adapters improvise HTTP responses would duplicate transport policy, while leaving raw framework exceptions in place would make the first pilot host brittle and hard to operate.
+
+Implications:
+- `Mes.Application` and `Mes.Infrastructure` should surface deterministic not-found, conflict, and validation outcomes through the typed operator-execution exception taxonomy instead of leaking provider-specific exceptions upward.
+- `Mes.ExperienceApi` route handlers stay thin and delegate to the existing endpoint adapter, while one host-level mapper turns those exceptions into stable problem-details payloads with slice-specific error codes and context extensions.
+- Broader cross-slice transport standardization can widen this mapper later without changing the current application or persistence seams.
