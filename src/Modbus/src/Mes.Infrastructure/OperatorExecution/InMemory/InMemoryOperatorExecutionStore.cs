@@ -4,6 +4,7 @@ using Mes.Application.OperatorExecution.WorkQueue;
 using Mes.Domain.Abstractions;
 using Mes.Domain.Aggregates;
 using Mes.Domain.Entities;
+using Mes.Domain.Statuses;
 using Mes.Domain.ValueObjects;
 
 namespace Mes.Infrastructure.OperatorExecution.InMemory;
@@ -138,6 +139,32 @@ public sealed class InMemoryOperatorExecutionStore
         lock (_gate)
         {
             return Require(_operationExecutions, operationExecutionId, nameof(operationExecutionId));
+        }
+    }
+
+    /// <summary>
+    /// 생산오더 완료 진행률 판단에 필요한 sibling-operation 요약을 계산합니다.
+    /// </summary>
+    /// <param name="productionOrderId">요약을 계산할 생산오더 식별자입니다.</param>
+    /// <param name="currentOperationExecutionId">현재 완료 처리 중인 공정 실행 식별자입니다.</param>
+    /// <returns>완료 진행률 판단에 필요한 최소 요약입니다.</returns>
+    public OrderCompletionProgressSnapshot GetOrderCompletionProgress(string productionOrderId, string currentOperationExecutionId)
+    {
+        lock (_gate)
+        {
+            var order = Require(_productionOrders, productionOrderId, nameof(productionOrderId));
+            var normalizedCurrentOperationExecutionId = NormalizeRequired(currentOperationExecutionId, nameof(currentOperationExecutionId));
+            var totalOperationCount = order.OperationIds.Count;
+            var remainingOpenOperationCount = order.OperationIds
+                .Where(operationId => !string.Equals(operationId.ToString(), normalizedCurrentOperationExecutionId, StringComparison.Ordinal))
+                .Select(operationId => Require(_operationExecutions, operationId.ToString(), nameof(currentOperationExecutionId)))
+                .Count(operation => !IsCompletedForOrderProgression(operation.Status));
+
+            return new OrderCompletionProgressSnapshot(
+                order.Id.ToString(),
+                totalOperationCount,
+                remainingOpenOperationCount,
+                totalOperationCount - remainingOpenOperationCount);
         }
     }
 
@@ -297,7 +324,69 @@ public sealed class InMemoryOperatorExecutionStore
             return value;
         }
 
-        throw new InvalidOperationException($"No stored value exists for {parameterName} '{key}'.");
+        throw CreateNotFoundException(parameterName, key);
+    }
+
+    /// <summary>
+    /// in-memory 저장소 조회 miss를 operator-execution not-found 예외로 변환합니다.
+    /// </summary>
+    /// <param name="parameterName">조회에 사용한 식별자 이름입니다.</param>
+    /// <param name="key">조회에 사용한 식별자 값입니다.</param>
+    /// <returns>host가 problem details로 승격할 수 있는 not-found 예외입니다.</returns>
+    private static OperatorExecutionNotFoundException CreateNotFoundException(string parameterName, string key)
+    {
+        var aggregateType = ResolveAggregateType(parameterName);
+        return new OperatorExecutionNotFoundException(
+            $"Could not find {parameterName} '{key}'.",
+            new OperatorExecutionErrorContext(
+                aggregateType,
+                key.Trim(),
+                null,
+                null));
+    }
+
+    /// <summary>
+    /// 저장소 파라미터 이름을 problem details용 aggregate 이름으로 정규화합니다.
+    /// </summary>
+    /// <param name="parameterName">조회 파라미터 이름입니다.</param>
+    /// <returns>알려진 aggregate 이름 또는 원본 파라미터 이름입니다.</returns>
+    private static string ResolveAggregateType(string parameterName)
+    {
+        return parameterName switch
+        {
+            "productionOrderId" => nameof(ProductionOrder),
+            "operationExecutionId" or "currentOperationExecutionId" => nameof(OperationExecution),
+            "wipUnitId" => nameof(WipUnit),
+            "materialLotId" => nameof(MaterialLot),
+            "qualityRecordId" => nameof(QualityRecord),
+            _ => parameterName
+        };
+    }
+
+    /// <summary>
+    /// 완료 진행률 계산에서 공정을 완료 상태로 간주할지 판별합니다.
+    /// </summary>
+    /// <param name="status">판별할 공정 실행 상태입니다.</param>
+    /// <returns>Release 1 기준 완료 상태면 <see langword="true"/>입니다.</returns>
+    private static bool IsCompletedForOrderProgression(OperationExecutionStatus status)
+    {
+        return status == OperationExecutionStatus.Done;
+    }
+
+    /// <summary>
+    /// 필수 문자열 입력을 정규화합니다.
+    /// </summary>
+    /// <param name="value">정규화할 문자열입니다.</param>
+    /// <param name="parameterName">예외 메시지에 사용할 파라미터 이름입니다.</param>
+    /// <returns>trim 처리된 문자열입니다.</returns>
+    private static string NormalizeRequired(string? value, string parameterName)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            throw new ArgumentException("Required string value cannot be empty.", parameterName);
+        }
+
+        return value.Trim();
     }
 
     /// <summary>

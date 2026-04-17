@@ -6,6 +6,7 @@ using Mes.Application.OperatorExecution.WorkQueue;
 using Mes.Domain.Aggregates;
 using Mes.Domain.Entities;
 using Mes.Domain.Events;
+using Mes.Domain.Statuses;
 using Mes.Domain.ValueObjects;
 using Mes.Infrastructure.OperatorExecution;
 using Mes.Infrastructure.OperatorExecution.InMemory;
@@ -94,7 +95,7 @@ public sealed class InMemoryOperatorExecutionAdapterTests
     /// 공정 완료 endpoint가 actuals batch와 outbox를 함께 저장하는지 검증합니다.
     /// </summary>
     [Fact]
-    public async Task CompleteOperationAsync_should_commit_batch_and_outbox()
+    public async Task CompleteOperationAsync_should_commit_canonical_save_boundary_for_accepted_completion()
     {
         var now = new DateTimeOffset(2026, 4, 16, 18, 20, 0, TimeSpan.Zero);
         var endpoint = CreateEndpoint(now, out var store);
@@ -119,9 +120,58 @@ public sealed class InMemoryOperatorExecutionAdapterTests
 
         Assert.True(response.Accepted);
         Assert.Equal("Done", response.Status);
+        Assert.Single(store.Receipts);
         Assert.Single(store.ProductionActualsBatches);
         Assert.Equal(ProductionActualsStatusValues.PendingProjection, store.ProductionActualsBatches[0].Status);
+        Assert.Equal(ProductionOrderStatus.Completed, store.GetProductionOrder(order.Id.ToString()).Status);
+        Assert.Equal(OperationExecutionStatus.Done, store.GetOperationExecution(operation.Id.ToString()).Status);
+        Assert.Equal(2, store.OutboxEntries.Count);
+        Assert.Contains(store.OutboxEntries, entry => entry.DomainEvent is ScrapRecordedDomainEvent);
         Assert.Contains(store.OutboxEntries, entry => entry.DomainEvent is OperationCompletedDomainEvent);
+    }
+
+    /// <summary>
+    /// replay된 `complete-operation`이 receipt, actuals batch, outbox를 중복 저장하지 않는지 검증합니다.
+    /// </summary>
+    [Fact]
+    public async Task CompleteOperationAsync_should_replay_without_duplicate_save_boundary()
+    {
+        var now = new DateTimeOffset(2026, 4, 16, 18, 25, 0, TimeSpan.Zero);
+        var endpoint = CreateEndpoint(now, out var store);
+        var order = CreateProductionOrder("PO-10003-R");
+        var operation = CreateRunningOperation(order.Id.ToString(), "OP-10003-R", "ST-103-R", 10, now.AddMinutes(-15));
+        order.AttachOperation(operation.Id);
+
+        store.Seed(new InMemoryOperatorExecutionSeed
+        {
+            ProductionOrders = [order],
+            OperationExecutions = [operation]
+        });
+
+        var command = new CompleteOperationCommandContract(
+            CreateContext("CMD-10003-R", "CORR-10003-R", "KEY-10003-R", "operator-103-R", "ST-103-R"),
+            new CompleteOperationPayloadContract(
+                operation.Id.ToString(),
+                new MeasuredQuantityContract(6m, "EA"),
+                new MeasuredQuantityContract(1m, "EA"),
+                CompletionModeValues.Manual));
+
+        var firstResponse = await endpoint.CompleteOperationAsync(command);
+        var receiptCountAfterFirst = store.Receipts.Count;
+        var batchCountAfterFirst = store.ProductionActualsBatches.Count;
+        var outboxCountAfterFirst = store.OutboxEntries.Count;
+
+        var replayResponse = await endpoint.CompleteOperationAsync(command);
+
+        Assert.Equal(firstResponse, replayResponse);
+        Assert.Equal(receiptCountAfterFirst, store.Receipts.Count);
+        Assert.Equal(batchCountAfterFirst, store.ProductionActualsBatches.Count);
+        Assert.Equal(outboxCountAfterFirst, store.OutboxEntries.Count);
+        Assert.Equal(2, store.OutboxEntries.Count);
+        Assert.Contains(store.OutboxEntries, entry => entry.DomainEvent is ScrapRecordedDomainEvent);
+        Assert.Contains(store.OutboxEntries, entry => entry.DomainEvent is OperationCompletedDomainEvent);
+        Assert.Equal(ProductionOrderStatus.Completed, store.GetProductionOrder(order.Id.ToString()).Status);
+        Assert.Equal(OperationExecutionStatus.Done, store.GetOperationExecution(operation.Id.ToString()).Status);
     }
 
     /// <summary>

@@ -61,6 +61,33 @@ public sealed class MaterialLot : AggregateRoot<MaterialLotId>
     }
 
     /// <summary>
+    /// 영속 스냅샷에서 자재 lot aggregate를 복원합니다.
+    /// </summary>
+    /// <param name="state">복원할 자재 lot 상태입니다.</param>
+    /// <returns>도메인 이벤트가 비어 있는 자재 lot aggregate입니다.</returns>
+    public static MaterialLot Restore(MaterialLotRestoreState state)
+    {
+        ArgumentNullException.ThrowIfNull(state);
+
+        var lot = new MaterialLot(
+            state.Id,
+            state.MaterialCode,
+            state.AvailableQuantity)
+        {
+            Status = state.Status,
+            AvailableQuantity = state.AvailableQuantity,
+            ConsumedQuantity = state.ConsumedQuantity,
+            ReturnedQuantity = state.ReturnedQuantity,
+            BlockReason = string.IsNullOrWhiteSpace(state.BlockReason)
+                ? null
+                : state.BlockReason.Trim()
+        };
+
+        lot._genealogyLinks.AddRange(state.GenealogyLinks);
+        return lot;
+    }
+
+    /// <summary>
     /// 자재 Lot를 라인 투입 상태로 전환합니다.
     /// </summary>
     public void IssueToLine()
@@ -130,3 +157,24 @@ public sealed class MaterialLot : AggregateRoot<MaterialLotId>
         DomainGuard.Against(quantity.Value > AvailableQuantity.Value, "Movement quantity cannot exceed available quantity.");
     }
 }
+
+/// <summary>
+/// 자재 lot aggregate 복원에 필요한 상태 묶음입니다.
+/// </summary>
+/// <param name="Id">자재 lot 식별자입니다.</param>
+/// <param name="MaterialCode">자재 코드입니다.</param>
+/// <param name="Status">현재 자재 lot 상태입니다.</param>
+/// <param name="AvailableQuantity">현재 가용 수량입니다.</param>
+/// <param name="ConsumedQuantity">누적 소모 수량입니다.</param>
+/// <param name="ReturnedQuantity">누적 반납 수량입니다.</param>
+/// <param name="BlockReason">현재 block 사유입니다.</param>
+/// <param name="GenealogyLinks">누적 genealogy link 목록입니다.</param>
+public sealed record MaterialLotRestoreState(
+    MaterialLotId Id,
+    string MaterialCode,
+    MaterialLotStatus Status,
+    MeasuredQuantity AvailableQuantity,
+    MeasuredQuantity ConsumedQuantity,
+    MeasuredQuantity ReturnedQuantity,
+    string? BlockReason,
+    IReadOnlyCollection<GenealogyLink> GenealogyLinks);

@@ -5,25 +5,24 @@ using Mes.Application.OperatorExecution;
 using Mes.Domain.Abstractions;
 using Mes.Domain.Aggregates;
 using Mes.Domain.Entities;
-using Mes.Domain.ValueObjects;
 
-namespace Mes.Infrastructure.OperatorExecution.InMemory;
+namespace Mes.Infrastructure.OperatorExecution.FileStore;
 
 /// <summary>
-/// 운영자 실행 command 포트를 in-memory 기준 저장소로 구현합니다.
+/// operator-execution command 포트를 파일 기반 durable 저장소로 구현합니다.
 /// </summary>
-public sealed class InMemoryOperatorExecutionCommandAdapter : IOperatorExecutionCommandPort
+public sealed class FileOperatorExecutionCommandAdapter : IOperatorExecutionCommandPort
 {
     private readonly CanonicalCommandFingerprintBuilder _fingerprintBuilder;
-    private readonly InMemoryOperatorExecutionStore _store;
+    private readonly FileOperatorExecutionStore _store;
 
     /// <summary>
-    /// in-memory command 어댑터를 초기화합니다.
+    /// 파일 기반 command 어댑터를 초기화합니다.
     /// </summary>
-    /// <param name="store">기준 저장소입니다.</param>
+    /// <param name="store">파일 기반 저장소입니다.</param>
     /// <param name="fingerprintBuilder">receipt scope 계산기입니다.</param>
-    public InMemoryOperatorExecutionCommandAdapter(
-        InMemoryOperatorExecutionStore store,
+    public FileOperatorExecutionCommandAdapter(
+        FileOperatorExecutionStore store,
         CanonicalCommandFingerprintBuilder fingerprintBuilder)
     {
         _store = store;
@@ -50,7 +49,7 @@ public sealed class InMemoryOperatorExecutionCommandAdapter : IOperatorExecution
     /// </summary>
     /// <param name="command">공정 시작 command입니다.</param>
     /// <param name="cancellationToken">비동기 취소 토큰입니다.</param>
-    /// <returns>공정 시작 상태 묶음입니다.</returns>
+    /// <returns>공정 시작 처리 상태입니다.</returns>
     public Task<StartOperationCommandState> LoadStateAsync(
         StartOperationCommandContract command,
         CancellationToken cancellationToken = default)
@@ -65,7 +64,7 @@ public sealed class InMemoryOperatorExecutionCommandAdapter : IOperatorExecution
     /// </summary>
     /// <param name="command">자재 소모 command입니다.</param>
     /// <param name="cancellationToken">비동기 취소 토큰입니다.</param>
-    /// <returns>자재 소모 상태 묶음입니다.</returns>
+    /// <returns>자재 소모 처리 상태입니다.</returns>
     public Task<RecordMaterialConsumptionCommandState> LoadStateAsync(
         RecordMaterialConsumptionCommandContract command,
         CancellationToken cancellationToken = default)
@@ -81,7 +80,7 @@ public sealed class InMemoryOperatorExecutionCommandAdapter : IOperatorExecution
     /// </summary>
     /// <param name="command">hold 설정 command입니다.</param>
     /// <param name="cancellationToken">비동기 취소 토큰입니다.</param>
-    /// <returns>hold 설정 상태 묶음입니다.</returns>
+    /// <returns>hold 설정 처리 상태입니다.</returns>
     public Task<PlaceHoldCommandState> LoadStateAsync(
         PlaceHoldCommandContract command,
         CancellationToken cancellationToken = default)
@@ -106,7 +105,7 @@ public sealed class InMemoryOperatorExecutionCommandAdapter : IOperatorExecution
     /// </summary>
     /// <param name="command">hold 해제 command입니다.</param>
     /// <param name="cancellationToken">비동기 취소 토큰입니다.</param>
-    /// <returns>hold 해제 상태 묶음입니다.</returns>
+    /// <returns>hold 해제 처리 상태입니다.</returns>
     public Task<ReleaseHoldCommandState> LoadStateAsync(
         ReleaseHoldCommandContract command,
         CancellationToken cancellationToken = default)
@@ -131,7 +130,7 @@ public sealed class InMemoryOperatorExecutionCommandAdapter : IOperatorExecution
     /// </summary>
     /// <param name="command">품질 결과 command입니다.</param>
     /// <param name="cancellationToken">비동기 취소 토큰입니다.</param>
-    /// <returns>품질 결과 상태 묶음입니다.</returns>
+    /// <returns>품질 결과 처리 상태입니다.</returns>
     public Task<RecordQualityResultCommandState> LoadStateAsync(
         RecordQualityResultCommandContract command,
         CancellationToken cancellationToken = default)
@@ -152,7 +151,7 @@ public sealed class InMemoryOperatorExecutionCommandAdapter : IOperatorExecution
     /// </summary>
     /// <param name="command">공정 완료 command입니다.</param>
     /// <param name="cancellationToken">비동기 취소 토큰입니다.</param>
-    /// <returns>공정 완료 상태 묶음입니다.</returns>
+    /// <returns>공정 완료 처리 상태입니다.</returns>
     public Task<CompleteOperationCommandState> LoadStateAsync(
         CompleteOperationCommandContract command,
         CancellationToken cancellationToken = default)
@@ -166,7 +165,7 @@ public sealed class InMemoryOperatorExecutionCommandAdapter : IOperatorExecution
     }
 
     /// <summary>
-    /// 수락된 command의 side effect를 저장소에 커밋합니다.
+    /// 수락된 command의 side effect를 파일 저장소에 커밋합니다.
     /// </summary>
     /// <typeparam name="TState">저장할 상태 묶음 형식입니다.</typeparam>
     /// <param name="request">저장 요청입니다.</param>
@@ -178,16 +177,21 @@ public sealed class InMemoryOperatorExecutionCommandAdapter : IOperatorExecution
     {
         ArgumentNullException.ThrowIfNull(request);
 
-        var aggregates = GetAggregates(request.State);
-        var outboxEntries = aggregates
-            .SelectMany(CreateOutboxEntryDrafts)
-            .ToList();
+        var state = request.State ?? throw new ArgumentNullException(nameof(request.State));
+        var aggregates = GetAggregates(state);
 
-        _store.Commit(new InMemoryOperatorExecutionWriteSet(
-            request.ReceiptToStore,
-            request.PreparedBatch,
-            outboxEntries,
-            request.PersistedAt));
+        _store.Commit(new FileOperatorExecutionCommitRequest
+        {
+            ProductionOrders = GetValues<ProductionOrder>(state),
+            OperationExecutions = GetValues<OperationExecution>(state),
+            WipUnits = GetValues<WipUnit>(state),
+            MaterialLots = GetValues<MaterialLot>(state),
+            QualityRecords = GetValues<QualityRecord>(state),
+            Receipt = request.ReceiptToStore,
+            PreparedBatch = request.PreparedBatch,
+            OutboxEntries = aggregates.SelectMany(CreateOutboxEntryDrafts).ToList(),
+            CommittedAt = request.PersistedAt
+        });
 
         foreach (var aggregate in aggregates)
         {
@@ -201,7 +205,7 @@ public sealed class InMemoryOperatorExecutionCommandAdapter : IOperatorExecution
     /// 품질 기록 subject에 대응하는 hold 상태를 조합합니다.
     /// </summary>
     /// <param name="qualityRecordId">품질 기록 식별자입니다.</param>
-    /// <returns>hold 설정 상태 묶음입니다.</returns>
+    /// <returns>hold 설정 처리 상태입니다.</returns>
     private PlaceHoldCommandState CreateQualityHoldState(string qualityRecordId)
     {
         var qualityRecord = _store.GetQualityRecord(qualityRecordId);
@@ -214,7 +218,7 @@ public sealed class InMemoryOperatorExecutionCommandAdapter : IOperatorExecution
     /// 품질 기록 subject에 대응하는 release 상태를 조합합니다.
     /// </summary>
     /// <param name="qualityRecordId">품질 기록 식별자입니다.</param>
-    /// <returns>hold 해제 상태 묶음입니다.</returns>
+    /// <returns>hold 해제 처리 상태입니다.</returns>
     private ReleaseHoldCommandState CreateQualityReleaseState(string qualityRecordId)
     {
         var qualityRecord = _store.GetQualityRecord(qualityRecordId);
@@ -224,7 +228,7 @@ public sealed class InMemoryOperatorExecutionCommandAdapter : IOperatorExecution
     }
 
     /// <summary>
-    /// WIP와 연결된 현재 공정 실행을 조회합니다.
+    /// WIP에 연결된 현재 공정 실행을 조회합니다.
     /// </summary>
     /// <param name="wipUnit">연결 정보를 가진 WIP입니다.</param>
     /// <returns>연결된 공정 실행 aggregate입니다.</returns>
@@ -237,55 +241,68 @@ public sealed class InMemoryOperatorExecutionCommandAdapter : IOperatorExecution
     }
 
     /// <summary>
-    /// 상태 묶음에서 저장 대상 aggregate를 추출합니다.
+    /// 상태 묶음에서 특정 형식의 변경 대상을 추출합니다.
     /// </summary>
-    /// <typeparam name="TState">상태 묶음 형식입니다.</typeparam>
-    /// <param name="state">aggregate를 추출할 상태 묶음입니다.</param>
-    /// <returns>중복 제거된 aggregate 목록입니다.</returns>
-    private static IReadOnlyList<object> GetAggregates<TState>(TState state)
+    /// <typeparam name="TValue">추출할 형식입니다.</typeparam>
+    /// <param name="state">변경 대상 상태 묶음입니다.</param>
+    /// <returns>중복이 제거된 변경 대상 목록입니다.</returns>
+    private static IReadOnlyCollection<TValue> GetValues<TValue>(object state)
+        where TValue : class
     {
         ArgumentNullException.ThrowIfNull(state);
 
-        var aggregates = state switch
+        var values = state switch
         {
             StartOperationCommandState start => [start.ProductionOrder, start.OperationExecution],
-            RecordMaterialConsumptionCommandState material => [material.OperationExecution, material.MaterialLot],
+            RecordMaterialConsumptionCommandState material => [material.OperationExecution, material.WipUnit, material.MaterialLot],
             PlaceHoldCommandState placeHold => new object?[]
             {
                 placeHold.OperationExecution,
+                placeHold.WipUnit,
                 placeHold.QualityRecord,
                 placeHold.LinkedOperationExecution
             },
             ReleaseHoldCommandState releaseHold => new object?[]
             {
                 releaseHold.OperationExecution,
+                releaseHold.WipUnit,
                 releaseHold.QualityRecord,
                 releaseHold.LinkedOperationExecution
             },
-            RecordQualityResultCommandState quality => [quality.QualityRecord, quality.OperationExecution],
+            RecordQualityResultCommandState quality => [quality.QualityRecord, quality.WipUnit, quality.OperationExecution],
             CompleteOperationCommandState complete => [complete.ProductionOrder, complete.OperationExecution],
             _ => throw new InvalidOperationException($"Unsupported command state type: {state.GetType().Name}.")
         };
 
-        return aggregates
-            .Where(aggregate => aggregate is not null)
-            .Select(aggregate => aggregate!)
-            .Distinct(AggregateReferenceComparer.Instance)
+        return values
+            .OfType<TValue>()
+            .Distinct(ReferenceEqualityComparer<TValue>.Instance)
             .ToList();
     }
 
     /// <summary>
-    /// aggregate의 domain event를 outbox entry 초안으로 변환합니다.
+    /// 상태 묶음에서 outbox 대상 aggregate 목록을 추출합니다.
     /// </summary>
-    /// <param name="aggregate">outbox entry를 생성할 aggregate입니다.</param>
-    /// <returns>aggregate가 가진 domain event 초안 목록입니다.</returns>
-    private static IEnumerable<InMemoryOutboxEntryDraft> CreateOutboxEntryDrafts(object aggregate)
+    /// <param name="state">aggregate를 추출할 상태 묶음입니다.</param>
+    /// <returns>중복이 제거된 aggregate 목록입니다.</returns>
+    private static IReadOnlyList<object> GetAggregates(object state)
     {
-        var domainEvents = GetDomainEvents(aggregate);
+        return GetValues<object>(state)
+            .Where(value => value is ProductionOrder or OperationExecution or MaterialLot or QualityRecord)
+            .ToList();
+    }
+
+    /// <summary>
+    /// aggregate의 domain event를 outbox 초안으로 변환합니다.
+    /// </summary>
+    /// <param name="aggregate">outbox 초안을 만들 aggregate입니다.</param>
+    /// <returns>aggregate가 가진 domain event 초안 목록입니다.</returns>
+    private static IEnumerable<FileOperatorExecutionOutboxDraft> CreateOutboxEntryDrafts(object aggregate)
+    {
         var aggregateType = aggregate.GetType().Name;
         var aggregateId = GetAggregateId(aggregate);
 
-        return domainEvents.Select(domainEvent => new InMemoryOutboxEntryDraft(
+        return GetDomainEvents(aggregate).Select(domainEvent => new FileOperatorExecutionOutboxDraft(
             aggregateType,
             aggregateId,
             domainEvent));
@@ -309,7 +326,7 @@ public sealed class InMemoryOperatorExecutionCommandAdapter : IOperatorExecution
     }
 
     /// <summary>
-    /// aggregate의 domain event 컬렉션을 반환합니다.
+    /// aggregate가 가진 domain event 컬렉션을 반환합니다.
     /// </summary>
     /// <param name="aggregate">event를 읽을 aggregate입니다.</param>
     /// <returns>aggregate의 현재 domain event 컬렉션입니다.</returns>
@@ -351,32 +368,34 @@ public sealed class InMemoryOperatorExecutionCommandAdapter : IOperatorExecution
     }
 
     /// <summary>
-    /// aggregate reference 중복 제거용 비교기를 제공합니다.
+    /// 참조 동일성 기준 중복 제거 비교기입니다.
     /// </summary>
-    private sealed class AggregateReferenceComparer : IEqualityComparer<object>
+    /// <typeparam name="TValue">비교할 참조 형식입니다.</typeparam>
+    private sealed class ReferenceEqualityComparer<TValue> : IEqualityComparer<TValue>
+        where TValue : class
     {
         /// <summary>
         /// 전역 비교기 인스턴스입니다.
         /// </summary>
-        public static AggregateReferenceComparer Instance { get; } = new();
+        public static ReferenceEqualityComparer<TValue> Instance { get; } = new();
 
         /// <summary>
-        /// 두 aggregate reference가 동일한 인스턴스인지 비교합니다.
+        /// 두 객체가 같은 참조인지 비교합니다.
         /// </summary>
-        /// <param name="x">왼쪽 aggregate입니다.</param>
-        /// <param name="y">오른쪽 aggregate입니다.</param>
-        /// <returns>같은 인스턴스면 <see langword="true"/>입니다.</returns>
-        public new bool Equals(object? x, object? y)
+        /// <param name="x">왼쪽 객체입니다.</param>
+        /// <param name="y">오른쪽 객체입니다.</param>
+        /// <returns>같은 참조면 <see langword="true"/>입니다.</returns>
+        public bool Equals(TValue? x, TValue? y)
         {
             return ReferenceEquals(x, y);
         }
 
         /// <summary>
-        /// aggregate reference의 런타임 hash code를 반환합니다.
+        /// 참조 기반 hash code를 반환합니다.
         /// </summary>
-        /// <param name="obj">hash를 계산할 aggregate입니다.</param>
-        /// <returns>reference 기준 hash code입니다.</returns>
-        public int GetHashCode(object obj)
+        /// <param name="obj">hash를 계산할 객체입니다.</param>
+        /// <returns>참조 기반 hash code입니다.</returns>
+        public int GetHashCode(TValue obj)
         {
             return System.Runtime.CompilerServices.RuntimeHelpers.GetHashCode(obj);
         }

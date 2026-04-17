@@ -1,5 +1,4 @@
 using Mes.Application.OperatorExecution;
-using Mes.Domain.Abstractions;
 using Mes.Domain.Aggregates;
 using Mes.Domain.Common;
 using Mes.Domain.Statuses;
@@ -37,7 +36,7 @@ public sealed class QualityHoldGateCoordinatorTests
         Assert.Equal(HoldSourceTypes.QualityRecord, operation.HoldSourceType);
         Assert.Equal(qualityRecord.Id.ToString(), operation.HoldSourceId);
         Assert.False(heldSnapshot.QualityGateOpen);
-        Assert.Throws<DomainException>(() => coordinator.EnsureCompletionAllowed(operation));
+        Assert.Throws<OperatorExecutionConflictException>(() => coordinator.EnsureCompletionAllowed(operation));
 
         var releasedSnapshot = coordinator.ReleaseQualityHold(new ReleaseQualityHoldRequest(
             new QualityGateContext(qualityRecord, operation),

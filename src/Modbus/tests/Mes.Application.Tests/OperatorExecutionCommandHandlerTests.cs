@@ -153,7 +153,10 @@ public sealed class OperatorExecutionCommandHandlerTests
         var result = handler.Handle(
             new OperatorExecutionCommandHandlingRequest<CompleteOperationCommandContract, CompleteOperationCommandState>(
                 command,
-                new CompleteOperationCommandState(order, operation),
+                new CompleteOperationCommandState(
+                    order,
+                    operation,
+                    new OrderCompletionProgressSnapshot(order.Id.ToString(), 1, 0, 1)),
                 null,
                 serverReceivedAt));
 
@@ -161,9 +164,49 @@ public sealed class OperatorExecutionCommandHandlerTests
         Assert.Equal(OperationExecutionStatus.Done, operation.Status);
         Assert.Equal(8m, operation.GoodQuantity.Value);
         Assert.Equal(2m, operation.ScrapQuantity.Value);
+        Assert.Equal(ProductionOrderStatus.Completed, order.Status);
         Assert.Equal(ProductionActualsStatusValues.PendingProjection, result.PreparedBatch.Status);
         Assert.Equal($"ACT-{order.Id}-{operation.Id}", result.PreparedBatch.ActualsBatchId);
         Assert.NotNull(result.ReceiptToStore);
+    }
+
+    /// <summary>
+    /// 현재 공정 외에 미완료 sibling operation이 남아 있으면 생산오더를 부분완료로 올리는지 검증합니다.
+    /// </summary>
+    [Fact]
+    public void Handle_complete_operation_should_mark_order_partially_completed_when_siblings_remain_open()
+    {
+        var serverReceivedAt = new DateTimeOffset(2026, 4, 16, 16, 55, 0, TimeSpan.Zero);
+        var handler = CreateHandler();
+        var order = CreateProductionOrder("PO-7005");
+        var currentOperation = CreateRunningOperation(order.Id.ToString(), "OP-7005", "ST-75", 10, serverReceivedAt.AddMinutes(-10));
+        var remainingSiblingOperation = CreateQueuedOperation(order.Id, "OP-7006", 20);
+        order.AttachOperation(currentOperation.Id);
+        order.AttachOperation(remainingSiblingOperation.Id);
+        order.MarkInProgress();
+
+        var command = new CompleteOperationCommandContract(
+            CreateContext("CMD-7005", "CORR-7005", "KEY-7005", "operator-75", "ST-75"),
+            new CompleteOperationPayloadContract(
+                currentOperation.Id.ToString(),
+                new MeasuredQuantityContract(4m, "EA"),
+                new MeasuredQuantityContract(0m, "EA"),
+                CompletionModeValues.Manual));
+
+        var result = handler.Handle(
+            new OperatorExecutionCommandHandlingRequest<CompleteOperationCommandContract, CompleteOperationCommandState>(
+                command,
+                new CompleteOperationCommandState(
+                    order,
+                    currentOperation,
+                    new OrderCompletionProgressSnapshot(order.Id.ToString(), 2, 1, 1)),
+                null,
+                serverReceivedAt));
+
+        Assert.Equal(CommandReceiptDecisionKind.AcceptNew, result.Decision);
+        Assert.Equal(OperationExecutionStatus.Done, currentOperation.Status);
+        Assert.Equal(ProductionOrderStatus.PartiallyCompleted, order.Status);
+        Assert.Equal(ProductionActualsStatusValues.PendingProjection, result.PreparedBatch.Status);
     }
 
     /// <summary>

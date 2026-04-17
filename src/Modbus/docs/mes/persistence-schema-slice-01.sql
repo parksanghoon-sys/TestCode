@@ -1,5 +1,12 @@
 -- MES Persistence Schema Draft: Slice 01 Operator Execution
 -- Target: SQL Server style draft for the first operator execution pilot slice.
+-- Current executable runtime: SQLite is the active durable provider for slice 01.
+-- Current SQLite coverage: production_order, operation_execution, wip_unit, material_lot,
+-- genealogy_link, quality_record, operation_material_requirement, command_receipt,
+-- domain_outbox, and production_actuals_batch.
+-- Deferred relational targets for a later slice expansion: material_consumption and
+-- override_request. They remain in this draft so later relational providers such as
+-- PostgreSQL can align to the intended target shape without rediscovery.
 
 create table dbo.production_order
 (
@@ -76,6 +83,7 @@ create table dbo.wip_unit
     status nvarchar(32) not null,
     current_operation_execution_id nvarchar(64) null,
     hold_reason nvarchar(256) null,
+    status_before_hold nvarchar(32) null,
     constraint pk_wip_unit primary key (wip_unit_id),
     constraint fk_wip_unit_operation_execution
         foreign key (current_operation_execution_id) references dbo.operation_execution (operation_execution_id)

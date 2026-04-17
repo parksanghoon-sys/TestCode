@@ -159,6 +159,76 @@ public sealed partial class OperatorExecutionCommandHandler
     }
 
     /// <summary>
+    /// 현재 공정 완료 이후 생산오더 진행 상태를 sibling-operation 요약으로 갱신합니다.
+    /// </summary>
+    /// <param name="state">완료 처리 결과가 반영된 현재 command 상태입니다.</param>
+    private static void ApplyOrderCompletionProgression(CompleteOperationCommandState state)
+    {
+        ArgumentNullException.ThrowIfNull(state);
+
+        var progress = state.OrderCompletionProgress;
+        var expectedCompletedCount = progress.TotalOperationCount - progress.RemainingOpenOperationCountExcludingCurrent;
+
+        if (!string.Equals(progress.ProductionOrderId, state.ProductionOrder.Id.ToString(), StringComparison.Ordinal))
+        {
+            throw new DomainException("Complete operation progression requires a matching production order summary.");
+        }
+
+        if (progress.TotalOperationCount <= 0)
+        {
+            throw new DomainException("Complete operation progression requires at least one attached operation.");
+        }
+
+        if (progress.RemainingOpenOperationCountExcludingCurrent < 0
+            || progress.RemainingOpenOperationCountExcludingCurrent >= progress.TotalOperationCount)
+        {
+            throw new DomainException("Complete operation progression summary contains an invalid remaining operation count.");
+        }
+
+        if (progress.CompletedOperationCountIncludingCurrentAfterAccept != expectedCompletedCount)
+        {
+            throw new DomainException("Complete operation progression summary contains an inconsistent completed operation count.");
+        }
+
+        if (progress.RemainingOpenOperationCountExcludingCurrent == 0)
+        {
+            if (state.ProductionOrder.Status == ProductionOrderStatus.Completed)
+            {
+                return;
+            }
+
+            if (state.ProductionOrder.Status is not (ProductionOrderStatus.Dispatched or ProductionOrderStatus.InProgress or ProductionOrderStatus.PartiallyCompleted))
+            {
+                throw new DomainException("Complete operation cannot finalize an order from its current status.");
+            }
+
+            state.ProductionOrder.MarkCompleted();
+            return;
+        }
+
+        if (state.ProductionOrder.Status is ProductionOrderStatus.Completed or ProductionOrderStatus.Closed or ProductionOrderStatus.Cancelled)
+        {
+            throw new DomainException("Complete operation cannot leave remaining open operations on a completed, closed, or cancelled order.");
+        }
+
+        if (state.ProductionOrder.Status == ProductionOrderStatus.Dispatched)
+        {
+            state.ProductionOrder.MarkInProgress();
+        }
+
+        if (state.ProductionOrder.Status == ProductionOrderStatus.InProgress)
+        {
+            state.ProductionOrder.MarkPartiallyCompleted();
+            return;
+        }
+
+        if (state.ProductionOrder.Status != ProductionOrderStatus.PartiallyCompleted)
+        {
+            throw new DomainException("Complete operation cannot advance order progression from its current status.");
+        }
+    }
+
+    /// <summary>
     /// 품질 hold 적용 응답을 생성합니다.
     /// </summary>
     /// <param name="request">hold 명령 처리 입력입니다.</param>
@@ -334,18 +404,36 @@ public sealed partial class OperatorExecutionCommandHandler
 
         if (request.State.OperationExecution.ProductionOrderId != request.State.ProductionOrder.Id)
         {
-            throw new DomainException("Start operation requires a matching production order and operation execution.");
+            throw new OperatorExecutionValidationException(
+                "Start operation requires a matching production order and operation execution.",
+                new OperatorExecutionErrorContext(
+                    nameof(OperationExecution),
+                    request.State.OperationExecution.Id.ToString(),
+                    request.Command.CommandId,
+                    request.Command.IdempotencyKey));
         }
 
         if (request.State.OperationExecution.OperationSequence != request.Command.Payload.OperationSequence)
         {
-            throw new DomainException("Start operation requires a matching operation sequence.");
+            throw new OperatorExecutionValidationException(
+                "Start operation requires a matching operation sequence.",
+                new OperatorExecutionErrorContext(
+                    nameof(OperationExecution),
+                    request.State.OperationExecution.Id.ToString(),
+                    request.Command.CommandId,
+                    request.Command.IdempotencyKey));
         }
 
         if (!string.IsNullOrWhiteSpace(request.Command.Payload.QuantityUnit)
             && !string.Equals(request.State.OperationExecution.QuantityUnit, request.Command.Payload.QuantityUnit, StringComparison.OrdinalIgnoreCase))
         {
-            throw new DomainException("Start operation quantity unit must match the operation unit.");
+            throw new OperatorExecutionValidationException(
+                "Start operation quantity unit must match the operation unit.",
+                new OperatorExecutionErrorContext(
+                    nameof(OperationExecution),
+                    request.State.OperationExecution.Id.ToString(),
+                    request.Command.CommandId,
+                    request.Command.IdempotencyKey));
         }
     }
 
@@ -366,12 +454,24 @@ public sealed partial class OperatorExecutionCommandHandler
 
         if (request.State.WipUnit.CurrentOperationExecutionId != request.State.OperationExecution.Id)
         {
-            throw new DomainException("Material consumption requires the WIP unit to be linked to the active operation execution.");
+            throw new OperatorExecutionValidationException(
+                "Material consumption requires the WIP unit to be linked to the active operation execution.",
+                new OperatorExecutionErrorContext(
+                    nameof(WipUnit),
+                    request.State.WipUnit.Id.ToString(),
+                    request.Command.CommandId,
+                    request.Command.IdempotencyKey));
         }
 
         if (!string.Equals(request.State.MaterialLot.MaterialCode, request.Command.Payload.MaterialCode, StringComparison.OrdinalIgnoreCase))
         {
-            throw new DomainException("Material consumption requires a matching material code.");
+            throw new OperatorExecutionValidationException(
+                "Material consumption requires a matching material code.",
+                new OperatorExecutionErrorContext(
+                    nameof(MaterialLot),
+                    request.State.MaterialLot.Id.ToString(),
+                    request.Command.CommandId,
+                    request.Command.IdempotencyKey));
         }
     }
 
@@ -391,17 +491,35 @@ public sealed partial class OperatorExecutionCommandHandler
 
         if (request.State.QualityRecord.WipUnitId != request.State.WipUnit.Id)
         {
-            throw new DomainException("Quality result requires the quality record to match the current WIP unit.");
+            throw new OperatorExecutionValidationException(
+                "Quality result requires the quality record to match the current WIP unit.",
+                new OperatorExecutionErrorContext(
+                    nameof(QualityRecord),
+                    request.State.QualityRecord.Id.ToString(),
+                    request.Command.CommandId,
+                    request.Command.IdempotencyKey));
         }
 
         if (request.State.WipUnit.CurrentOperationExecutionId != request.State.OperationExecution.Id)
         {
-            throw new DomainException("Quality result requires the WIP unit to point to the current operation execution.");
+            throw new OperatorExecutionValidationException(
+                "Quality result requires the WIP unit to point to the current operation execution.",
+                new OperatorExecutionErrorContext(
+                    nameof(WipUnit),
+                    request.State.WipUnit.Id.ToString(),
+                    request.Command.CommandId,
+                    request.Command.IdempotencyKey));
         }
 
         if (!string.Equals(request.State.QualityRecord.InspectionCode, request.Command.Payload.InspectionCode, StringComparison.OrdinalIgnoreCase))
         {
-            throw new DomainException("Quality result requires a matching inspection code.");
+            throw new OperatorExecutionValidationException(
+                "Quality result requires a matching inspection code.",
+                new OperatorExecutionErrorContext(
+                    nameof(QualityRecord),
+                    request.State.QualityRecord.Id.ToString(),
+                    request.Command.CommandId,
+                    request.Command.IdempotencyKey));
         }
     }
 
@@ -415,12 +533,19 @@ public sealed partial class OperatorExecutionCommandHandler
         ArgumentNullException.ThrowIfNull(request);
         ArgumentNullException.ThrowIfNull(request.Command);
         ArgumentNullException.ThrowIfNull(request.State);
+        ArgumentNullException.ThrowIfNull(request.State.OrderCompletionProgress);
 
         EnsureMatchingId(request.State.OperationExecution.Id.ToString(), request.Command.Payload.OperationExecutionId, nameof(request.Command.Payload.OperationExecutionId));
 
         if (request.State.OperationExecution.ProductionOrderId != request.State.ProductionOrder.Id)
         {
-            throw new DomainException("Complete operation requires a matching production order and operation execution.");
+            throw new OperatorExecutionValidationException(
+                "Complete operation requires a matching production order and operation execution.",
+                new OperatorExecutionErrorContext(
+                    nameof(OperationExecution),
+                    request.State.OperationExecution.Id.ToString(),
+                    request.Command.CommandId,
+                    request.Command.IdempotencyKey));
         }
     }
 
@@ -435,7 +560,7 @@ public sealed partial class OperatorExecutionCommandHandler
         {
             QualityDecisionValues.Passed => QualityDecisionStatus.Passed,
             QualityDecisionValues.Failed => QualityDecisionStatus.Failed,
-            _ => throw new DomainException($"Unsupported quality decision: {decision}.")
+            _ => throw new OperatorExecutionValidationException($"Unsupported quality decision: {decision}.")
         };
     }
 
@@ -452,7 +577,7 @@ public sealed partial class OperatorExecutionCommandHandler
             {
                 CompletionModeValues.Manual => CompletionModeValues.Manual,
                 CompletionModeValues.EquipmentAssisted => CompletionModeValues.EquipmentAssisted,
-                _ => throw new DomainException($"Unsupported completion mode: {completionMode}.")
+                _ => throw new OperatorExecutionValidationException($"Unsupported completion mode: {completionMode}.")
             };
     }
 
@@ -488,7 +613,7 @@ public sealed partial class OperatorExecutionCommandHandler
             HoldSubjectTypeValues.OperationExecution => nameof(OperationExecution),
             HoldSubjectTypeValues.WipUnit => nameof(WipUnit),
             HoldSubjectTypeValues.QualityRecord => nameof(QualityRecord),
-            _ => throw new DomainException($"Unsupported hold subject type: {subjectType}.")
+            _ => throw new OperatorExecutionValidationException($"Unsupported hold subject type: {subjectType}.")
         };
     }
 
@@ -502,7 +627,8 @@ public sealed partial class OperatorExecutionCommandHandler
     {
         if (!string.Equals(actualId, NormalizeRequired(expectedId, parameterName), StringComparison.Ordinal))
         {
-            throw new DomainException($"Request identifier {parameterName} does not match the loaded aggregate state.");
+            throw new OperatorExecutionValidationException(
+                $"Request identifier {parameterName} does not match the loaded aggregate state.");
         }
     }
 
@@ -527,9 +653,15 @@ public sealed partial class OperatorExecutionCommandHandler
     /// </summary>
     /// <param name="evaluation">receipt 평가 결과입니다.</param>
     /// <returns>충돌을 설명하는 domain 예외입니다.</returns>
-    private static DomainException CreateConflictException(CommandReceiptEvaluationResult evaluation)
+    private static OperatorExecutionConflictException CreateConflictException(CommandReceiptEvaluationResult evaluation)
     {
         var storedCommandId = evaluation.StoredReceipt?.CommandId ?? "<unknown>";
-        return new DomainException($"Idempotency conflict detected against stored command {storedCommandId}.");
+        return new OperatorExecutionConflictException(
+            $"Idempotency conflict detected against stored command {storedCommandId}.",
+            new OperatorExecutionErrorContext(
+                evaluation.StoredReceipt?.AggregateType,
+                evaluation.StoredReceipt?.AggregateId,
+                evaluation.StoredReceipt?.CommandId,
+                evaluation.StoredReceipt?.Scope.IdempotencyKey));
     }
 }

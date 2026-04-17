@@ -160,7 +160,8 @@ public sealed partial class OperatorExecutionCommandHandler
             HoldSubjectTypeValues.OperationExecution => PlaceOperationHold(request),
             HoldSubjectTypeValues.WipUnit => PlaceWipHold(request),
             HoldSubjectTypeValues.QualityRecord => PlaceQualityHold(request),
-            _ => throw new DomainException($"Unsupported hold subject type: {request.Command.Payload.SubjectType}.")
+            _ => throw new OperatorExecutionValidationException(
+                $"Unsupported hold subject type: {request.Command.Payload.SubjectType}.")
         };
 
         return new HandledCommandResult<PlaceHoldResponseContract>(
@@ -197,7 +198,8 @@ public sealed partial class OperatorExecutionCommandHandler
             HoldSubjectTypeValues.OperationExecution => ReleaseOperationHold(request),
             HoldSubjectTypeValues.WipUnit => ReleaseWipHold(request),
             HoldSubjectTypeValues.QualityRecord => ReleaseQualityHold(request),
-            _ => throw new DomainException($"Unsupported hold subject type: {request.Command.Payload.SubjectType}.")
+            _ => throw new OperatorExecutionValidationException(
+                $"Unsupported hold subject type: {request.Command.Payload.SubjectType}.")
         };
 
         return new HandledCommandResult<ReleaseHoldResponseContract>(
@@ -288,6 +290,8 @@ public sealed partial class OperatorExecutionCommandHandler
         request.State.OperationExecution.Complete(
             ToMeasuredQuantity(request.Command.Payload.GoodQuantity),
             request.ServerReceivedAt);
+
+        ApplyOrderCompletionProgression(request.State);
 
         var preparedBatch = PrepareProductionActualsBatch(request.State, request.ServerReceivedAt);
         var response = new CompleteOperationResponseContract(

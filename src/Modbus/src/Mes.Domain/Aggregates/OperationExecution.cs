@@ -115,6 +115,34 @@ public sealed class OperationExecution : AggregateRoot<OperationExecutionId>
     }
 
     /// <summary>
+    /// 영속 스냅샷에서 공정 실행 aggregate를 복원합니다.
+    /// </summary>
+    /// <param name="state">복원할 공정 실행 상태입니다.</param>
+    /// <returns>도메인 이벤트가 비어 있는 공정 실행 aggregate입니다.</returns>
+    public static OperationExecution Restore(OperationExecutionRestoreState state)
+    {
+        ArgumentNullException.ThrowIfNull(state);
+
+        return new OperationExecution(
+            state.Id,
+            state.ProductionOrderId,
+            state.OperationSequence,
+            state.QuantityUnit)
+        {
+            Status = state.Status,
+            StationId = state.StationId,
+            HoldReason = NormalizeOptional(state.HoldReason),
+            StatusBeforeHold = state.StatusBeforeHold,
+            HoldSourceType = NormalizeOptional(state.HoldSourceType),
+            HoldSourceId = NormalizeOptional(state.HoldSourceId),
+            StartedAt = state.StartedAt,
+            CompletedAt = state.CompletedAt,
+            GoodQuantity = state.GoodQuantity,
+            ScrapQuantity = state.ScrapQuantity
+        };
+    }
+
+    /// <summary>
     /// 공정 실행을 작업 대기 상태로 전환합니다.
     /// </summary>
     public void QueueForExecution()
@@ -325,3 +353,36 @@ public sealed record OperationHoldReleaseRequest(
     DateTimeOffset OccurredAt,
     string? ExpectedSourceType = null,
     string? ExpectedSourceId = null);
+
+/// <summary>
+/// 공정 실행 aggregate 복원에 필요한 상태 묶음입니다.
+/// </summary>
+/// <param name="Id">공정 실행 식별자입니다.</param>
+/// <param name="ProductionOrderId">상위 생산 오더 식별자입니다.</param>
+/// <param name="OperationSequence">공정 순번입니다.</param>
+/// <param name="QuantityUnit">수량 단위입니다.</param>
+/// <param name="Status">현재 공정 실행 상태입니다.</param>
+/// <param name="StationId">현재 배정된 스테이션 식별자입니다.</param>
+/// <param name="HoldReason">현재 hold 사유입니다.</param>
+/// <param name="StatusBeforeHold">hold 직전 공정 상태입니다.</param>
+/// <param name="HoldSourceType">hold 출처 유형입니다.</param>
+/// <param name="HoldSourceId">hold 출처 식별자입니다.</param>
+/// <param name="StartedAt">시작 시각입니다.</param>
+/// <param name="CompletedAt">완료 시각입니다.</param>
+/// <param name="GoodQuantity">누적 양품 수량입니다.</param>
+/// <param name="ScrapQuantity">누적 불량 수량입니다.</param>
+public sealed record OperationExecutionRestoreState(
+    OperationExecutionId Id,
+    ProductionOrderId ProductionOrderId,
+    int OperationSequence,
+    string QuantityUnit,
+    OperationExecutionStatus Status,
+    StationId? StationId,
+    string? HoldReason,
+    OperationExecutionStatus? StatusBeforeHold,
+    string? HoldSourceType,
+    string? HoldSourceId,
+    DateTimeOffset? StartedAt,
+    DateTimeOffset? CompletedAt,
+    MeasuredQuantity GoodQuantity,
+    MeasuredQuantity ScrapQuantity);

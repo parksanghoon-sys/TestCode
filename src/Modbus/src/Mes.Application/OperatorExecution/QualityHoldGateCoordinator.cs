@@ -51,7 +51,13 @@ public sealed class QualityHoldGateCoordinator
 
         if (request.Context.QualityRecord.Status != QualityRecordStatus.Hold)
         {
-            throw new DomainException("Only a held quality record can be released.");
+            throw new OperatorExecutionConflictException(
+                "Only a held quality record can be released.",
+                new OperatorExecutionErrorContext(
+                    nameof(QualityRecord),
+                    request.Context.QualityRecord.Id.ToString(),
+                    null,
+                    null));
         }
 
         request.Context.QualityRecord.ReleaseHold(request.ReleaseNote, request.OccurredAt);
@@ -102,7 +108,13 @@ public sealed class QualityHoldGateCoordinator
     {
         if (operationExecution.Status == OperationExecutionStatus.Hold)
         {
-            throw new DomainException("Operation completion is blocked while the quality gate is on hold.");
+            throw new OperatorExecutionConflictException(
+                "Operation completion is blocked while the quality gate is on hold.",
+                new OperatorExecutionErrorContext(
+                    nameof(OperationExecution),
+                    operationExecution.Id.ToString(),
+                    null,
+                    null));
         }
     }
 
@@ -118,7 +130,7 @@ public sealed class QualityHoldGateCoordinator
 
         if (request.Policy.BlocksOperation && string.IsNullOrWhiteSpace(request.Policy.HoldReason))
         {
-            throw new DomainException("Blocking quality decisions require a hold reason.");
+            throw new OperatorExecutionValidationException("Blocking quality decisions require a hold reason.");
         }
     }
 

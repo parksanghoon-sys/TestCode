@@ -73,6 +73,31 @@ public sealed class QualityRecord : AggregateRoot<QualityRecordId>
     }
 
     /// <summary>
+    /// 영속 스냅샷에서 품질 기록 aggregate를 복원합니다.
+    /// </summary>
+    /// <param name="state">복원할 품질 기록 상태입니다.</param>
+    /// <returns>도메인 이벤트가 비어 있는 품질 기록 aggregate입니다.</returns>
+    public static QualityRecord Restore(QualityRecordRestoreState state)
+    {
+        ArgumentNullException.ThrowIfNull(state);
+
+        return new QualityRecord(
+            state.Id,
+            state.WipUnitId,
+            state.InspectionCode)
+        {
+            Status = state.Status,
+            DecisionStatus = state.DecisionStatus,
+            HoldReason = string.IsNullOrWhiteSpace(state.HoldReason)
+                ? null
+                : state.HoldReason.Trim(),
+            DecisionNote = string.IsNullOrWhiteSpace(state.DecisionNote)
+                ? null
+                : state.DecisionNote.Trim()
+        };
+    }
+
+    /// <summary>
     /// 품질 기록을 검사 진행 상태로 전환합니다.
     /// </summary>
     public void BeginInspection()
@@ -145,3 +170,22 @@ public sealed class QualityRecord : AggregateRoot<QualityRecordId>
         DomainGuard.Against(Status is not (QualityRecordStatus.Pending or QualityRecordStatus.InInspection), "Quality result can only be recorded from pending or in-inspection state.");
     }
 }
+
+/// <summary>
+/// 품질 기록 aggregate 복원에 필요한 상태 묶음입니다.
+/// </summary>
+/// <param name="Id">품질 기록 식별자입니다.</param>
+/// <param name="WipUnitId">대상 WIP 식별자입니다.</param>
+/// <param name="InspectionCode">검사 항목 코드입니다.</param>
+/// <param name="Status">현재 품질 기록 상태입니다.</param>
+/// <param name="DecisionStatus">마지막 품질 판정 결과입니다.</param>
+/// <param name="HoldReason">현재 hold 사유입니다.</param>
+/// <param name="DecisionNote">마지막 판정 메모입니다.</param>
+public sealed record QualityRecordRestoreState(
+    QualityRecordId Id,
+    WipUnitId WipUnitId,
+    string InspectionCode,
+    QualityRecordStatus Status,
+    QualityDecisionStatus? DecisionStatus,
+    string? HoldReason,
+    string? DecisionNote);

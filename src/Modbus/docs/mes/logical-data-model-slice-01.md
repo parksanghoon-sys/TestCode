@@ -18,7 +18,7 @@ This draft covers the first implementation-ready data model for the selected ope
 | `production_order` | `production_order_id`, `item_code`, `route_revision`, `status`, `released_at` | authoritative order header for execution |
 | `operation_execution` | `operation_execution_id`, `production_order_id`, `operation_sequence`, `quantity_unit`, `status`, `status_before_hold`, `station_id`, `hold_reason`, `hold_source_type`, `hold_source_id`, `started_at`, `completed_at`, `good_quantity`, `scrap_quantity` | authoritative execution unit for one routed step, including release-1 hold provenance |
 | `operation_material_requirement` | `operation_material_requirement_id`, `operation_execution_id`, `material_code`, `required_quantity_value`, `required_quantity_unit`, `source_revision_ref`, `sequence_no` | MES-side requirement snapshot that feeds `GetStationWorkQueue` without live upstream lookups |
-| `wip_unit` | `wip_unit_id`, `product_code`, `status`, `current_operation_execution_id`, `hold_reason` | current unit under execution and hold gate |
+| `wip_unit` | `wip_unit_id`, `product_code`, `status`, `current_operation_execution_id`, `hold_reason`, `status_before_hold` | current unit under execution and hold gate, including release-1 hold restoration state |
 | `material_lot` | `material_lot_id`, `material_code`, `status`, `available_quantity_value`, `available_quantity_unit`, `consumed_quantity_value`, `returned_quantity_value`, `block_reason` | line-side material truth for the slice |
 | `material_consumption` | `material_consumption_id`, `material_lot_id`, `wip_unit_id`, `operation_execution_id`, `quantity_value`, `quantity_unit`, `occurred_at` | immutable movement record behind genealogy and posting |
 | `genealogy_link` | `genealogy_link_id`, `material_lot_id`, `child_wip_unit_id`, `linked_at` | parent-child traceability link created by accepted consumption |
@@ -87,13 +87,36 @@ These records should be append-only or append-mostly:
 - `QualityRecord.ReleaseHold` currently results in a released state rather than returning to `InInspection`, so the persistence model should keep a direct released terminal state.
 - Release-1 blocking quality outcomes should persist the decision outcome separately from the current `QualityRecord` gate state so a failed inspection remains visible after the record enters `Hold`.
 - `OperationExecution` and `QualityRecord` both carry hold-related fields. A separate shared hold table is not required for the first slice as long as one active hold source per `OperationExecution` is enough.
+- `WipUnit` also needs `status_before_hold` in executable persistence because the current release-1 restore boundary preserves WIP hold restoration state directly in code.
 - `required_materials` for the station queue should come from `operation_material_requirement`, which is projected at order-release ingestion or operation-attachment time rather than from live BFF joins.
 - The current executable anchor for that projection is operation attachment. Future order-release ingestion should call the same projector so the queue source stays MES-owned.
 - `quality_gate_state` should be derived from `operation_execution.status` plus any held `quality_record` joined through `wip_unit.current_operation_execution_id`.
 - `command_receipt.request_fingerprint` should be built from canonical business fields plus actor and station context, while `command_id`, `correlation_id`, `client_timestamp`, and `revision_refs` stay outside the fingerprint so later contract compaction does not change replay semantics.
 - `review-required` remains part of the shared vocabulary, but the first operator queue should emit only `open` or `hold`.
 
-## 7. Open modeling choices after the first physical schema draft
+## 7. Current executable SQLite coverage
+
+The current slice now runs on `Sqlite` by default through `Mes.ExperienceApi`.
+That runtime intentionally implements the executable subset of the provider-neutral
+draft rather than forcing every later relational target into slice 01 immediately.
+
+| Record or table | Current SQLite status | Notes |
+|---|---|---|
+| `production_order` | implemented now | current runtime does not yet use the draft-only `closed_at` lifecycle column |
+| `operation_execution` | implemented now | includes release-1 hold provenance and quantity state |
+| `operation_material_requirement` | implemented now | authoritative MES-side source for station queue `required_materials` |
+| `wip_unit` | implemented now | runtime already persists `status_before_hold`; the provider-neutral draft now needs to keep that field visible |
+| `material_lot` | implemented now | current runtime persists executable lot state and genealogy links without a separate movement table yet |
+| `genealogy_link` | implemented now | accepted material use currently materializes traceability here |
+| `quality_record` | implemented now | runtime does not yet use the draft-only `decision_recorded_at` column |
+| `command_receipt` | implemented now | matches the current replay and conflict rules |
+| `domain_outbox` | implemented now | runtime also stores `persisted_at` as an adapter-local operational timestamp |
+| `production_actuals_batch` | implemented now | runtime does not yet use the draft-only `posted_at` lifecycle column |
+| `material_consumption` | deferred for now | accepted material use is still represented through aggregate mutation plus `genealogy_link`; the immutable movement table remains a later relational target |
+| `override_request` | deferred for now | supervisory exception approval is not yet an executable slice-01 workflow |
+| `store_metadata` | adapter-local | SQLite runtime uses this internal table for outbox sequence bookkeeping; it is not part of the provider-neutral MES draft |
+
+## 8. Open modeling choices after the first physical schema draft
 
 The first persistence draft now exists in `docs/mes/persistence-schema-slice-01.sql`.
 

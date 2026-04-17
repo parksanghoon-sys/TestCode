@@ -99,7 +99,10 @@ public sealed class OperatorExecutionApplicationServiceTests
         var order = CreateProductionOrder("PO-9003");
         var operation = CreateRunningOperation(order.Id.ToString(), "OP-9003", "ST-93", 10, serverReceivedAt.AddMinutes(-10));
         order.AttachOperation(operation.Id);
-        commandPort.CompleteOperationState = new CompleteOperationCommandState(order, operation);
+        commandPort.CompleteOperationState = new CompleteOperationCommandState(
+            order,
+            operation,
+            new OrderCompletionProgressSnapshot(order.Id.ToString(), 1, 0, 1));
 
         var command = new CompleteOperationCommandContract(
             CreateContext("CMD-9003", "CORR-9003", "KEY-9003", "operator-93", "ST-93"),
@@ -118,6 +121,7 @@ public sealed class OperatorExecutionApplicationServiceTests
         Assert.Equal(1, commandPort.SaveCount);
         var savedRequest = Assert.IsType<PersistOperatorExecutionCommandRequest<CompleteOperationCommandState>>(commandPort.LastSavedRequest);
         Assert.NotNull(savedRequest.PreparedBatch);
+        Assert.Equal(ProductionOrderStatus.Completed, savedRequest.State.ProductionOrder.Status);
         Assert.Equal(ProductionActualsStatusValues.PendingProjection, savedRequest.PreparedBatch!.Status);
     }
 

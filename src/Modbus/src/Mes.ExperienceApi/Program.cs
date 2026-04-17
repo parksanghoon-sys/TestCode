@@ -1,9 +1,11 @@
 using Mes.ExperienceApi.OperatorExecution;
 
 var builder = WebApplication.CreateSlimBuilder(args);
-builder.Services.AddOperatorExecutionReferenceServices();
+builder.Services.AddOperatorExecutionProblemDetails();
+builder.Services.AddOperatorExecutionDurableServices(builder.Configuration, builder.Environment);
 
 var app = builder.Build();
+app.UseOperatorExecutionProblemDetails();
 app.MapOperatorExecutionEndpoints();
 
 app.Run();

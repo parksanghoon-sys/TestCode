@@ -62,6 +62,28 @@ public sealed class ProductionOrder : AggregateRoot<ProductionOrderId>
     }
 
     /// <summary>
+    /// 영속 스냅샷에서 생산 오더 aggregate를 복원합니다.
+    /// </summary>
+    /// <param name="state">복원할 생산 오더 상태입니다.</param>
+    /// <returns>도메인 이벤트가 비어 있는 생산 오더 aggregate입니다.</returns>
+    public static ProductionOrder Restore(ProductionOrderRestoreState state)
+    {
+        ArgumentNullException.ThrowIfNull(state);
+
+        var order = new ProductionOrder(
+            state.Id,
+            state.ItemCode,
+            state.RouteRevision,
+            state.ReleasedAt)
+        {
+            Status = state.Status
+        };
+
+        order._operationIds.AddRange(state.OperationIds);
+        return order;
+    }
+
+    /// <summary>
     /// 생산 오더에 실행 공정을 연결합니다.
     /// </summary>
     /// <param name="operationExecutionId">연결할 공정 실행 식별자입니다.</param>
@@ -124,3 +146,20 @@ public sealed class ProductionOrder : AggregateRoot<ProductionOrderId>
         Status = ProductionOrderStatus.Cancelled;
     }
 }
+
+/// <summary>
+/// 생산 오더 aggregate 복원에 필요한 상태 묶음입니다.
+/// </summary>
+/// <param name="Id">생산 오더 식별자입니다.</param>
+/// <param name="ItemCode">생산 대상 품목 코드입니다.</param>
+/// <param name="RouteRevision">적용된 라우팅 리비전입니다.</param>
+/// <param name="Status">현재 생산 오더 상태입니다.</param>
+/// <param name="ReleasedAt">오더 릴리즈 시각입니다.</param>
+/// <param name="OperationIds">오더에 연결된 공정 실행 식별자 목록입니다.</param>
+public sealed record ProductionOrderRestoreState(
+    ProductionOrderId Id,
+    string ItemCode,
+    string RouteRevision,
+    ProductionOrderStatus Status,
+    DateTimeOffset ReleasedAt,
+    IReadOnlyCollection<OperationExecutionId> OperationIds);
