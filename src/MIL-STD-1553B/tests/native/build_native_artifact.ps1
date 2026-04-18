@@ -27,6 +27,8 @@ $coreSources = @(
     (Join-Path $repositoryRoot "src\native\Application\BusControllerService.cpp"),
     (Join-Path $repositoryRoot "src\native\Infrastructure\JsonLinesBusEventStore.cpp"),
     (Join-Path $repositoryRoot "src\native\Infrastructure\SimulatorBusAdapter.cpp"),
+    (Join-Path $repositoryRoot "src\native\Infrastructure\SimulatorVendorChannel.cpp"),
+    (Join-Path $repositoryRoot "src\native\Infrastructure\VendorSdkBusAdapter.cpp"),
     (Join-Path $repositoryRoot "src\native\Interop\NativeSessionApi.cpp")
 )
 

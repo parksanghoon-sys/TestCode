@@ -8,6 +8,7 @@
 #include <cstdint>
 #include <optional>
 #include <string>
+#include <utility>
 #include <vector>
 
 namespace MilStd1553::Domain
@@ -164,6 +165,16 @@ struct HealthSnapshot final
     std::uint32_t retryCount{0};
 
     /// <summary>
+    /// 연속 timeout 수입니다.
+    /// </summary>
+    std::uint32_t consecutiveTimeoutCount{0};
+
+    /// <summary>
+    /// 자동 failover 누적 수입니다.
+    /// </summary>
+    std::uint32_t autoFailoverCount{0};
+
+    /// <summary>
     /// degraded 상태 여부입니다.
     /// </summary>
     bool degraded{false};
@@ -183,6 +194,7 @@ struct HealthSnapshot final
     void RecordTimeout() noexcept
     {
         ++timeoutCount;
+        ++consecutiveTimeoutCount;
         degraded = true;
     }
 
@@ -192,6 +204,22 @@ struct HealthSnapshot final
     void RecordRetry() noexcept
     {
         ++retryCount;
+    }
+
+    /// <summary>
+    /// line fault와 같이 즉시 degraded로 보아야 하는 상태를 반영합니다.
+    /// </summary>
+    void MarkDegraded() noexcept
+    {
+        degraded = true;
+    }
+
+    /// <summary>
+    /// 성공적인 전송 이후 연속 timeout 수를 초기화합니다.
+    /// </summary>
+    void RecordSuccessfulTransfer() noexcept
+    {
+        consecutiveTimeoutCount = 0;
     }
 
     /// <summary>
@@ -207,6 +235,18 @@ struct HealthSnapshot final
 
         standbyBus = activeBus;
         activeBus = nextBus;
+    }
+
+    /// <summary>
+    /// 자동 failover를 반영합니다.
+    /// </summary>
+    /// <param name="nextBus">전환할 대상 버스입니다.</param>
+    void RecordAutomaticFailover(const BusLine nextBus) noexcept
+    {
+        ++autoFailoverCount;
+        SwitchActiveBus(nextBus);
+        consecutiveTimeoutCount = 0;
+        degraded = true;
     }
 };
 
@@ -244,14 +284,17 @@ struct TelemetryEvent final
     /// 메시지 프레임 이벤트를 생성합니다.
     /// </summary>
     /// <param name="frame">기록할 프레임입니다.</param>
+    /// <param name="description">이벤트 설명입니다.</param>
     /// <returns>생성된 메시지 이벤트입니다.</returns>
-    static TelemetryEvent CreateMessageEvent(const MessageFrame& frame)
+    static TelemetryEvent CreateMessageEvent(
+        const MessageFrame& frame,
+        std::string description = "메시지 프레임")
     {
         TelemetryEvent event;
         event.type = TelemetryEventType::MessageFrame;
         event.timeTag = frame.timeTag;
         event.activeBus = frame.busLine;
-        event.description = "메시지 프레임";
+        event.description = std::move(description);
         event.messageFrame = frame;
         return event;
     }
@@ -271,6 +314,26 @@ struct TelemetryEvent final
         event.timeTag = timeTag;
         event.activeBus = nextBus;
         event.description = nextBus == BusLine::A ? "활성 버스를 A로 전환" : "활성 버스를 B로 전환";
+        return event;
+    }
+
+    /// <summary>
+    /// 자동 failover 이벤트를 생성합니다.
+    /// </summary>
+    /// <param name="nextBus">전환된 활성 버스입니다.</param>
+    /// <param name="description">자동 failover 사유 설명입니다.</param>
+    /// <param name="timeTag">이벤트 시각입니다.</param>
+    /// <returns>생성된 자동 failover 이벤트입니다.</returns>
+    static TelemetryEvent CreateAutoFailoverEvent(
+        const BusLine nextBus,
+        std::string description,
+        const std::chrono::microseconds timeTag)
+    {
+        TelemetryEvent event;
+        event.type = TelemetryEventType::AutoFailover;
+        event.timeTag = timeTag;
+        event.activeBus = nextBus;
+        event.description = std::move(description);
         return event;
     }
 };

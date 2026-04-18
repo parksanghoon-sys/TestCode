@@ -16,6 +16,11 @@ public enum TelemetryEventType
     /// 수동 버스 전환 이벤트입니다.
     /// </summary>
     BusSwitch = 1,
+
+    /// <summary>
+    /// 자동 failover 이벤트입니다.
+    /// </summary>
+    AutoFailover = 2,
 }
 
 /// <summary>

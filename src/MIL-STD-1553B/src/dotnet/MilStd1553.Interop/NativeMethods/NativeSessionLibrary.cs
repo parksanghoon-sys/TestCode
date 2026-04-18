@@ -44,14 +44,20 @@ internal sealed class NativeSessionLibrary
     private readonly SwitchBusDelegate switchBus;
     private readonly GetHealthSnapshotDelegate getHealthSnapshot;
     private readonly PollTelemetryDelegate pollTelemetry;
+    private readonly INativeLibraryPlatform platform;
+    private readonly nint libraryHandle;
 
     private NativeSessionLibrary(
+        INativeLibraryPlatform platform,
+        nint libraryHandle,
         OpenSessionDelegate openSession,
         StopSessionDelegate stopSession,
         SwitchBusDelegate switchBus,
         GetHealthSnapshotDelegate getHealthSnapshot,
         PollTelemetryDelegate pollTelemetry)
     {
+        this.platform = platform;
+        this.libraryHandle = libraryHandle;
         this.openSession = openSession;
         this.stopSession = stopSession;
         this.switchBus = switchBus;
@@ -65,12 +71,24 @@ internal sealed class NativeSessionLibrary
     /// <returns>적재된 네이티브 세션 라이브러리입니다.</returns>
     internal static NativeSessionLibrary LoadDefault()
     {
-        var libraryPath = NativeLibraryPathResolver.GetExpectedLibraryPath();
+        return Load(
+            NativeLibraryPathResolver.GetExpectedLibraryPath(),
+            RuntimeNativeLibraryPlatform.Instance);
+    }
+
+    /// <summary>
+    /// 지정한 경로와 플랫폼 구현으로 네이티브 세션 라이브러리를 적재합니다.
+    /// </summary>
+    /// <param name="libraryPath">적재할 라이브러리 경로입니다.</param>
+    /// <param name="platform">네이티브 라이브러리 적재 플랫폼입니다.</param>
+    /// <returns>적재된 네이티브 세션 라이브러리입니다.</returns>
+    internal static NativeSessionLibrary Load(string libraryPath, INativeLibraryPlatform platform)
+    {
         nint libraryHandle;
 
         try
         {
-            libraryHandle = NativeLibrary.Load(libraryPath);
+            libraryHandle = platform.Load(libraryPath);
         }
         catch (DllNotFoundException exception)
         {
@@ -94,15 +112,17 @@ internal sealed class NativeSessionLibrary
         try
         {
             return new NativeSessionLibrary(
-                GetExport<OpenSessionDelegate>(libraryHandle, "MilStd1553_OpenSession", "OpenSession", libraryPath),
-                GetExport<StopSessionDelegate>(libraryHandle, "MilStd1553_StopSession", "StopSession", libraryPath),
-                GetExport<SwitchBusDelegate>(libraryHandle, "MilStd1553_SwitchBus", "SwitchBus", libraryPath),
-                GetExport<GetHealthSnapshotDelegate>(libraryHandle, "MilStd1553_GetHealthSnapshot", "GetHealthSnapshot", libraryPath),
-                GetExport<PollTelemetryDelegate>(libraryHandle, "MilStd1553_PollTelemetry", "PollTelemetry", libraryPath));
+                platform,
+                libraryHandle,
+                GetExport<OpenSessionDelegate>(platform, libraryHandle, "MilStd1553_OpenSession", "OpenSession", libraryPath),
+                GetExport<StopSessionDelegate>(platform, libraryHandle, "MilStd1553_StopSession", "StopSession", libraryPath),
+                GetExport<SwitchBusDelegate>(platform, libraryHandle, "MilStd1553_SwitchBus", "SwitchBus", libraryPath),
+                GetExport<GetHealthSnapshotDelegate>(platform, libraryHandle, "MilStd1553_GetHealthSnapshot", "GetHealthSnapshot", libraryPath),
+                GetExport<PollTelemetryDelegate>(platform, libraryHandle, "MilStd1553_PollTelemetry", "PollTelemetry", libraryPath));
         }
         catch
         {
-            NativeLibrary.Free(libraryHandle);
+            platform.Free(libraryHandle);
             throw;
         }
     }
@@ -177,7 +197,16 @@ internal sealed class NativeSessionLibrary
             out requiredTelemetryJsonCapacity);
     }
 
+    /// <summary>
+    /// 테스트 전용 정리 경로로 적재된 라이브러리 핸들을 해제합니다.
+    /// </summary>
+    internal void ReleaseForTestsOnly()
+    {
+        platform.Free(libraryHandle);
+    }
+
     private static TDelegate GetExport<TDelegate>(
+        INativeLibraryPlatform platform,
         nint libraryHandle,
         string exportName,
         string operationName,
@@ -186,7 +215,7 @@ internal sealed class NativeSessionLibrary
     {
         try
         {
-            var exportHandle = NativeLibrary.GetExport(libraryHandle, exportName);
+            var exportHandle = platform.GetExport(libraryHandle, exportName);
             return Marshal.GetDelegateForFunctionPointer<TDelegate>(exportHandle);
         }
         catch (EntryPointNotFoundException exception)

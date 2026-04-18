@@ -16,6 +16,7 @@
   <ItemGroup>
     <ProjectReference Include="..\\..\\..\\src\\dotnet\\MilStd1553.Host\\MilStd1553.Host.csproj" />
     <ProjectReference Include="..\\..\\..\\src\\dotnet\\MilStd1553.Interop\\MilStd1553.Interop.csproj" />
+    <ProjectReference Include="..\\..\\..\\src\\dotnet\\MilStd1553.Cli\\MilStd1553.Cli.csproj" AdditionalProperties="MilStd1553BundleNativeOnBuild=false" />
   </ItemGroup>
 
   <ItemGroup>

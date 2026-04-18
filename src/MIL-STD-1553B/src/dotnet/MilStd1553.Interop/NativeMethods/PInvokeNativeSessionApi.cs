@@ -7,13 +7,16 @@ namespace MilStd1553.Interop.NativeMethods;
 /// </summary>
 internal sealed class PInvokeNativeSessionApi : INativeSessionApi
 {
+    private static readonly NativeSessionLibraryCache SharedLibraryCache =
+        new(RuntimeNativeLibraryPlatform.Instance);
+
     private readonly Lazy<NativeSessionLibrary> sessionLibrary;
 
     /// <summary>
     /// 기본 런타임 경로에서 네이티브 세션 API를 호출하는 구현을 생성합니다.
     /// </summary>
     public PInvokeNativeSessionApi()
-        : this(() => NativeSessionLibrary.LoadDefault())
+        : this(() => SharedLibraryCache.Load(NativeLibraryPathResolver.GetExpectedLibraryPath()))
     {
     }
 

@@ -1,0 +1,14 @@
+{
+  "name": "MockCliSmoke",
+  "channelId": 0,
+  "activeBus": "A",
+  "bcSchedules": [
+    {
+      "name": "PollRt1Tx",
+      "periodMs": 20,
+      "rtAddress": 1,
+      "subAddress": 2,
+      "direction": "Transmit"
+    }
+  ]
+}

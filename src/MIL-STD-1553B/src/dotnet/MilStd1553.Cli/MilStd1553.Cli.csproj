@@ -1,0 +1,48 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <MilStd1553RepositoryRoot>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\..\..'))</MilStd1553RepositoryRoot>
+    <MilStd1553NativeBuildScriptPath>$([System.IO.Path]::Combine('$(MilStd1553RepositoryRoot)', 'tests', 'native', 'build_native_artifact.ps1'))</MilStd1553NativeBuildScriptPath>
+    <MilStd1553NativeArtifactPath>$([System.IO.Path]::Combine('$(MilStd1553RepositoryRoot)', 'tests', 'native', 'artifacts', 'MilStd1553.Native.dll'))</MilStd1553NativeArtifactPath>
+    <MilStd1553NativeRuntimeRelativePath>runtimes\win-x64\native\MilStd1553.Native.dll</MilStd1553NativeRuntimeRelativePath>
+    <MilStd1553BundleNativeOnBuild Condition="'$(MilStd1553BundleNativeOnBuild)' == ''">true</MilStd1553BundleNativeOnBuild>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\\MilStd1553.Host\\MilStd1553.Host.csproj" />
+    <ProjectReference Include="..\\MilStd1553.Interop\\MilStd1553.Interop.csproj" AdditionalProperties="MilStd1553BundleNativeOnBuild=false" />
+  </ItemGroup>
+
+  <Target
+    Name="BuildMilStd1553NativeRuntimeArtifact"
+    Condition="'$(MilStd1553BundleNativeOnBuild)' == 'true' and '$(DesignTimeBuild)' != 'true'">
+    <Exec Command="powershell -NoProfile -ExecutionPolicy Bypass -File &quot;$(MilStd1553NativeBuildScriptPath)&quot; -ArtifactType NativeDll" />
+  </Target>
+
+  <Target
+    Name="CopyMilStd1553NativeRuntimeToBuildOutput"
+    AfterTargets="Build"
+    DependsOnTargets="BuildMilStd1553NativeRuntimeArtifact"
+    Condition="'$(MilStd1553BundleNativeOnBuild)' == 'true' and '$(DesignTimeBuild)' != 'true'">
+    <MakeDir Directories="$(TargetDir)runtimes\win-x64\native" />
+    <Copy
+      SourceFiles="$(MilStd1553NativeArtifactPath)"
+      DestinationFiles="$(TargetDir)$(MilStd1553NativeRuntimeRelativePath)"
+      SkipUnchangedFiles="true" />
+  </Target>
+
+  <Target
+    Name="CopyMilStd1553NativeRuntimeToPublishOutput"
+    AfterTargets="Publish"
+    DependsOnTargets="BuildMilStd1553NativeRuntimeArtifact"
+    Condition="'$(MilStd1553BundleNativeOnBuild)' == 'true' and '$(DesignTimeBuild)' != 'true'">
+    <MakeDir Directories="$(PublishDir)runtimes\win-x64\native" />
+    <Copy
+      SourceFiles="$(MilStd1553NativeArtifactPath)"
+      DestinationFiles="$(PublishDir)$(MilStd1553NativeRuntimeRelativePath)"
+      SkipUnchangedFiles="true" />
+  </Target>
+</Project>

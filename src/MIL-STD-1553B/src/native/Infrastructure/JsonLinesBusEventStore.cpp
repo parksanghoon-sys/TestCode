@@ -114,6 +114,8 @@ std::string JsonLinesBusEventStore::SerializeEventType(const Domain::TelemetryEv
         return "MessageFrame";
     case Domain::TelemetryEventType::BusSwitch:
         return "BusSwitch";
+    case Domain::TelemetryEventType::AutoFailover:
+        return "AutoFailover";
     default:
         return "Unknown";
     }

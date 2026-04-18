@@ -28,15 +28,21 @@ public sealed class NativeHarnessClientEndToEndTests
         Assert.StartsWith("session-", sessionStart.SessionHandle.Value, StringComparison.Ordinal);
         Assert.Equal(BusLine.B, sessionStart.InitialHealth.ActiveBus);
 
+        var initialEvents = await client.PollTelemetryAsync(sessionStart.SessionHandle, CancellationToken.None);
+        var messageEvent = Assert.Single(initialEvents);
+        Assert.Equal(TelemetryEventType.MessageFrame, messageEvent.Type);
+        Assert.NotNull(messageEvent.MessageFrame);
+        Assert.Equal(BusLine.B, messageEvent.ActiveBus);
+
         await client.SwitchBusAsync(sessionStart.SessionHandle, BusLine.A, CancellationToken.None);
 
         var health = await client.GetHealthSnapshotAsync(sessionStart.SessionHandle, CancellationToken.None);
         Assert.Equal(BusLine.A, health.ActiveBus);
 
         var events = await client.PollTelemetryAsync(sessionStart.SessionHandle, CancellationToken.None);
-        Assert.Single(events);
-        Assert.Equal(TelemetryEventType.BusSwitch, events[0].Type);
-        Assert.Equal(BusLine.A, events[0].ActiveBus);
+        var busSwitchEvent = Assert.Single(events);
+        Assert.Equal(TelemetryEventType.BusSwitch, busSwitchEvent.Type);
+        Assert.Equal(BusLine.A, busSwitchEvent.ActiveBus);
 
         var emptyEvents = await client.PollTelemetryAsync(sessionStart.SessionHandle, CancellationToken.None);
         Assert.Empty(emptyEvents);
@@ -46,6 +52,29 @@ public sealed class NativeHarnessClientEndToEndTests
         var exception = await Assert.ThrowsAsync<NativeInteropException>(() =>
             client.GetHealthSnapshotAsync(sessionStart.SessionHandle, CancellationToken.None));
         Assert.Equal(2, exception.StatusCode);
+    }
+
+    /// <summary>
+    /// BC -> RT receive 계열 telemetry는 실제 payload 데이터 워드를 유지해야 합니다.
+    /// </summary>
+    [Fact]
+    public async Task NativeHarnessClient_WithReceiveScenario_PreservesPayloadInTelemetry()
+    {
+        using var runtimeRootScope = NativeRuntimeRootScope.Create();
+        CopyBuiltArtifactToRuntimeLayout("NativeDll", runtimeRootScope.RuntimeRootPath);
+
+        var client = new NativeHarnessClient();
+        var sessionStart = await client.OpenSessionAsync(CreateReceiveScenario(), CancellationToken.None);
+
+        var initialEvents = await client.PollTelemetryAsync(sessionStart.SessionHandle, CancellationToken.None);
+        var messageEvent = Assert.Single(initialEvents);
+        var messageFrame = Assert.IsType<TelemetryMessageFrame>(messageEvent.MessageFrame);
+
+        Assert.Equal(TelemetryEventType.MessageFrame, messageEvent.Type);
+        Assert.Equal(BusLine.A, messageEvent.ActiveBus);
+        Assert.Equal((ushort)0x0102, Assert.Single(messageFrame.DataWords));
+
+        await client.StopSessionAsync(sessionStart.SessionHandle, CancellationToken.None);
     }
 
     /// <summary>
@@ -116,7 +145,23 @@ public sealed class NativeHarnessClientEndToEndTests
             BusLine.B,
             new ReadOnlyCollection<ScenarioScheduleDefinition>(
             [
-                new ScenarioScheduleDefinition("PollRt1", 20, 1, 2, TransferDirection.Receive),
+                new ScenarioScheduleDefinition("PollRt1", 20, 1, 2, TransferDirection.Transmit),
+            ]));
+    }
+
+    /// <summary>
+    /// BC -> RT receive payload 검증용 시나리오를 생성합니다.
+    /// </summary>
+    /// <returns>receive payload 검증용 시나리오입니다.</returns>
+    private static ScenarioDefinition CreateReceiveScenario()
+    {
+        return new ScenarioDefinition(
+            "ReceiveInterop",
+            0,
+            BusLine.A,
+            new ReadOnlyCollection<ScenarioScheduleDefinition>(
+            [
+                new ScenarioScheduleDefinition("PushRt1", 20, 1, 2, TransferDirection.Receive),
             ]));
     }
 

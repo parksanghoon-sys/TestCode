@@ -2,7 +2,9 @@
 
 #include "Application/Contracts.h"
 
+#include <array>
 #include <chrono>
+#include <optional>
 #include <unordered_map>
 
 namespace MilStd1553::Infrastructure
@@ -48,6 +50,15 @@ public:
         Domain::DataWord bitWord);
 
     /// <summary>
+    /// RT vector word를 설정합니다.
+    /// </summary>
+    /// <param name="rtAddress">대상 RT 주소입니다.</param>
+    /// <param name="vectorWord">설정할 vector word입니다.</param>
+    void SetVectorWord(
+        std::uint8_t rtAddress,
+        Domain::DataWord vectorWord);
+
+    /// <summary>
     /// 현재 저장된 RT 데이터 버퍼를 반환합니다.
     /// </summary>
     /// <param name="rtAddress">대상 RT 주소입니다.</param>
@@ -56,6 +67,23 @@ public:
     [[nodiscard]] std::vector<Domain::DataWord> GetSubAddressData(
         std::uint8_t rtAddress,
         std::uint8_t subAddress) const;
+
+    /// <summary>
+    /// 마지막 synchronize data word를 반환합니다.
+    /// </summary>
+    /// <param name="rtAddress">대상 RT 주소입니다.</param>
+    /// <returns>마지막 synchronize data word입니다.</returns>
+    [[nodiscard]] std::optional<Domain::DataWord> GetLastSynchronizationWord(
+        std::uint8_t rtAddress) const;
+
+    /// <summary>
+    /// 지정한 버스 라인에 line fault를 설정합니다.
+    /// </summary>
+    /// <param name="busLine">설정할 버스 라인입니다.</param>
+    /// <param name="enabled">활성화 여부입니다.</param>
+    void SetLineFault(
+        Domain::BusLine busLine,
+        bool enabled);
 
     /// <summary>
     /// 전송 요청을 수행합니다.
@@ -79,6 +107,10 @@ private:
         Domain::StatusWord statusWord{ 0, false, false, false, false, false, false, false };
         std::unordered_map<std::uint8_t, std::vector<Domain::DataWord>> subAddressData;
         Domain::DataWord bitWord{ 0 };
+        Domain::DataWord vectorWord{ 0 };
+        std::optional<Domain::DataWord> lastSynchronizationWord;
+        std::optional<std::uint16_t> lastAcceptedCommandWordRaw;
+        bool terminalFlagInhibited{ false };
     };
 
     /// <summary>
@@ -123,7 +155,33 @@ private:
     /// <returns>전송 결과입니다.</returns>
     [[nodiscard]] Domain::TransferResult HandleModeCommand(
         const Domain::TransferRequest& request,
+        RemoteTerminalState& terminal);
+
+    /// <summary>
+    /// 현재 RT 상태에 inhibit 규칙을 반영한 상태 워드를 반환합니다.
+    /// </summary>
+    /// <param name="terminal">대상 RT 상태입니다.</param>
+    /// <returns>외부로 노출할 상태 워드입니다.</returns>
+    [[nodiscard]] static Domain::StatusWord BuildEffectiveStatusWord(
         const RemoteTerminalState& terminal);
+
+    /// <summary>
+    /// 성공적으로 수락한 마지막 커맨드 raw 값을 기록합니다.
+    /// </summary>
+    /// <param name="terminal">대상 RT 상태입니다.</param>
+    /// <param name="commandWord">기록할 커맨드 워드입니다.</param>
+    static void RecordAcceptedCommand(
+        RemoteTerminalState& terminal,
+        const Domain::CommandWord& commandWord);
+
+    /// <summary>
+    /// RT 상태를 기본값으로 재설정합니다.
+    /// </summary>
+    /// <param name="rtAddress">대상 RT 주소입니다.</param>
+    /// <param name="terminal">재설정할 RT 상태입니다.</param>
+    static void ResetTerminal(
+        std::uint8_t rtAddress,
+        RemoteTerminalState& terminal);
 
     /// <summary>
     /// 다음 time-tag를 반환합니다.
@@ -132,6 +190,7 @@ private:
     [[nodiscard]] std::chrono::microseconds NextTimeTag() noexcept;
 
     std::unordered_map<std::uint8_t, RemoteTerminalState> terminals_;
+    std::array<bool, 2> lineFaults_{ false, false };
     Domain::BusLine selectedBus_{ Domain::BusLine::A };
     std::chrono::microseconds nextTimeTag_{ 100 };
 };

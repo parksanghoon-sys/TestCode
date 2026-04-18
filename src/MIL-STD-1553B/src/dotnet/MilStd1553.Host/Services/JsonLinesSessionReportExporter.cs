@@ -33,6 +33,8 @@ public sealed class JsonLinesSessionReportExporter : IReportExporter
             eventRecord.Type == TelemetryEventType.MessageFrame);
         var busSwitchEvents = report.TelemetryEvents.Count(eventRecord =>
             eventRecord.Type == TelemetryEventType.BusSwitch);
+        var autoFailoverEvents = report.TelemetryEvents.Count(eventRecord =>
+            eventRecord.Type == TelemetryEventType.AutoFailover);
 
         return new
         {
@@ -49,6 +51,7 @@ public sealed class JsonLinesSessionReportExporter : IReportExporter
             totalEvents = report.TelemetryEvents.Count,
             messageFrameEvents,
             busSwitchEvents,
+            autoFailoverEvents,
         };
     }
 
