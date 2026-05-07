@@ -1,5 +1,4 @@
 ﻿using ReadableRingChainSample.Abstractions;
-using System.Runtime.InteropServices;
 
 namespace ReadableRingChainSample.Core;
 

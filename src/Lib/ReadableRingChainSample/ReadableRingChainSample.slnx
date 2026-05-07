@@ -1,4 +1,5 @@
 <Solution>
+  <Project Path="CleanProtocolSample/CleanProtocolSample.csproj" Id="ee3daa7e-061b-42e6-b477-a1440791c67c" />
   <Project Path="ReadableRingChainSample/ReadableRingChainSample.csproj" />
   <Project Path="ReadableRingChainSampleTest/ReadableRingChainSampleTest.csproj" />
 </Solution>
