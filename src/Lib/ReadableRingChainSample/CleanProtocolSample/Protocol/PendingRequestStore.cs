@@ -9,11 +9,11 @@ internal sealed class PendingRequestStore
     /// <summary>
     /// 결정되지 않은 처리 요청 ex)대기중, 처리중, 보류중
     /// </summary>
-    private readonly ConcurrentDictionary<Guid, TaskCompletionSource<ProtocolMessage>> _pending = new();
+    private readonly ConcurrentDictionary<int, TaskCompletionSource<ProtocolMessage>> _pending = new();
     /// <summary>
     /// pending 요청 등록
     /// </summary>
-    public Task<ProtocolMessage> Register(Guid correlationId)
+    public Task<ProtocolMessage> Register(int correlationId)
     {
         var source = new TaskCompletionSource<ProtocolMessage>(TaskCreationOptions.RunContinuationsAsynchronously);
 

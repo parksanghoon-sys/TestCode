@@ -61,7 +61,7 @@ internal class FakeTransport : ITransport
                         "TOKEN:ABC123"));
 
                     _responses.Enqueue(new ProtocolMessage(
-                        Guid.NewGuid(),
+                        1,
                         EMessageKind.Event,
                         EResponseStatus.None,
                         "READY",

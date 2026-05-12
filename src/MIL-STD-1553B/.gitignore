@@ -7,3 +7,5 @@ tests/native/artifacts/
 *.exe
 **/bin/
 **/obj/
+!src/native/*.vcxproj
+!tests/native/*.vcxproj

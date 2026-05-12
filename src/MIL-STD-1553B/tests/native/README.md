@@ -8,6 +8,14 @@
 powershell -NoProfile -ExecutionPolicy Bypass -File .\tests\native\run_tests.ps1
 ```
 
+## Visual Studio 솔루션 빌드
+
+`MIL-STD-1553B.sln`에는 `MilStd1553.Native`, `MilStd1553.Native.Tests` 프로젝트가 포함되어 있으며, 솔루션에서는 `x64` 구성을 사용합니다.
+
+```powershell
+& "C:\Program Files\Microsoft Visual Studio\2022\Professional\MSBuild\Current\Bin\MSBuild.exe" .\MIL-STD-1553B.sln /t:Build /p:Configuration=Debug /p:Platform=x64
+```
+
 ## 네이티브 DLL만 빌드할 때
 
 ```powershell

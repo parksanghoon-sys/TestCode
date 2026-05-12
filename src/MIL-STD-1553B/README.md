@@ -30,6 +30,12 @@ dotnet test .\tests\dotnet\MilStd1553.Host.Tests\MilStd1553.Host.Tests.csproj
 powershell -NoProfile -ExecutionPolicy Bypass -File .\tests\native\run_tests.ps1
 ```
 
+Visual Studio 솔루션에서 C++와 .NET을 함께 빌드하려면 `x64` 구성을 사용합니다.
+
+```powershell
+& "C:\Program Files\Microsoft Visual Studio\2022\Professional\MSBuild\Current\Bin\MSBuild.exe" .\MIL-STD-1553B.sln /t:Build /p:Configuration=Debug /p:Platform=x64
+```
+
 ## mock example 바로 실행
 
 실장비 없이 simulator / mock 경로로 실제 세션을 돌려보려면 아래 example 스크립트를 실행합니다.

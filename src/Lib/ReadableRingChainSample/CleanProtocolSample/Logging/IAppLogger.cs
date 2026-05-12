@@ -3,7 +3,7 @@
 /// <summary>
 /// Log 인터페이스
 /// </summary>
-public interface IAppLogger
+internal interface IAppLogger
 {
     void Info(string message);
     void Warn(string message);

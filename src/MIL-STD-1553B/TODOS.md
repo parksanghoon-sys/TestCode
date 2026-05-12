@@ -66,3 +66,4 @@
 - [x] 2026-04-18 RT ↔ RT 목적지 단계 최소 `40us` gap 보정과 destination time-tag 검증을 추가했다.
 - [x] 2026-04-18 남은 확장 설계를 `docs/design/2026-04-18_잔여확장설계_설계검토.md`로 정리하고, 실장비 binding / Mode Code tranche / schema v1 / WPF 방향을 문서와 상태 파일에 반영했다.
 - [x] 2026-04-18 1차 Mode Code 묶음 4종(`Reset Remote Terminal`, `Transmit Last Command Word`, `Inhibit Terminal Flag`, `Override Inhibit Terminal Flag`)을 simulator adapter와 네이티브 테스트에 반영했다.
+- [x] 2026-04-20 `MIL-STD-1553B.sln`�� `MilStd1553.Native`, `MilStd1553.Native.Tests` C++ ������Ʈ�� �߰��ϰ� x64 �ַ�� ���� ��θ� �����ߴ�.

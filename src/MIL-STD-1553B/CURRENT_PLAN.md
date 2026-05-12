@@ -52,3 +52,9 @@
 ## ë¯¸í™•ì • ì‚¬í•­
 
 - ì‹¤ì œë¡œ ì‚¬ìš©í•  ë²¤ë” ì¹´ë“œì™€ SDK ì¢…ë¥˜
+
+## 2026-04-20 update
+
+- `MIL-STD-1553B.sln`¿¡ `MilStd1553.Native`, `MilStd1553.Native.Tests` C++ ÇÁ·ÎÁ§Æ®¸¦ Ãß°¡Çß´Ù.
+- ¼Ö·ç¼Ç ±â¹İ ³×ÀÌÆ¼ºê ºôµå °æ·Î´Â `C:\Program Files\Microsoft Visual Studio\2022\Professional\MSBuild\Current\Bin\MSBuild.exe .\MIL-STD-1553B.sln /t:Build /p:Configuration=Debug /p:Platform=x64`·Î °ËÁõÇß´Ù.
+- ±âÁ¸ È¸±Í °æ·Î `powershell -NoProfile -ExecutionPolicy Bypass -File .\tests\native\run_tests.ps1`´Â °è¼Ó 34°Ç Åë°úÇß´Ù.

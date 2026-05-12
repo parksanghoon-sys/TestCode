@@ -258,3 +258,26 @@
 - `dotnet build-server shutdown`
 - `dotnet test tests/dotnet/MilStd1553.Host.Tests/MilStd1553.Host.Tests.csproj --no-build --filter "FullyQualifiedName~NativeHarnessClientEndToEndTests" -v normal` ì‹¤í–‰ ê²°ê³¼ ì˜í–¥ ë²”ìœ„ .NET 5ê±´ í†µê³¼
 - `dotnet test tests/dotnet/MilStd1553.Host.Tests/MilStd1553.Host.Tests.csproj` ì „ì²´ ìŠ¤ìœ„íŠ¸ëŠ” í˜„ì¬ í™˜ê²½ì—ì„œ ì¥ì‹œê°„ ì‹¤í–‰ìœ¼ë¡œ íƒ€ì„ì•„ì›ƒì´ ë°œìƒí•´ ì´ë²ˆ ì‚¬ì´í´ì—ì„œëŠ” ì˜í–¥ ë²”ìœ„ smokeë§Œ ì±„íƒí–ˆë‹¤.
+
+## 2026-04-20 (solution native project integration)
+
+### ¼³°è
+
+- `docs/design/2026-04-20_¼Ö·ç¼Ç-native-project-Ãß°¡_¼³°è°ËÅä.md`¸¦ Ãß°¡ÇÏ°í ¼Ö·ç¼Ç¿¡ native project¸¦ ÆíÀÔÇÏ´Â ÃÖ¼Ò º¯°æ ¹üÀ§¸¦ È®Á¤Çß´Ù.
+
+### ±¸Çö
+
+- `src/native/MilStd1553.Native.vcxproj`, `tests/native/MilStd1553.Native.Tests.vcxproj`¸¦ Ãß°¡Çß´Ù.
+- `MIL-STD-1553B.sln`¿¡ `src/native`, `tests/native` Æú´õ¿Í `Debug|x64`, `Release|x64` ¼Ö·ç¼Ç ±¸¼ºÀ» Ãß°¡Çß´Ù.
+- VC++ project¿Í ±âÁ¸ ½ºÅ©¸³Æ® °£ Â÷ÀÌ¸¦ ÁÙÀÌ±â À§ÇØ `_SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING` ÀüÃ³¸®±â Á¤ÀÇ¸¦ ¹İ¿µÇß´Ù.
+
+### Å×½ºÆ® ¹× ¹®¼­
+
+- `docs/test/2026-04-20_¼Ö·ç¼Ç-native-project-Ãß°¡_Å×½ºÆ®°èÈ¹.md`
+- `docs/test/2026-04-20_¼Ö·ç¼Ç-native-project-Ãß°¡_Å×½ºÆ®°á°ú.md`
+- `README.md`, `tests/native/README.md`, `CURRENT_PLAN.md`, `TODOS.md`¸¦ ÇöÀç »óÅÂ·Î °»½ÅÇß´Ù.
+
+### °ËÁõ
+
+- `C:\Program Files\Microsoft Visual Studio\2022\Professional\MSBuild\Current\Bin\MSBuild.exe .\MIL-STD-1553B.sln /t:Build /p:Configuration=Debug /p:Platform=x64` ½ÇÇà ¼º°ø
+- `powershell -NoProfile -ExecutionPolicy Bypass -File .\tests\native\run_tests.ps1` ½ÇÇà °á°ú ³×ÀÌÆ¼ºê 34°Ç Åë°ú

@@ -1,0 +1,8 @@
+<Solution>
+  <Folder Name="/example/">
+    <Project Path="example/TestApp/TestApp.csproj" />
+  </Folder>
+  <Folder Name="/src/">
+    <Project Path="src/AvalonDock/AvalonDock/AvalonDock.csproj" Id="716bfa01-d31d-4075-83ac-b357ef766eb7" />
+  </Folder>
+</Solution>
